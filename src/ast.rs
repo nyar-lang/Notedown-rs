@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 use {HTMLConfig, ToHTML};
 
@@ -14,6 +15,8 @@ pub enum AST {
     Italic(Box<AST>),
     /// - `Underline`:
     Underline(Box<AST>),
+    /// - `Font`:
+    Font(Box<AST>, HashMap<String, String>),
 
     /// - `Node`: For unknown structural
     Node(Box<AST>),
@@ -28,12 +31,12 @@ impl Display for AST {
             AST::String(ref s) => write!(f, "{}", s),
             AST::Bold(ref e) => write!(f, "{}", e),
             AST::Italic(ref e) => write!(f, "{}", e),
+            AST::Font(ref e, ref kv) => write!(f, "{} {:?}", e, kv),
             AST::Underline(ref e) => write!(f, "{}", e),
             _ => write!(f, "unknown"),
         }
     }
 }
-
 
 /// Unwrap Box<AST>
 impl ToHTML for Box<AST> {
@@ -55,6 +58,13 @@ impl ToHTML for AST {
             AST::String(ref s) => format!("{}", s),
             AST::Bold(ref e) => format!("<b>{}</b>", unbox!(e)),
             AST::Italic(ref e) => format!("<i>{}</i>", unbox!(e)),
+            AST::Font(ref e, ref kv) => {
+                let mut tags = String::new();
+                for (k, v) in kv.iter() {
+                    tags += &format!(" {}=\"{}\"", k, v);
+                }
+                format!("<font{}>{}</font>", tags, unbox!(e))
+            }
             AST::Underline(ref e) => format!("<u>{}</u>", unbox!(e)),
             _ => format!(""),
         }
