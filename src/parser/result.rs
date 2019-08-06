@@ -1,6 +1,6 @@
+#[allow(dead_code)]
 #[grammar = "note_down.pest"]
-pub struct NotedownParser;
-
+pub struct Parser;
 #[allow(dead_code, non_camel_case_types)]
 #[structural_match]
 #[rustc_copy_clone_marker]
@@ -10,12 +10,13 @@ pub enum Rule {
     statement,
     EmptyLines,
     EmptyLine,
+    Command,
     Header,
     Sharp,
     TextBlock,
     TextHeaderCharacter,
     TextBlockLine,
-    Command,
+    Text,
     CommandPart,
     CommandContent,
     Begin,
@@ -109,6 +110,10 @@ impl ::std::fmt::Debug for Rule {
                 let mut debug_trait_builder = f.debug_tuple("EmptyLine");
                 debug_trait_builder.finish()
             }
+            (&Rule::Command,) => {
+                let mut debug_trait_builder = f.debug_tuple("Command");
+                debug_trait_builder.finish()
+            }
             (&Rule::Header,) => {
                 let mut debug_trait_builder = f.debug_tuple("Header");
                 debug_trait_builder.finish()
@@ -129,8 +134,8 @@ impl ::std::fmt::Debug for Rule {
                 let mut debug_trait_builder = f.debug_tuple("TextBlockLine");
                 debug_trait_builder.finish()
             }
-            (&Rule::Command,) => {
-                let mut debug_trait_builder = f.debug_tuple("Command");
+            (&Rule::Text,) => {
+                let mut debug_trait_builder = f.debug_tuple("Text");
                 debug_trait_builder.finish()
             }
             (&Rule::CommandPart,) => {
@@ -421,7 +426,7 @@ impl ::std::cmp::PartialOrd for Rule {
     }
 }
 #[allow(clippy::all)]
-impl ::pest::Parser<Rule> for NotedownParser {
+impl ::pest::Parser<Rule> for Parser {
     fn parse<'i>(
         rule: Rule,
         input: &'i str,
@@ -565,6 +570,15 @@ impl ::pest::Parser<Rule> for NotedownParser {
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
+                pub fn Command(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    self::CommandLine(state)
+                        .or_else(|state| self::CommandPart(state))
+                        .or_else(|state| self::CommandBlock(state))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
                 pub fn Header(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
@@ -645,7 +659,7 @@ impl ::pest::Parser<Rule> for NotedownParser {
                                     .or_else(|state| self::Sharp(state))
                             })
                             .and_then(|state| super::hidden::skip(state))
-                            .and_then(|state| self::ANY(state))
+                            .and_then(|state| self::Text(state))
                     })
                 }
                 #[inline]
@@ -659,17 +673,15 @@ impl ::pest::Parser<Rule> for NotedownParser {
                                 self::EmptyLines(state).or_else(|state| self::Sharp(state))
                             })
                             .and_then(|state| super::hidden::skip(state))
-                            .and_then(|state| self::ANY(state))
+                            .and_then(|state| self::Text(state))
                     })
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
-                pub fn Command(
+                pub fn Text(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    self::CommandLine(state)
-                        .or_else(|state| self::CommandPart(state))
-                        .or_else(|state| self::CommandBlock(state))
+                    state.rule(Rule::Text, |state| self::ANY(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -1410,13 +1422,6 @@ impl ::pest::Parser<Rule> for NotedownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ANY(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.skip(1)
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
                 pub fn ASCII_NONZERO_DIGIT(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
@@ -1424,19 +1429,17 @@ impl ::pest::Parser<Rule> for NotedownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_ALPHA(
+                pub fn ANY(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state
-                        .match_range('a'..'z')
-                        .or_else(|state| state.match_range('A'..'Z'))
+                    state.skip(1)
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn EOI(
+                pub fn ASCII_DIGIT(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::EOI, |state| state.end_of_input())
+                    state.match_range('0'..'9')
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -1454,10 +1457,19 @@ impl ::pest::Parser<Rule> for NotedownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_DIGIT(
+                pub fn ASCII_ALPHA(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'9')
+                    state
+                        .match_range('a'..'z')
+                        .or_else(|state| state.match_range('A'..'Z'))
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn EOI(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::EOI, |state| state.end_of_input())
                 }
             }
             pub use self::visible::*;
@@ -1467,12 +1479,13 @@ impl ::pest::Parser<Rule> for NotedownParser {
             Rule::statement => rules::statement(state),
             Rule::EmptyLines => rules::EmptyLines(state),
             Rule::EmptyLine => rules::EmptyLine(state),
+            Rule::Command => rules::Command(state),
             Rule::Header => rules::Header(state),
             Rule::Sharp => rules::Sharp(state),
             Rule::TextBlock => rules::TextBlock(state),
             Rule::TextHeaderCharacter => rules::TextHeaderCharacter(state),
             Rule::TextBlockLine => rules::TextBlockLine(state),
-            Rule::Command => rules::Command(state),
+            Rule::Text => rules::Text(state),
             Rule::CommandPart => rules::CommandPart(state),
             Rule::CommandContent => rules::CommandContent(state),
             Rule::Begin => rules::Begin(state),
