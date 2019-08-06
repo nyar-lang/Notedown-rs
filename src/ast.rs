@@ -5,7 +5,7 @@ use {HTMLConfig, ToHTML};
 #[derive(Debug, Clone)]
 pub enum AST {
     /// - `Header`
-    Header(u8, Box<AST>),
+    Header(Box<AST>, HashMap<String, String>),
 
     /// - `String`: Normal string with no style
     String(String),
@@ -21,13 +21,13 @@ pub enum AST {
     /// - `Node`: For unknown structural
     Node(Box<AST>),
     /// - `Function`:
-    Function(Vec<AST>),
+    Function(String, Vec<AST>, HashMap<String, String>),
 }
 
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
-            AST::Header(ref level, ref s) => write!(f, "h{}", level),
+            AST::Header(ref e, ref kv) => write!(f, "{} {:?}", e, kv),
             AST::String(ref s) => write!(f, "{}", s),
             AST::Bold(ref e) => write!(f, "{}", e),
             AST::Italic(ref e) => write!(f, "{}", e),
@@ -35,6 +35,12 @@ impl Display for AST {
             AST::Underline(ref e) => write!(f, "{}", e),
             _ => write!(f, "unknown"),
         }
+    }
+}
+
+impl From<&str> for AST {
+    fn from(s: &str) -> Self {
+        AST::String(s.to_string())
     }
 }
 
@@ -54,7 +60,7 @@ impl ToHTML for AST {
             };
         }
         match *self {
-            AST::Header(ref level, ref e) => format!("h{} {}", level, unbox!(e)),
+            AST::Header(ref e, ref kv) => format!("{} {:?}", unbox!(e), kv),
             AST::String(ref s) => format!("{}", s),
             AST::Bold(ref e) => format!("<b>{}</b>", unbox!(e)),
             AST::Italic(ref e) => format!("<i>{}</i>", unbox!(e)),

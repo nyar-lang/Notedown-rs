@@ -11,9 +11,10 @@ extern crate colored;
 
 pub mod ast;
 mod parser;
+#[macro_use]
 pub mod traits;
 pub mod utils;
 
 pub use ast::AST as NotedownAST;
-pub use parser::{NotedownParser, NotedownRule};
-pub use traits::{HTMLConfig, MarkdownConfig, ToHTML, ToMarkdown};
+pub use parser::{NotedownParser, NotedownRule,TextMode,TextModeParser};
+pub use traits::{HTMLConfig, MarkdownConfig, ToAST, ToHTML, ToMarkdown};
