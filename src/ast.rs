@@ -17,6 +17,10 @@ pub enum AST {
     Underline(Box<AST>),
     /// - `Font`:
     Font(Box<AST>, HashMap<String, String>),
+    /// - `Math`:
+    Math(String, HashMap<String, String>),
+    /// - `Code`:
+    Code(String, HashMap<String, String>),
 
     /// - `Node`: For unknown structural
     Node(Box<AST>),
@@ -60,7 +64,9 @@ impl ToHTML for AST {
             };
         }
         match *self {
-            AST::Header(ref e, ref kv) => format!("{} {:?}", unbox!(e), kv),
+            AST::Header(ref e, ref kv) =>{
+                format!("{} {:?}", unbox!(e), kv)
+            }
             AST::String(ref s) => format!("{}", s),
             AST::Bold(ref e) => format!("<b>{}</b>", unbox!(e)),
             AST::Italic(ref e) => format!("<i>{}</i>", unbox!(e)),

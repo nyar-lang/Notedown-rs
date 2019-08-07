@@ -15,6 +15,12 @@ pub struct TextMode;
 
 use crate::{NotedownAST as AST, ToAST};
 
+impl ToAST for TextModeParser {
+    fn to_ast(&self) -> AST {
+        unimplemented!()
+    }
+}
+
 impl ToAST for NotedownParser {
     fn to_ast(&self) -> AST {
         unimplemented!()

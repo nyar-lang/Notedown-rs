@@ -33,6 +33,7 @@ pub trait ToMarkdown {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct HTMLConfig {}
 
 impl Default for HTMLConfig {
@@ -41,6 +42,7 @@ impl Default for HTMLConfig {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct MarkdownConfig {}
 
 impl Default for MarkdownConfig {
