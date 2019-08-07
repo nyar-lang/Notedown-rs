@@ -4,7 +4,7 @@ use {HTMLConfig, ToHTML};
 
 #[derive(Debug, Clone)]
 pub enum AST {
-    /// - `None`: Should remove
+    /// - `None`: It doesn't look like anything to me
     None,
 
     Statements(Vec<AST>),

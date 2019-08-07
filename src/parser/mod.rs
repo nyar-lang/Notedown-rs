@@ -9,7 +9,7 @@ pub mod derive;
 pub mod result;
 
 #[derive(Parser)]
-#[grammar = "text_mode.pest"]
+#[grammar = "note_text.pest"]
 #[allow(dead_code)]
 pub struct TextMode;
 
