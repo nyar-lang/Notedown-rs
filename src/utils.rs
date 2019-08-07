@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 use crate::{NotedownAST as AST, NotedownParser, NotedownRule as Rule, ToAST};
 use colored::*;
+use pest::iterators::{Pair, Pairs};
 use pest::Parser;
-use pest::iterators::Pairs;
 use std::collections::HashMap;
 
 pub fn token_print(s: &str, rule: Rule) {
@@ -54,38 +54,45 @@ pub fn parse(s: &str) -> AST {
     return AST::Statements(nodes);
 }
 
+macro_rules! declare {
+    ($name:ident) => {
+        let mut $name: Vec<Pairs<Rule>> = vec![]
+    };
+    {$($x:ident),*} => {
+        $(declare!($x);)*
+    };
+}
+macro_rules! rules {
+    ($rule:ident $name:ident) => {
+        $rule => $name.push(pair.into_inner()),
+    };
+}
+
 fn parse_header(pairs: Pairs<Rule>) -> AST {
-    let mut level: u8 = 0;
-    let mut arguments: Vec<Pairs<Rule>> = vec![];
-    let mut content = String::new();
-
-
-    for pair in pairs {
+    let mut level: Vec<Pair<Rule>> = vec![];
+    let mut arguments: Vec<Pair<Rule>> = vec![];
+    let mut content = "";
+    for pair in pairs.into_iter() {
         match pair.as_rule() {
-            Rule::Sharp => level += 1,
-            Rule::arguments => {
-                arguments.push(pair.into_inner())
-            }
-            Rule::RestOfLine => {
-                content = parse_text(pair.into_inner())
-            },
-            _ => unreachable!()
+            Rule::Sharp => level.push(pair),
+            Rule::arguments => arguments.push(pair),
+            Rule::RestOfLine => content = pair.as_str(),
+            _ => unreachable!(),
         }
     }
-
-
-    println!("{:?}", level);
+    println!("{:?}", level.len());
     println!("{:?}", arguments);
-    println!("{:?}", content);
+    println!("{:?}", parse_text(content));
+
     AST::None
 }
 
-fn parse_arguments(pairs: Pairs<Rule>) -> HashMap<String, String> {
-    let arguments:HashMap<String, String> = HashMap::new();
+fn parse_arguments(pairs: Vec<Pair<Rule>>) -> HashMap<String, String> {
+    let arguments: HashMap<String, String> = HashMap::new();
     arguments
 }
 
-fn parse_text(pairs: Pairs<Rule>) -> String {
-    println!("{:?}", pairs);
-    "".to_string()
+fn parse_text(raw: &str) -> String {
+    let s = raw.trim();
+    raw.to_string()
 }

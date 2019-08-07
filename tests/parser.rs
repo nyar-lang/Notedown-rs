@@ -22,8 +22,7 @@ Line4
 
 #[test]
 fn header() {
-    const TEXT: &str = "\
-## Header1
+    const TEXT: &str = "## Header1
 ";
     parse(TEXT);
     panic!()

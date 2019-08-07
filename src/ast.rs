@@ -9,8 +9,8 @@ pub enum AST {
 
     Statements(Vec<AST>),
 
-    /// - `Header`
-    Header(Box<AST>, HashMap<String, String>),
+    /// - `Header`: TEXT, level, args
+    Header(Box<AST>, u8, HashMap<String, String>),
 
     /// - `String`: Normal string with no style
     String(String),
