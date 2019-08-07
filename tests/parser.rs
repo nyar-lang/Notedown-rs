@@ -1,8 +1,8 @@
 extern crate notedown;
 extern crate pest;
 
-use notedown::utils::token_print;
-use notedown::{traits::ToAST, NotedownParser, NotedownRule};
+use notedown::utils::{parse, token_print};
+use notedown::{NotedownParser, NotedownRule, ToAST};
 use pest::Parser;
 
 #[test]
@@ -18,4 +18,13 @@ Line3
 Line4
 ";
     token_print(TEXT, NotedownRule::program);
+}
+
+#[test]
+fn header() {
+    const TEXT: &str = "\
+## Header1
+";
+    parse(TEXT);
+    panic!()
 }

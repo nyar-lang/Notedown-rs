@@ -4,6 +4,11 @@ use {HTMLConfig, ToHTML};
 
 #[derive(Debug, Clone)]
 pub enum AST {
+    /// - `None`: Should remove
+    None,
+
+    Statements(Vec<AST>),
+
     /// - `Header`
     Header(Box<AST>, HashMap<String, String>),
 
@@ -22,9 +27,9 @@ pub enum AST {
     /// - `Code`:
     Code(String, HashMap<String, String>),
 
-    /// - `Node`: For unknown structural
-    Node(Box<AST>),
-    /// - `Function`:
+    /// - `Text`: For inline style
+    Paragraph(Box<AST>),
+    /// - `Function`: input, args, kvs
     Function(String, Vec<AST>, HashMap<String, String>),
 }
 
@@ -64,9 +69,7 @@ impl ToHTML for AST {
             };
         }
         match *self {
-            AST::Header(ref e, ref kv) =>{
-                format!("{} {:?}", unbox!(e), kv)
-            }
+            AST::Header(ref e, ref kv) => format!("{} {:?}", unbox!(e), kv),
             AST::String(ref s) => format!("{}", s),
             AST::Bold(ref e) => format!("<b>{}</b>", unbox!(e)),
             AST::Italic(ref e) => format!("<i>{}</i>", unbox!(e)),

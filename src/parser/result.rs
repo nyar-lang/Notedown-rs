@@ -12,11 +12,11 @@ pub enum Rule {
     EmptyLine,
     Command,
     Header,
+    HeaderLevel,
     Sharp,
     TextBlock,
     TextHeaderCharacter,
     TextBlockLine,
-    Text,
     CommandPart,
     CommandContent,
     Begin,
@@ -33,7 +33,7 @@ pub enum Rule {
     RB,
     CommandLine,
     command,
-    ROL,
+    RestOfLine,
     Colon,
     Escape,
     Number,
@@ -58,6 +58,7 @@ pub enum Rule {
     NameCharacter,
     NameStartCharacter,
     Underline,
+    Asterisk,
     NEWLINE,
     WHITESPACE,
     TAB,
@@ -118,6 +119,10 @@ impl ::std::fmt::Debug for Rule {
                 let mut debug_trait_builder = f.debug_tuple("Header");
                 debug_trait_builder.finish()
             }
+            (&Rule::HeaderLevel,) => {
+                let mut debug_trait_builder = f.debug_tuple("HeaderLevel");
+                debug_trait_builder.finish()
+            }
             (&Rule::Sharp,) => {
                 let mut debug_trait_builder = f.debug_tuple("Sharp");
                 debug_trait_builder.finish()
@@ -132,10 +137,6 @@ impl ::std::fmt::Debug for Rule {
             }
             (&Rule::TextBlockLine,) => {
                 let mut debug_trait_builder = f.debug_tuple("TextBlockLine");
-                debug_trait_builder.finish()
-            }
-            (&Rule::Text,) => {
-                let mut debug_trait_builder = f.debug_tuple("Text");
                 debug_trait_builder.finish()
             }
             (&Rule::CommandPart,) => {
@@ -202,8 +203,8 @@ impl ::std::fmt::Debug for Rule {
                 let mut debug_trait_builder = f.debug_tuple("command");
                 debug_trait_builder.finish()
             }
-            (&Rule::ROL,) => {
-                let mut debug_trait_builder = f.debug_tuple("ROL");
+            (&Rule::RestOfLine,) => {
+                let mut debug_trait_builder = f.debug_tuple("RestOfLine");
                 debug_trait_builder.finish()
             }
             (&Rule::Colon,) => {
@@ -300,6 +301,10 @@ impl ::std::fmt::Debug for Rule {
             }
             (&Rule::Underline,) => {
                 let mut debug_trait_builder = f.debug_tuple("Underline");
+                debug_trait_builder.finish()
+            }
+            (&Rule::Asterisk,) => {
+                let mut debug_trait_builder = f.debug_tuple("Asterisk");
                 debug_trait_builder.finish()
             }
             (&Rule::NEWLINE,) => {
@@ -585,28 +590,33 @@ impl ::pest::Parser<Rule> for Parser {
                     state.atomic(::pest::Atomicity::CompoundAtomic, |state| {
                         state.rule(Rule::Header, |state| {
                             state.sequence(|state| {
-                                state
-                                    .sequence(|state| {
-                                        self::Sharp(state)
-                                            .and_then(|state| {
-                                                state.optional(|state| self::Sharp(state))
-                                            })
-                                            .and_then(|state| {
-                                                state.optional(|state| self::Sharp(state))
-                                            })
-                                            .and_then(|state| {
-                                                state.optional(|state| self::Sharp(state))
-                                            })
-                                            .and_then(|state| {
-                                                state.optional(|state| self::Sharp(state))
-                                            })
-                                            .and_then(|state| {
-                                                state.optional(|state| self::Sharp(state))
-                                            })
+                                self::HeaderLevel(state)
+                                    .and_then(|state| {
+                                        state.optional(|state| self::arguments(state))
                                     })
-                                    .and_then(|state| state.repeat(|state| self::WHITESPACE(state)))
-                                    .and_then(|state| self::ROL(state))
+                                    .and_then(|state| self::RestOfLine(state))
                             })
+                        })
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn HeaderLevel(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::HeaderLevel, |state| {
+                        state.sequence(|state| {
+                            self::Sharp(state)
+                                .and_then(|state| super::hidden::skip(state))
+                                .and_then(|state| state.optional(|state| self::Sharp(state)))
+                                .and_then(|state| super::hidden::skip(state))
+                                .and_then(|state| state.optional(|state| self::Sharp(state)))
+                                .and_then(|state| super::hidden::skip(state))
+                                .and_then(|state| state.optional(|state| self::Sharp(state)))
+                                .and_then(|state| super::hidden::skip(state))
+                                .and_then(|state| state.optional(|state| self::Sharp(state)))
+                                .and_then(|state| super::hidden::skip(state))
+                                .and_then(|state| state.optional(|state| self::Sharp(state)))
                         })
                     })
                 }
@@ -654,12 +664,12 @@ impl ::pest::Parser<Rule> for Parser {
                     state.sequence(|state| {
                         state
                             .lookahead(false, |state| {
-                                self::Escape(state)
-                                    .or_else(|state| self::NEWLINE(state))
+                                self::NEWLINE(state)
+                                    .or_else(|state| self::Escape(state))
                                     .or_else(|state| self::Sharp(state))
                             })
                             .and_then(|state| super::hidden::skip(state))
-                            .and_then(|state| self::Text(state))
+                            .and_then(|state| self::ANY(state))
                     })
                 }
                 #[inline]
@@ -673,15 +683,8 @@ impl ::pest::Parser<Rule> for Parser {
                                 self::EmptyLines(state).or_else(|state| self::Sharp(state))
                             })
                             .and_then(|state| super::hidden::skip(state))
-                            .and_then(|state| self::Text(state))
+                            .and_then(|state| self::ANY(state))
                     })
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn Text(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::Text, |state| self::ANY(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -908,7 +911,7 @@ impl ::pest::Parser<Rule> for Parser {
                                 .and_then(|state| super::hidden::skip(state))
                                 .and_then(|state| self::Colon(state))
                                 .and_then(|state| super::hidden::skip(state))
-                                .and_then(|state| self::ROL(state))
+                                .and_then(|state| self::RestOfLine(state))
                         })
                     })
                 }
@@ -928,10 +931,10 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
-                pub fn ROL(
+                pub fn RestOfLine(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::ROL, |state| {
+                    state.rule(Rule::RestOfLine, |state| {
                         state.sequence(|state| {
                             state.optional(|state| {
                                 state
@@ -1296,6 +1299,15 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
+                pub fn Asterisk(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::Asterisk, |state| {
+                        state.atomic(::pest::Atomicity::Atomic, |state| state.match_string("*"))
+                    })
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
                 pub fn NEWLINE(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
@@ -1366,7 +1378,7 @@ impl ::pest::Parser<Rule> for Parser {
                                 self::Comment(state)
                                     .and_then(|state| state.repeat(|state| self::WHITESPACE(state)))
                                     .and_then(|state| self::Colon(state))
-                                    .and_then(|state| self::ROL(state))
+                                    .and_then(|state| self::RestOfLine(state))
                             })
                         })
                     })
@@ -1422,10 +1434,17 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_NONZERO_DIGIT(
+                pub fn SOI(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('1'..'9')
+                    state.start_of_input()
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn EOI(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::EOI, |state| state.end_of_input())
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -1436,24 +1455,24 @@ impl ::pest::Parser<Rule> for Parser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_DIGIT(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'9')
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn SOI(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.start_of_input()
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
                 fn SPACE_SEPARATOR(
                     state: Box<::pest::ParserState<Rule>>,
                 ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     state.match_char_by(::pest::unicode::SPACE_SEPARATOR)
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_NONZERO_DIGIT(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('1'..'9')
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_DIGIT(
+                    state: Box<::pest::ParserState<Rule>>,
+                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('0'..'9')
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -1463,13 +1482,6 @@ impl ::pest::Parser<Rule> for Parser {
                     state
                         .match_range('a'..'z')
                         .or_else(|state| state.match_range('A'..'Z'))
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn EOI(
-                    state: Box<::pest::ParserState<Rule>>,
-                ) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::EOI, |state| state.end_of_input())
                 }
             }
             pub use self::visible::*;
@@ -1481,11 +1493,11 @@ impl ::pest::Parser<Rule> for Parser {
             Rule::EmptyLine => rules::EmptyLine(state),
             Rule::Command => rules::Command(state),
             Rule::Header => rules::Header(state),
+            Rule::HeaderLevel => rules::HeaderLevel(state),
             Rule::Sharp => rules::Sharp(state),
             Rule::TextBlock => rules::TextBlock(state),
             Rule::TextHeaderCharacter => rules::TextHeaderCharacter(state),
             Rule::TextBlockLine => rules::TextBlockLine(state),
-            Rule::Text => rules::Text(state),
             Rule::CommandPart => rules::CommandPart(state),
             Rule::CommandContent => rules::CommandContent(state),
             Rule::Begin => rules::Begin(state),
@@ -1502,7 +1514,7 @@ impl ::pest::Parser<Rule> for Parser {
             Rule::RB => rules::RB(state),
             Rule::CommandLine => rules::CommandLine(state),
             Rule::command => rules::command(state),
-            Rule::ROL => rules::ROL(state),
+            Rule::RestOfLine => rules::RestOfLine(state),
             Rule::Colon => rules::Colon(state),
             Rule::Escape => rules::Escape(state),
             Rule::Number => rules::Number(state),
@@ -1527,6 +1539,7 @@ impl ::pest::Parser<Rule> for Parser {
             Rule::NameCharacter => rules::NameCharacter(state),
             Rule::NameStartCharacter => rules::NameStartCharacter(state),
             Rule::Underline => rules::Underline(state),
+            Rule::Asterisk => rules::Asterisk(state),
             Rule::NEWLINE => rules::NEWLINE(state),
             Rule::WHITESPACE => rules::WHITESPACE(state),
             Rule::TAB => rules::TAB(state),

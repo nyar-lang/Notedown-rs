@@ -9,12 +9,12 @@ extern crate pest_derive;
 #[cfg(feature = "colored")]
 extern crate colored;
 
-pub mod ast;
+mod ast;
 mod parser;
 #[macro_use]
-pub mod traits;
+mod traits;
 pub mod utils;
 
 pub use ast::AST as NotedownAST;
-pub use parser::{NotedownParser, NotedownRule,TextMode,TextModeParser};
+pub use parser::{NotedownParser, NotedownRule, TextMode, TextModeParser};
 pub use traits::{HTMLConfig, MarkdownConfig, ToAST, ToHTML, ToMarkdown};
