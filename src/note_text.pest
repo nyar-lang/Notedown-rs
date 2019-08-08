@@ -1,13 +1,13 @@
 text_mode = _{SOI ~ statement*  ~  EOI}
 statement = _{Style|Mark|Math|Code|SPACE_SEPARATOR|NEWLINE|Word}
 /*====================================================================================================================*/
-Math = _{MathEmpty|MathDisplay|MathInline|MathRest} // `MathEmpty` can be removed but there will slow down
+Math = _{MathEmpty|MathDisplay|MathInline|MathRest} // `MathEmpty` can be removed but it will slow down
 ///#C678DD
 MathDisplay = {Dollar{2} ~ MathDisplayText ~ Dollar{2}}
 MathDisplayText = {(Escape ~ Dollar|!Dollar{2}~ANY)+}
 ///#D19A66
-MathInline = {Dollar ~ MathInlineText+ ~ Dollar}
-MathInlineText = {Escape ~ Dollar|!Dollar~ANY}
+MathInline = {Dollar ~ MathInlineText ~ Dollar}
+MathInlineText = {(Escape ~ Dollar|!Dollar~ANY)+}
 //!Gray: MathEmpty|MathRest
 MathEmpty = {Dollar{3,}}
 MathRest = {Dollar+}
@@ -15,51 +15,50 @@ Dollar = _{"$"}
 /*====================================================================================================================*/
 Code = _{CodeEmpty|CodeDisplay|CodeInline|CodeRest}
 ///#C678DD
-CodeDisplay = {CodeEscape{2} ~ CodeDisplayText ~ CodeEscape{2}}
-CodeDisplayText = {(Escape ~ CodeEscape|!CodeEscape{2}~ANY)+}
+CodeDisplay = {Accent{2} ~ CodeDisplayText ~ Accent{2}}
+CodeDisplayText = {(Escape ~ Accent|!Accent{2}~ANY)+}
 ///#D19A66
-CodeInline = {CodeEscape ~ CodeInlineText+ ~ CodeEscape}
-CodeInlineText = {Escape ~ CodeEscape|!CodeEscape~ANY}
+CodeInline = {Accent ~ CodeInlineText ~ Accent}
+CodeInlineText = {(Escape ~ Accent|!Accent~ANY)+}
 //!Gray: CodeEmpty|CodeRest
-CodeEmpty = {CodeEscape{3,}}
-CodeRest = {CodeEscape+}
-CodeEscape = _{"`"}
+CodeEmpty = {Accent{3,}}
+CodeRest = {Accent+}
+Accent = _{"`"}
 /*====================================================================================================================*/
 Style = _{StyleEmpty|StyleBoldItalic|StyleBold|StyleItalic|StyleRest}
 ///#61AFEF
-StyleItalic = {Italic ~ StyleItalicText+ ~ Italic}
-StyleItalicText = {(Escape ~ Italic|!Italic~ANY)+}
+StyleItalic = {Asterisk ~ StyleItalicText ~ Asterisk}
+StyleItalicText = {(Escape ~ Asterisk|!Asterisk~ANY)+}
 ///#D19A66
-StyleBold = {Bold ~ StyleBoldText+ ~ Bold}
-StyleBoldText = {Escape ~ Bold|!Bold~ANY}
+StyleBold = {Bold ~ StyleBoldText ~ Bold}
+StyleBoldText = {(Escape ~ Asterisk|!Bold~ANY)+}
 ///#C678DD
-StyleBoldItalic = {BoldItalic ~ StyleBoldItalicText+ ~ BoldItalic}
-StyleBoldItalicText = {Escape ~ BoldItalic|!BoldItalic~ANY}
+StyleBoldItalic = {BoldItalic ~ StyleBoldItalicText ~ BoldItalic}
+StyleBoldItalicText = {(Escape ~ Asterisk|!BoldItalic~ANY)+}
 //!Gray: StyleEmpty|StyleRest
-StyleEmpty = {Italic{4,}}
-StyleRest = {Italic+}
-BoldItalic = _{Italic{3}}
-Bold = _{Italic{2}}
-Italic = _{"*"}
+StyleEmpty = {Asterisk{4,}}
+StyleRest = {Asterisk+}
+BoldItalic = _{Asterisk{3}}
+Bold = _{Asterisk{2}}
+Asterisk = _{"*"}
 /*====================================================================================================================*/
 Mark = _{MarkEmpty|MarkDelete|MarkUnderline|MarkRest}
 ///#C678DD
 MarkDelete = {Delete ~ MarkDeleteText ~ Delete}
-MarkDeleteText = {(Escape ~ Delete|!Delete~ANY)+}
+MarkDeleteText = {(Escape ~ Tilde|!Delete~ANY)+}
 ///#D19A66
-MarkUnderline = {Underline ~ MarkUnderlineText ~ Underline}
-MarkUnderlineText = {(Escape ~ Underline|!Underline~ANY)+}
+MarkUnderline = {Tilde ~ MarkUnderlineText ~ Tilde}
+MarkUnderlineText = {(Escape ~ Tilde|!Tilde~ANY)+}
 //!Gray: MarkEmpty|MarkRest
-MarkEmpty = {Underline{3,}}
-MarkRest = {Underline+}
-Delete = _{Underline{2}}
-Underline = _{"_"}
+MarkEmpty = {Tilde{3,}}
+MarkRest = {Tilde+}
+Delete = _{Tilde{2}}
+Tilde = _{"~"}
 /*====================================================================================================================*/
 Word = @{Character+}
 Character = @{Escape ~ ANY | !Escape~SYMBOL}
 NonCharacter = _{!SPACE_SEPARATOR|NEWLINE}
-SYMBOL = {ASCII_ALPHA|ASCII_DIGIT|Dot}
-Dot = @{"."}
+SYMBOL = {!(Asterisk|Tilde|Dollar|Accent)~ANY}
 /*====================================================================================================================*/
 Escape = _{"\\"}
 /*====================================================================================================================*/

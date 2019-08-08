@@ -3,9 +3,10 @@ name = "notedown-rs"
 version = "0.0.1"
 
 
-
 [lib]
-name = "notedown"
+crate-type = ["dylib", "rlib"]
+name =  "notedown"
+path = "src/lib.rs"
 
 #[[bin]]
 #name = "comrak"
@@ -25,3 +26,4 @@ default = ["colored"]
 
 [profile.release]
 lto = true
+opt-level = "s"

@@ -1,10 +1,12 @@
 #[allow(unused_imports)]
 use crate::{NotedownAST as AST, NotedownParser, NotedownRule as Rule, ToAST};
+#[cfg(feature = "colored")]
 use colored::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use std::collections::HashMap;
 
+#[cfg(feature = "colored")]
 pub fn token_print(s: &str, rule: Rule) {
     let pairs = NotedownParser::parse(rule, s).unwrap_or_else(|e| panic!("{}", e));
     // Because ident_list is silent, the iterator will contain idents
