@@ -1,6 +1,6 @@
+use crate::{HTMLConfig, ToHTML};
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
-use {HTMLConfig, ToHTML};
 
 #[derive(Debug, Clone)]
 pub enum AST {

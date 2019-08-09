@@ -13,6 +13,7 @@ mod ast;
 mod parser;
 #[macro_use]
 mod traits;
+#[allow(dead_code)]
 pub mod utils;
 
 pub use ast::AST as NotedownAST;
