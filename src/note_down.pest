@@ -1,7 +1,7 @@
 program = _{SOI ~ statement*  ~  EOI}
 
 statement = _{
-    Header  ~  NEWLINE
+    Header  ~  NEWLINE?
   | TextBlock
   | Command
   | EmptyLine{1,}
