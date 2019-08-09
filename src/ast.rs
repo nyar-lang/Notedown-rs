@@ -28,6 +28,8 @@ pub enum AST {
     Code(String, HashMap<String, String>),
 
     /// - `Text`: For inline style
+    Text(Box<AST>),
+    ///  - `Paragraph`:
     Paragraph(Box<AST>),
     /// - `Function`: input, args, kvs
     Function(String, Vec<AST>, HashMap<String, String>),
@@ -36,7 +38,7 @@ pub enum AST {
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
-            AST::Header(ref e,ref level, ref kv) => write!(f, "{}{} {:?}", e, level, kv),
+            AST::Header(ref e, ref level, ref kv) => write!(f, "{}{} {:?}", e, level, kv),
             AST::String(ref s) => write!(f, "{}", s),
             AST::Bold(ref e) => write!(f, "{}", e),
             AST::Italic(ref e) => write!(f, "{}", e),
@@ -69,7 +71,7 @@ impl ToHTML for AST {
             };
         }
         match *self {
-            AST::Header(ref e,ref level, ref kv) => format!("{} {}{:?}", unbox!(e), level, kv),
+            AST::Header(ref e, ref level, ref kv) => format!("{} {}{:?}", unbox!(e), level, kv),
             AST::String(ref s) => format!("{}", s),
             AST::Bold(ref e) => format!("<b>{}</b>", unbox!(e)),
             AST::Italic(ref e) => format!("<i>{}</i>", unbox!(e)),
