@@ -1,11 +1,11 @@
 [package]
 name = "notedown-rs"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Aster <galaster@foxmail.com>"]
-description = "Prime lib for Nyar"
+description = "Notedown Text parser and formatter"
 license = "MPL-2.0"
 readme = "README.md"
-repository = "https://github.com/nyar-lang/nyar-prime"
+repository = "https://github.com/nyar-lang/notedown-rs"
 exclude = ["/tests/*", "/.idea/*"]
 edition = "2018"
 

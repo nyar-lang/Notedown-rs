@@ -2,27 +2,55 @@ extern crate notedown;
 extern crate pest;
 
 use notedown::utils::{parse, token_print};
-use notedown::{NotedownParser, NotedownRule, ToAST};
+use notedown::{NotedownAST as AST, NotedownParser, NotedownRule, ToAST};
 use pest::Parser;
 
 #[test]
-fn main() {
-    const TEXT: &str = "\
-# Header1
-Line1
-
-## Header2
-Line2
-Line3
-### Header
-Line4
-";
+fn text_chinese_english() {
+    const TEXT: &str = "text\nabc一二三0123\nabc123\n";
     token_print(TEXT, NotedownRule::program);
+    assert_eq!(
+        format!("{:?}",parse(TEXT)),
+        r#"Statements([Paragraph(Statements([Word("text"), Newline, Word("abc"), Word("一二三"), Word("0123"), Newline, Word("abc123")]))])"#
+    )
+}
+
+#[test]
+fn text_style_1() {
+    const TEXT: &str = "text\n**";
+    token_print(TEXT, NotedownRule::program);
+    assert_eq!(
+        format!("{:?}", parse(TEXT)),
+        r#"Statements([Paragraph(Statements([Word("text"), Newline, Word("**")]))])"#
+    )
+}
+
+#[test]
+fn text_style_2() {
+    const TEXT: &str = "text\n***";
+    token_print(TEXT, NotedownRule::program);
+    assert_eq!(
+        format!("{:?}", parse(TEXT)),
+        r#"Statements([Paragraph(Statements([Word("text"), Newline, Word("***")]))])"#
+    )
+}
+
+#[test]
+fn text_style_3() {
+    const TEXT: &str = "text\n* * *";
+    token_print(TEXT, NotedownRule::program);
+    assert_eq!(
+        format!("{:?}", parse(TEXT)),
+        r#"Statements([Paragraph(Statements([Word("text"), Newline, None, Word("*")]))])"#
+    )
 }
 
 #[test]
 fn header() {
     const TEXT: &str = "## Header1";
-    parse(TEXT);
-   // panic!()
+    token_print(TEXT, NotedownRule::program);
+    assert_eq!(
+        format!("{:?}", parse(TEXT)),
+        r#"Statements([Header(Statements([Word("Header1")]), 2, {})])"#
+    )
 }

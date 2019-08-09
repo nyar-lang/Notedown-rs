@@ -18,18 +18,14 @@ pub fn token_print(s: &str, rule: NotedownRule) {
         let rule = pair.as_rule();
 
         match rule {
-            NotedownRule::NEWLINE => continue,
+            NotedownRule::NEWLINE | NotedownRule::EOI => continue,
+
             _ => (),
         }
 
         println!("{} {:?}", "Rule:".green(), pair.as_rule());
         println!("{} {:?}", "Span:".green(), pair.as_span());
-
-        if rule != NotedownRule::NEWLINE {
-            println!("{} {}", "Text:".green(), pair.as_str());
-        } else {
-            println!();
-        }
+        println!("{} {}", "Text:".green(), pair.as_str());
 
         // A pair can be converted to an iterator of the tokens which make it up:
         for inner_pair in pair.into_inner() {
@@ -45,10 +41,11 @@ pub fn parse(s: &str) -> AST {
     for pair in pairs {
         let rule = pair.as_rule();
         let node = match rule {
-            NotedownRule::EOI | NotedownRule::COMMENT | NotedownRule::NEWLINE => AST::None,
+            NotedownRule::EOI | NotedownRule::COMMENT | NotedownRule::NEWLINE => continue,
             NotedownRule::Header => parse_header(pair.into_inner()),
+            NotedownRule::TextBlock => AST::Paragraph(Box::new(parse_text(pair.as_str()))),
             _ => {
-                println!("unimplemented Rule::{:?}", rule);
+                println!("unimplemented NoteRule::{:?}", rule);
                 AST::None
             }
         };
@@ -70,8 +67,11 @@ fn parse_text(raw: &str) -> AST {
             TextModeRule::SPACE_SEPARATOR => continue,
             TextModeRule::NEWLINE => AST::Newline,
             TextModeRule::English => AST::Word(pair.as_str().to_string()),
+            TextModeRule::Word => AST::Word(pair.as_str().to_string()),
+
+            TextModeRule::StyleRest => AST::Word(pair.as_str().to_string()),
             _ => {
-                println!("unimplemented Rule::{:?}", rule);
+                println!("unimplemented TextRule::{:?}", rule);
                 AST::None
             }
         };
@@ -116,5 +116,6 @@ fn parse_header(pairs: Pairs<NotedownRule>) -> AST {
 
 fn parse_arguments(pairs: Vec<Pair<NotedownRule>>) -> HashMap<String, String> {
     let arguments: HashMap<String, String> = HashMap::new();
+    println!("{:?}", pairs);
     arguments
 }
