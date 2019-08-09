@@ -19,7 +19,6 @@ pub fn token_print(s: &str, rule: NotedownRule) {
 
         match rule {
             NotedownRule::NEWLINE | NotedownRule::EOI => continue,
-
             _ => (),
         }
 
@@ -33,6 +32,23 @@ pub fn token_print(s: &str, rule: NotedownRule) {
             println!("           {:?}", inner_pair.as_span());
         }
     }
+}
+
+#[allow(unused_macros)]
+macro_rules! declare {
+    ($name:ident) => {
+        let mut $name: Vec<Pairs<NotedownRule>> = vec![]
+    };
+    {$($x:ident),*} => {
+        $(declare!($x);)*
+    };
+}
+
+#[allow(unused_macros)]
+macro_rules! rules {
+    ($rule:ident $name:ident) => {
+        $rule => $name.push(pair.into_inner()),
+    };
 }
 
 pub fn parse(s: &str) -> AST {
@@ -58,7 +74,6 @@ fn parse_text(raw: &str) -> AST {
     let s = raw.trim().replace("\t", "    ");
     let pairs: Pairs<TextModeRule> =
         TextModeParser::parse(TextModeRule::text_mode, &s).unwrap_or_else(|e| panic!("{}", e));
-    println!("{:?}", pairs);
     let mut nodes: Vec<AST> = vec![];
     for pair in pairs {
         let rule = pair.as_rule();
@@ -68,7 +83,7 @@ fn parse_text(raw: &str) -> AST {
             TextModeRule::NEWLINE => AST::Newline,
             TextModeRule::English => AST::Word(pair.as_str().to_string()),
             TextModeRule::Word => AST::Word(pair.as_str().to_string()),
-
+            TextModeRule::Style => parse_style(pair),
             TextModeRule::StyleRest => AST::Word(pair.as_str().to_string()),
             _ => {
                 println!("unimplemented TextRule::{:?}", rule);
@@ -79,20 +94,6 @@ fn parse_text(raw: &str) -> AST {
     }
     println!("{:?}", nodes);
     return AST::Statements(nodes);
-}
-
-macro_rules! declare {
-    ($name:ident) => {
-        let mut $name: Vec<Pairs<NotedownRule>> = vec![]
-    };
-    {$($x:ident),*} => {
-        $(declare!($x);)*
-    };
-}
-macro_rules! rules {
-    ($rule:ident $name:ident) => {
-        $rule => $name.push(pair.into_inner()),
-    };
 }
 
 fn parse_header(pairs: Pairs<NotedownRule>) -> AST {
@@ -118,4 +119,27 @@ fn parse_arguments(pairs: Vec<Pair<NotedownRule>>) -> HashMap<String, String> {
     let arguments: HashMap<String, String> = HashMap::new();
     println!("{:?}", pairs);
     arguments
+}
+
+
+fn parse_style(pair: Pair<TextModeRule>) -> AST {
+    let tokens: Vec<_> = pair.into_inner().into_iter().collect();
+    let level = tokens[0].as_str().len() as u8;
+    let text = tokens[1].as_str();
+    let mut content: Box<AST>;
+    if text.trim().len() == 1 {
+        content = Box::new(AST::from(text));
+    } else {
+        content = Box::new(parse(text));
+    }
+    println!("{:?}", tokens[1]);
+    println!("{:?}", content);
+    match level {
+        1 => AST::Italic(content, level),
+        2 => AST::Bold(content, level),
+        _ => {
+            println!("unknow *{}", level);
+            AST::from(tokens[1].as_str())
+        }
+    }
 }

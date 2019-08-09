@@ -6,7 +6,7 @@ use std::fmt::{self, Display, Formatter};
 pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,
-
+    /// - ``
     Statements(Vec<AST>),
 
     /// - `Header`: TEXT, level, args
@@ -15,13 +15,14 @@ pub enum AST {
     /// - `String`: Normal string with no style
     String(String),
     /// - `Bold`:
-    Bold(Box<AST>),
+    Bold(Box<AST>, u8),
     /// - `Italic`:
-    Italic(Box<AST>),
+    Italic(Box<AST>, u8),
     /// - `Underline`:
-    Underline(Box<AST>),
+    Underline(Box<AST>, u8),
     /// - `Font`:
     Font(Box<AST>, HashMap<String, String>),
+
     /// - `Math`:
     Math(String, HashMap<String, String>),
     /// - `Code`:
@@ -42,12 +43,6 @@ pub enum AST {
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
-            AST::Header(ref e, ref level, ref kv) => write!(f, "{}{} {:?}", e, level, kv),
-            AST::String(ref s) => write!(f, "{}", s),
-            AST::Bold(ref e) => write!(f, "{}", e),
-            AST::Italic(ref e) => write!(f, "{}", e),
-            AST::Font(ref e, ref kv) => write!(f, "{} {:?}", e, kv),
-            AST::Underline(ref e) => write!(f, "{}", e),
             _ => write!(f, "unknown"),
         }
     }
@@ -77,8 +72,8 @@ impl ToHTML for AST {
         match *self {
             AST::Header(ref e, ref level, ref kv) => format!("{} {}{:?}", unbox!(e), level, kv),
             AST::String(ref s) => format!("{}", s),
-            AST::Bold(ref e) => format!("<b>{}</b>", unbox!(e)),
-            AST::Italic(ref e) => format!("<i>{}</i>", unbox!(e)),
+            AST::Bold(ref e, _) => format!("<b>{}</b>", unbox!(e)),
+            AST::Italic(ref e, _) => format!("<i>{}</i>", unbox!(e)),
             AST::Font(ref e, ref kv) => {
                 let mut tags = String::new();
                 for (k, v) in kv.iter() {
@@ -86,7 +81,7 @@ impl ToHTML for AST {
                 }
                 format!("<font{}>{}</font>", tags, unbox!(e))
             }
-            AST::Underline(ref e) => format!("<u>{}</u>", unbox!(e)),
+            AST::Underline(ref e, _) => format!("<u>{}</u>", unbox!(e)),
             _ => format!(""),
         }
     }
