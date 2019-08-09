@@ -1,31 +1,57 @@
 program = _{SOI ~ statement*  ~  EOI}
-
 statement = _{
     Header
-  | TextBlock
+  | HorizontalRule
+  | Code
+  | List
+  | Table
+  | Quote
   | Command
   | EmptyLine{1,}
+  | TextBlock
 }
 
 EmptyLine = _{WHITESPACE*  ~  NEWLINE}
-
 Command = _{CommandLine|CommandPart| CommandBlock}
 /*====================================================================================================================*/
-//!#e06c75: Header
+//!#E06C75: Header
 Header = ${Sharp{1, 6}  ~  arguments?  ~  RestOfLine}
-Sharp = @{"#"}
 /*====================================================================================================================*/
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
-TextHeaderCharacter = _{!(NEWLINE|Escape|Sharp)  ~ ANY}
+TextHeaderCharacter = _{!NEWLINE  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
-
+/*====================================================================================================================*/
+//!#61AFEF: Code
+//!#E06C75: CodeText
+Code = {CodeLevel ~ CodeAction? ~Word? ~ arguments? ~ CodeText ~ POP ~ Accent{3}}
+CodeLevel = {Accent{3}~PUSH (Accent*)}
+CodeText = {(!(Accent ~ PEEK) ~ ANY)*}
+Accent = @{"`"}
+CodeAction = {At}
+/*====================================================================================================================*/
+///Yellow
+Table = {TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
+TableEnd = {TableMark ~ (EmptyLine{2}|EmptyLine~EOI|EOI)}
+TableMark = @{Vertical}
+/*====================================================================================================================*/
+///Green
+List = {ListMark ~ (!ListEnd~ANY)* ~ ListEnd}
+ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
+ListMark = @{(Plus|Minus|Asterisk)}
+/*====================================================================================================================*/
+///Orange
+Quote = {QuoteMark ~ (!QuoteEnd~ANY)* ~ QuoteEnd}
+QuoteEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
+QuoteMark = @{">"}
+/*====================================================================================================================*/
+///Red
+HorizontalRule = @{Set{3,}|Minus{3,}}
 /*====================================================================================================================*/
 //!#C678DD: Begin|End
 CommandPart = ${Begin ~ arguments  ~  CommandContent   ~  End  ~  arguments?}
 CommandContent = ${(CommandPart|!End ~ ANY)*}
 Begin = @{Escape ~ "begin"}
 End = @{Escape ~ "end"}
-Comma = @{","}
 
 //!#56B6C2: Set
 //!#E06C75: key
@@ -33,40 +59,26 @@ CommandBlock = !{command ~  arguments*}
 arguments = {LB  ~ (key_value|argument)* ~  RB}
 argument = {value  ~  Comma?}
 key_value = {key  ~  Set  ~ value  ~  Comma?}
-key = {SYMBOL}
-value = {SYMBOL|Integer|String}
-Set = @{"="}
+key = {Word}
+value = {Word|Integer|String}
 LB = @{"{"}
 RB = @{"}"}
 
-
-//!#61AFEF: command|SYMBOL
-CommandLine = {command  ~  Colon  ~  RestOfLine}
-command = @{Escape ~ SYMBOL*}
+//!#61AFEF: command
+CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
+command = @{Escape ~ Word}
 RestOfLine = !{(!NEWLINE  ~  ANY)*}
-
-
-
-///# White
-
-
-Colon = @{":"}
-Escape = @{"\\"}
-
 /*====================================================================================================================*/
 //!#D19A66: Integer|Decimal|DecimalBad|Exponent|ComplexHandler
-Number = ${Exponent|Complex|Decimal|DecimalBad|Integer}
+Number = ${Exponent|Decimal|DecimalBad|Integer}
 Decimal = ${Integer  ~ Dot ~  ASCII_DIGIT+}
 DecimalBad = ${Integer ~ Dot | Dot ~ ASCII_DIGIT+}
 Exponent = ${(Decimal|Integer)  ~ "^^" ~  (Decimal|Integer)}
-Complex = ${(Decimal|Integer) ~  ComplexHandler}
 Integer = @{Zero|ASCII_DIGIT  ~  (Underline?  ~  ASCII_NONZERO_DIGIT)* }
-ComplexHandler = @{SYMBOL}
-Dot = @{"."}
 Zero = @{"0"}
 /*====================================================================================================================*/
 //!#98C379: String|MultiLineComment|CommandContent|CommandLine
-String = ${StringSingle|StringBlock|LiteralString| LiteralBlock}//TODO: 字符串表达式
+String = ${StringSingle|StringBlock|LiteralString| LiteralBlock}
 StringSingle = ${S2  ~  (!S2 ~  ANY)*  ~  S2 }
 StringBlock = ${S6  ~  (!S6 ~  ANY)*  ~  S6 }
 LiteralString = ${S1  ~  (!S1 ~  ANY)*  ~  S1 }
@@ -76,26 +88,32 @@ S2 = _{"\""}
 S3 = _{"'''"}
 S6 = _{"\"\"\""}
 /*====================================================================================================================*/
-SYMBOL = @{NameStartCharacter ~ NameCharacter*}
-
-NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
-NameStartCharacter = _{Underline|ASCII_ALPHA}
-
-
-Underline = @{"_"}
-Asterisk = @{"*"}
-
-
+Word = {ASCII_ALPHA+}
+SYMBOL = @{ASCII_ALPHA}
+// NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
+// NameStartCharacter = _{Underline|ASCII_ALPHA}
 /*====================================================================================================================*/
-NEWLINE = @{CR ~ LF|CR|LF}
-WHITESPACE = _{SPACE_SEPARATOR| TAB}
-TAB = @{"\t"}
-CR = @{"\r"}
-LF = @{"\n"}
-
 //!Gray:BlockComment|LineComment
 COMMENT = ${BlockComment|LineComment }
 LineComment = ${Comment  ~ WHITESPACE* ~  Colon  ~  RestOfLine}
 BlockComment = ${Comment  ~ WHITESPACE* ~  LB  ~ MultiLineComment ~  RB}
 MultiLineComment = ${(BlockComment | !RB  ~  ANY)*}
 Comment = @{Escape ~ "comment"}
+
+NEWLINE = @{CR ~ LF|CR|LF}
+WHITESPACE = _{SPACE_SEPARATOR| TAB}
+TAB = @{"\t"}
+CR = @{"\r"}
+LF = @{"\n"}
+Escape = @{"\\"}
+At = @{"@"}
+Sharp = @{"#"}
+Underline = @{"_"}
+Asterisk = @{"*"}
+Comma = @{","}
+Dot = @{"."}
+Set = @{"="}
+Colon = @{":"}
+Vertical = @{"|"}
+Plus = @{"+"}
+Minus = @{"-"}

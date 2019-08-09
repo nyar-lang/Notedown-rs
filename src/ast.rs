@@ -2,7 +2,7 @@ use crate::{HTMLConfig, ToHTML};
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,

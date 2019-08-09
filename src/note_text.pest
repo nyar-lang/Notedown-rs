@@ -1,65 +1,57 @@
 text_mode = _{SOI ~ statement*  ~  EOI}
-statement = _{Style|Mark|Math|Code|SPACE_SEPARATOR|NEWLINE|Escaped|Order|English|Word}
+statement = _{StyleStatement|LineStatement|MathStatement|CodeStatement|SPACE_SEPARATOR|NEWLINE|Escaped|Command|English|Word}
 /*====================================================================================================================*/
-Math = _{MathEmpty|MathDisplay|MathInline|MathRest} // `MathEmpty` can be removed but it will slow down
-///#C678DD
-MathDisplay = {Dollar{2} ~ MathDisplayText ~ Dollar{2}}
-MathDisplayText = {(Escape ~ Dollar|!Dollar{2}~ANY)+}
-///#D19A66
-MathInline = {Dollar ~ MathInlineText ~ Dollar}
-MathInlineText = {(Escape ~ Dollar|!Dollar~ANY)+}
-//!Gray: MathEmpty|MathRest
-MathEmpty = {Dollar{3,}}
+MathStatement = _{Math|MathRest}
+///#E06C75
+Math = {MathLevel ~ MathText ~ POP ~ Dollar}
+MathLevel = {Dollar~PUSH (Dollar*)}
+MathText = {(Escape~Dollar|!(Dollar ~ PEEK) ~ ANY)*}
+///Gray
 MathRest = {Dollar+}
 Dollar = _{"$"}
 /*====================================================================================================================*/
-Code = _{CodeEmpty|CodeDisplay|CodeInline|CodeRest}
-///#C678DD
-CodeDisplay = {Accent{2} ~ CodeDisplayText ~ Accent{2}}
-CodeDisplayText = {(Escape ~ Accent|!Accent{2}~ANY)+}
-///#D19A66
-CodeInline = {Accent ~ CodeInlineText ~ Accent}
-CodeInlineText = {(Escape ~ Accent|!Accent~ANY)+}
-//!Gray: CodeEmpty|CodeRest
-CodeEmpty = {Accent{3,}}
+CodeStatement = _{Code|CodeRest}
+///#98C379
+Code = {CodeLevel ~ CodeText ~ POP ~ Accent}
+CodeLevel = {Accent~PUSH (Accent*)}
+CodeText = {(Escape~Accent|!(Accent ~ PEEK) ~ ANY)*}
+///Gray
 CodeRest = {Accent+}
 Accent = _{"`"}
 /*====================================================================================================================*/
-Style = _{StyleEmpty|StyleBoldItalic|StyleBold|StyleItalic|StyleRest}
-///#61AFEF
-StyleItalic = {Asterisk ~ StyleItalicText ~ Asterisk}
-StyleItalicText = {(Escape ~ Asterisk|!Asterisk~ANY)+}
+StyleStatement = _{Style|StyleRest}
 ///#D19A66
-StyleBold = {Bold ~ StyleBoldText ~ Bold}
-StyleBoldText = {(Escape ~ Asterisk|!Bold~ANY)+}
-///#C678DD
-StyleBoldItalic = {BoldItalic ~ StyleBoldItalicText ~ BoldItalic}
-StyleBoldItalicText = {(Escape ~ Asterisk|!BoldItalic~ANY)+}
-//!Gray: StyleEmpty|StyleRest
-StyleEmpty = {Asterisk{4,}}
+Style = {StyleLevel ~ SuperText ~ POP ~ Asterisk}
+StyleLevel = {Asterisk~PUSH (Asterisk*)}
+SuperText = {(Escape~Asterisk|!(Asterisk ~ PEEK) ~ ANY)*}
+///Gray
 StyleRest = {Asterisk+}
-BoldItalic = _{Asterisk{3}}
-Bold = _{Asterisk{2}}
 Asterisk = _{"*"}
 /*====================================================================================================================*/
-Mark = _{MarkEmpty|MarkDelete|MarkUnderline|MarkRest}
-///#C678DD
-MarkDelete = {Delete ~ MarkDeleteText ~ Delete}
-MarkDeleteText = {(Escape ~ Equal|!Delete~ANY)+}
-///#D19A66
-MarkUnderline = {Equal ~ MarkUnderlineText ~ Equal}
-MarkUnderlineText = {(Escape ~ Equal|!Equal~ANY)+}
-//!Gray: MarkEmpty|MarkRest
-MarkEmpty = {Equal{3,}}
-MarkRest = {Equal+}
-Delete = _{Equal{2}}
+LineStatement = _{Line|LineRest}
+///#61AFEF
+Line = {LineLevel ~ LineText ~ POP ~ Equal}
+LineLevel = {Equal~PUSH (Equal*)}
+LineText = {(Escape~Equal|!(Equal ~ PEEK) ~ ANY)*}
+///Gray
+LineRest = {Equal+}
 Equal = _{"="}
 /*====================================================================================================================*/
-Word = {(!(Escape|English)~SYMBOL)+}
+//!#C678DD: Function|Escaped
+Command = {Function~arguments*}
+Function = @{Escape ~ ASCII_ALPHA+}
+arguments = _{"{" ~(String|!"}"~ANY)*~ "}"}
+///#98C379
+String = ${StringSingle|LiteralString}
+StringSingle = ${S2  ~  (!S2 ~  ANY)*  ~  S2 }
+LiteralString = ${S1  ~  (!S1 ~  ANY)*  ~  S1 }
+S1 = _{"'"}
+S2 = _{"\""}
+/*====================================================================================================================*/
+Word = {(!(Escape|English)~SYMBOL)+|Escape}
 English = {(ASCII_ALPHA|ASCII_DIGIT)+|PUNCTUATION}
-Order = @{Escape ~ ASCII_ALPHA+}
-Escaped = @{Escape~(Escape|Equal|Asterisk|Dollar)}
-PUNCTUATION = @{","|"."|"?"}
+Escaped = @{Escape~(Escape|Equal|Asterisk|Dollar|Accent)}
+PUNCTUATION = @{","|"."|"?"|"!"}
 SYMBOL = _{!NonCharacter~ANY}
 /*====================================================================================================================*/
 Escape = _{"\\"}
