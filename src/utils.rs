@@ -58,15 +58,18 @@ pub fn parse(s: &str) -> AST {
 }
 
 fn parse_text(raw: &str) -> AST {
-    let pairs: Pairs<TextModeRule> = TextModeParser::parse(TextModeRule::text_mode, raw.trim())
-        .unwrap_or_else(|e| panic!("{}", e));
+    let s = raw.trim().replace("\t", "    ");
+    let pairs: Pairs<TextModeRule> =
+        TextModeParser::parse(TextModeRule::text_mode, &s).unwrap_or_else(|e| panic!("{}", e));
     println!("{:?}", pairs);
     let mut nodes: Vec<AST> = vec![];
     for pair in pairs {
         let rule = pair.as_rule();
         let node = match rule {
-            TextModeRule::EOI => AST::None,
-            TextModeRule::English => AST::String(format!("{} ", pair.as_str())),
+            TextModeRule::EOI => continue,
+            TextModeRule::SPACE_SEPARATOR => continue,
+            TextModeRule::NEWLINE => AST::Newline,
+            TextModeRule::English => AST::Word(pair.as_str().to_string()),
             _ => {
                 println!("unimplemented Rule::{:?}", rule);
                 AST::None
@@ -106,9 +109,9 @@ fn parse_header(pairs: Pairs<NotedownRule>) -> AST {
     }
     println!("{:?}", level.len());
     println!("{:?}", arguments);
+    let map: HashMap<String, String> = HashMap::new();
 
-    parse_text(content);
-    AST::None
+    AST::Header(Box::new(parse_text(content)), level.len() as u8, map)
 }
 
 fn parse_arguments(pairs: Vec<Pair<NotedownRule>>) -> HashMap<String, String> {

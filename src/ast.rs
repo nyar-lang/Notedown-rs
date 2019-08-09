@@ -29,6 +29,10 @@ pub enum AST {
 
     /// - `Text`: For inline style
     Text(Box<AST>),
+    /// -
+    Word(String),
+    Punctuation(String),
+    Newline,
     ///  - `Paragraph`:
     Paragraph(Box<AST>),
     /// - `Function`: input, args, kvs
