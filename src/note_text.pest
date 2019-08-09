@@ -1,5 +1,5 @@
 text_mode = _{SOI ~ statement*  ~  EOI}
-statement = _{Style|Mark|Math|Code|SPACE_SEPARATOR|NEWLINE|Word}
+statement = _{Style|Mark|Math|Code|SPACE_SEPARATOR|NEWLINE|Escaped|Order|English|Word}
 /*====================================================================================================================*/
 Math = _{MathEmpty|MathDisplay|MathInline|MathRest} // `MathEmpty` can be removed but it will slow down
 ///#C678DD
@@ -45,22 +45,25 @@ Asterisk = _{"*"}
 Mark = _{MarkEmpty|MarkDelete|MarkUnderline|MarkRest}
 ///#C678DD
 MarkDelete = {Delete ~ MarkDeleteText ~ Delete}
-MarkDeleteText = {(Escape ~ Tilde|!Delete~ANY)+}
+MarkDeleteText = {(Escape ~ Equal|!Delete~ANY)+}
 ///#D19A66
-MarkUnderline = {Tilde ~ MarkUnderlineText ~ Tilde}
-MarkUnderlineText = {(Escape ~ Tilde|!Tilde~ANY)+}
+MarkUnderline = {Equal ~ MarkUnderlineText ~ Equal}
+MarkUnderlineText = {(Escape ~ Equal|!Equal~ANY)+}
 //!Gray: MarkEmpty|MarkRest
-MarkEmpty = {Tilde{3,}}
-MarkRest = {Tilde+}
-Delete = _{Tilde{2}}
-Tilde = _{"~"}
+MarkEmpty = {Equal{3,}}
+MarkRest = {Equal+}
+Delete = _{Equal{2}}
+Equal = _{"="}
 /*====================================================================================================================*/
-Word = @{Character+}
-Character = @{Escape ~ ANY | !Escape~SYMBOL}
-NonCharacter = _{!SPACE_SEPARATOR|NEWLINE}
-SYMBOL = {!(Asterisk|Tilde|Dollar|Accent)~ANY}
+Word = {(!(Escape|English)~SYMBOL)+}
+English = {(ASCII_ALPHA|ASCII_DIGIT)+|PUNCTUATION}
+Order = @{Escape ~ ASCII_ALPHA+}
+Escaped = @{Escape~(Escape|Equal|Asterisk|Dollar)}
+PUNCTUATION = @{","|"."|"?"}
+SYMBOL = _{!NonCharacter~ANY}
 /*====================================================================================================================*/
 Escape = _{"\\"}
+NonCharacter = _{Asterisk|Equal|Dollar|Accent|SPACE_SEPARATOR|NEWLINE}
 /*====================================================================================================================*/
 SPACE_SEPARATOR = {" "|"\t"}
 NEWLINE = @{CR ~ LF|CR|LF}
