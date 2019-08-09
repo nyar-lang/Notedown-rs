@@ -1,7 +1,7 @@
 program = _{SOI ~ statement*  ~  EOI}
 
 statement = _{
-    Header  ~  NEWLINE?
+    Header
   | TextBlock
   | Command
   | EmptyLine{1,}
@@ -43,7 +43,7 @@ RB = @{"}"}
 //!#61AFEF: command|SYMBOL
 CommandLine = {command  ~  Colon  ~  RestOfLine}
 command = @{Escape ~ SYMBOL*}
-RestOfLine = {(!NEWLINE  ~  ANY)*} // Rest of line
+RestOfLine = !{(!NEWLINE  ~  ANY)*}
 
 
 
@@ -65,7 +65,7 @@ ComplexHandler = @{SYMBOL}
 Dot = @{"."}
 Zero = @{"0"}
 /*====================================================================================================================*/
-//!#98C379: String|ROL|MultiLineComment|CommandContent
+//!#98C379: String|MultiLineComment|CommandContent|CommandLine
 String = ${StringSingle|StringBlock|LiteralString| LiteralBlock}//TODO: 字符串表达式
 StringSingle = ${S2  ~  (!S2 ~  ANY)*  ~  S2 }
 StringBlock = ${S6  ~  (!S6 ~  ANY)*  ~  S6 }
@@ -99,19 +99,3 @@ LineComment = ${Comment  ~ WHITESPACE* ~  Colon  ~  RestOfLine}
 BlockComment = ${Comment  ~ WHITESPACE* ~  LB  ~ MultiLineComment ~  RB}
 MultiLineComment = ${(BlockComment | !RB  ~  ANY)*}
 Comment = @{Escape ~ "comment"}
-
-
-
-
-
-//!#C678DD: Use|Expose|With|Except|As
-
-
-
-//!#C678DD: Pass|Return|Break
-
-
-
-//!#C678DD: For|In
-
-//!#C678DD: Type|To
