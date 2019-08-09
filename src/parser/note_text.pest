@@ -21,9 +21,9 @@ Accent = _{"`"}
 /*====================================================================================================================*/
 StyleStatement = _{Style|StyleRest}
 ///#D19A66
-Style = {StyleLevel ~ SuperText ~ POP ~ Asterisk}
+Style = {StyleLevel ~ StyleText ~ POP ~ Asterisk}
 StyleLevel = {Asterisk~PUSH (Asterisk*)}
-SuperText = {(Escape~Asterisk|!(Asterisk ~ PEEK) ~ ANY)*}
+StyleText = {(Escape~Asterisk|!(Asterisk ~ PEEK) ~ ANY)*}
 ///Gray
 StyleRest = {Asterisk+}
 Asterisk = _{"*"}

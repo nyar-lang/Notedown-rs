@@ -1,6 +1,6 @@
 [package]
 name = "notedown-rs"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Aster <galaster@foxmail.com>"]
 description = "Notedown Text parser and formatter"
 license = "MPL-2.0"
