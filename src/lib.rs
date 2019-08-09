@@ -16,5 +16,5 @@ mod traits;
 pub mod utils;
 
 pub use ast::AST as NotedownAST;
-pub use parser::{NotedownParser, NotedownRule, TextMode, TextModeParser};
+pub use parser::{NotedownParser, NotedownRule, TextModeParser, TextModeRule};
 pub use traits::{HTMLConfig, MarkdownConfig, ToAST, ToHTML, ToMarkdown};

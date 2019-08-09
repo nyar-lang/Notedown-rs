@@ -1,28 +1,13 @@
 #[cfg(not(test))]
 pub use self::derive::{Parser as NotedownParser, Rule as NotedownRule};
+pub use self::note_text::{Parser as TextModeParser, Rule as TextModeRule};
 #[cfg(test)]
 pub use self::result::{Parser as NotedownParser, Rule as NotedownRule};
-pub use self::{Rule as TextModeRule, TextMode as TextModeParser};
 
-pub mod derive;
+mod derive;
 #[allow(unused_imports, unused_attributes)]
-pub mod result;
+mod result;
 
-#[derive(Parser)]
-#[grammar = "note_text.pest"]
-#[allow(dead_code)]
-pub struct TextMode;
+mod note_text;
 
 use crate::{NotedownAST as AST, ToAST};
-
-impl ToAST for TextModeParser {
-    fn to_ast(&self) -> AST {
-        unimplemented!()
-    }
-}
-
-impl ToAST for NotedownParser {
-    fn to_ast(&self) -> AST {
-        unimplemented!()
-    }
-}
