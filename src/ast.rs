@@ -24,7 +24,8 @@ pub enum AST {
     Font(Box<AST>, HashMap<String, String>),
 
     /// - `Math`:
-    Math(String, HashMap<String, String>),
+    MathInline(String),
+    MathDisplay(String),
     /// - `Code`:
     Code(String, HashMap<String, String>),
 
@@ -32,7 +33,7 @@ pub enum AST {
     Text(Box<AST>),
     /// -
     Word(String),
-    Punctuation(String),
+    Escaped(String),
     Newline,
     ///  - `Paragraph`:
     Paragraph(Box<AST>),
@@ -43,7 +44,28 @@ pub enum AST {
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
-            _ => write!(f, "unknown"),
+            AST::Statements(ref e) => {
+                let fs: Vec<String> = e.iter().map(|ast| format!("{}", ast)).collect();
+                write!(f, "{}", fs.join(""))
+            }
+            AST::Paragraph(ref e) => {
+                let fs: Vec<String> = format!("{}", e)
+                    .lines()
+                    .map(|k| k.trim_end().to_string())
+                    .collect();
+                write!(f, "{}\n\n", fs.join("\n"))
+            }
+            AST::Newline => write!(f, "\n"),
+
+            AST::Word(ref s) => write!(f, "{} ", s),
+
+            AST::MathInline(ref s) => write!(f, "${}$ ", s),
+
+            _ => {
+                let a = format!("unimplemented AST::{:?}", self);
+                println!("{}", a.split("(").next().unwrap_or("Unknown"));
+                write!(f, "UnimplementedError")
+            }
         }
     }
 }
@@ -70,10 +92,26 @@ impl ToHTML for AST {
             };
         }
         match *self {
+            AST::Newline => {
+                //CR or LF
+                "\n".to_string()
+            }
+
+            AST::Statements(ref e) => {
+                let mut text = String::new();
+                for node in e {
+                    text += &unbox!(node)
+                }
+                let trimmed: Vec<_> = text.lines().map(|s| s.trim()).collect();
+                trimmed.join("\n")
+            }
+            AST::Paragraph(ref e) => format!("<p>{}</p>", unbox!(e)),
+
             AST::Header(ref e, ref level, ref kv) => format!("{} {}{:?}", unbox!(e), level, kv),
             AST::String(ref s) => format!("{}", s),
             AST::Bold(ref e, _) => format!("<b>{}</b>", unbox!(e)),
             AST::Italic(ref e, _) => format!("<i>{}</i>", unbox!(e)),
+            AST::Underline(ref e, _) => format!("<u>{}</u>", unbox!(e)),
             AST::Font(ref e, ref kv) => {
                 let mut tags = String::new();
                 for (k, v) in kv.iter() {
@@ -81,8 +119,14 @@ impl ToHTML for AST {
                 }
                 format!("<font{}>{}</font>", tags, unbox!(e))
             }
-            AST::Underline(ref e, _) => format!("<u>{}</u>", unbox!(e)),
-            _ => format!(""),
+
+            AST::Word(ref s) => format!("{} ", s),
+            AST::MathInline(ref s) => format!("${}$ ", s),
+            _ => {
+                let a = format!("HTML unimplemented AST::{:?}", self);
+                println!("{}", a.split("(").next().unwrap_or("Unknown"));
+                format!("{:?}", self)
+            }
         }
     }
 }

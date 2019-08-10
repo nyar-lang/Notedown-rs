@@ -1,7 +1,5 @@
 #[allow(unused_imports)]
-use crate::{
-    NotedownAST as AST, NotedownParser, NotedownRule, TextModeParser, TextModeRule, ToAST,
-};
+use crate::{NotedownAST as AST, NotedownParser, NotedownRule, TextModeParser, TextModeRule};
 #[cfg(feature = "colored")]
 use colored::*;
 use pest::iterators::{Pair, Pairs};
@@ -61,7 +59,7 @@ pub fn parse(s: &str) -> AST {
             NotedownRule::Header => parse_header(pair.into_inner()),
             NotedownRule::TextBlock => AST::Paragraph(Box::new(parse_text(pair.as_str()))),
             _ => {
-                println!("unimplemented NoteRule::{:?}", rule);
+                println!("unimplemented NotedownRule::{:?}", rule);
                 AST::None
             }
         };
@@ -83,10 +81,16 @@ fn parse_text(raw: &str) -> AST {
             TextModeRule::NEWLINE => AST::Newline,
             TextModeRule::English => AST::Word(pair.as_str().to_string()),
             TextModeRule::Word => AST::Word(pair.as_str().to_string()),
+            TextModeRule::Escaped => {
+                let s = pair.as_str();
+                let last = &s[s.len() - 1..];
+                AST::Escaped(last.to_string())
+            }
+            TextModeRule::Math => parse_math_inline(pair),
             TextModeRule::Style => parse_style(pair),
             TextModeRule::StyleRest => AST::Word(pair.as_str().to_string()),
             _ => {
-                println!("unimplemented TextRule::{:?}", rule);
+                println!("unimplemented TextModeRule::{:?}", rule);
                 AST::None
             }
         };
@@ -121,25 +125,42 @@ fn parse_arguments(pairs: Vec<Pair<NotedownRule>>) -> HashMap<String, String> {
     arguments
 }
 
-
 fn parse_style(pair: Pair<TextModeRule>) -> AST {
-    let tokens: Vec<_> = pair.into_inner().into_iter().collect();
+    let tokens: Vec<_> = pair.clone().into_inner().into_iter().collect();
     let level = tokens[0].as_str().len() as u8;
     let text = tokens[1].as_str();
-    let mut content: Box<AST>;
-    if text.trim().len() == 1 {
-        content = Box::new(AST::from(text));
+    let content = if text.trim().len() == 0 {
+        Box::new(AST::from(text))
     } else {
-        content = Box::new(parse(text));
-    }
-    println!("{:?}", tokens[1]);
-    println!("{:?}", content);
+        Box::new(parse_text(text))
+    };
     match level {
         1 => AST::Italic(content, level),
         2 => AST::Bold(content, level),
+        3 => {
+            let i = AST::Italic(content, 0);
+            AST::Bold(Box::new(i), level)
+        }
         _ => {
             println!("unknow *{}", level);
-            AST::from(tokens[1].as_str())
+            AST::Word(pair.as_str().to_string())
+        }
+    }
+}
+
+fn parse_math_inline(pair: Pair<TextModeRule>) -> AST {
+    let tokens: Vec<_> = pair.clone().into_inner().into_iter().collect();
+    let level = tokens[0].as_str().len() as u8;
+    let text = tokens[1].as_str();
+    let content = if text.trim().len() == 0 {
+        return AST::from(text);
+    };
+    match level {
+        1 => AST::MathInline(text.trim().to_string()),
+        2 => AST::MathInline(format!("\\displaystyle{}", text.trim())),
+        _ => {
+            println!("unknow ${}", level);
+            AST::Word(pair.as_str().to_string())
         }
     }
 }

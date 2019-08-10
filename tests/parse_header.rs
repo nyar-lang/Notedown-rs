@@ -11,7 +11,7 @@ fn header() {
     const TEXT: &str = "## Header1";
     token_print(TEXT, NotedownRule::program);
     string_eq!(
-        "unknown",
+        "UnimplementedError",
         r#"Statements([Header(Statements([Word("Header1")]), 2, {})])"#,
         "Header1 2{}"
     );
