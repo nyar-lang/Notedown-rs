@@ -1,4 +1,3 @@
-use crate::NotedownAST;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 
@@ -15,8 +14,14 @@ macro_rules! dict (
      };
 );
 
-pub trait ToAST {
-    fn to_ast(&self) -> NotedownAST;
+#[macro_export]
+macro_rules! string_eq {
+    ($text:expr,$ast:expr,$html:expr) => {
+        let result = parse(TEXT);
+        assert_eq!(format!("{}", result), $text);
+        assert_eq!(format!("{:?}", result), $ast);
+        assert_eq!(result.to_html_default(), $html);
+    };
 }
 
 pub trait ToHTML {
