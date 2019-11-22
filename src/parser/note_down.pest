@@ -3,9 +3,8 @@ statement = _{
     Header
   | HorizontalRule
   | Code
-  | List
   | Table
-  | Quote
+  | List
   | Command
   | EmptyLine{1,}
   | TextBlock
@@ -23,26 +22,25 @@ TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
-Code = {CodeLevel ~ CodeAction? ~Word? ~ arguments? ~ CodeText ~ POP ~ Accent{3}}
-CodeLevel = {Accent{3}~PUSH (Accent*)}
-CodeText = {(!(Accent ~ PEEK) ~ ANY)*}
-Accent = @{"`"}
-CodeAction = {At}
+Code = {CodeLevel ~ CodeAction? ~Word? ~ arguments? ~ CodeText ~ POP ~ CodeMark{3}}
+CodeAction = {At|Asterisk|Sharp}
+CodeLevel = {CodeMark{3}~PUSH (CodeMark*)}
+CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
+CodeMark = @{Accent}
 /*====================================================================================================================*/
-///Yellow
+//!Orange: TableMark
 Table = {TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
-TableEnd = {TableMark ~ (EmptyLine{2}|EmptyLine~EOI|EOI)}
+TableEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
 TableMark = @{Vertical}
 /*====================================================================================================================*/
-///Green
+//!Green: ListMark
 List = {ListMark ~ (!ListEnd~ANY)* ~ ListEnd}
 ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
-ListMark = @{(Plus|Minus|Asterisk)}
-/*====================================================================================================================*/
-///Orange
-Quote = {QuoteMark ~ (!QuoteEnd~ANY)* ~ QuoteEnd}
-QuoteEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
-QuoteMark = @{">"}
+program_list = _{SOI ~ ListStatement+  ~  EOI}
+ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
+ListHeadLevel = {WHITESPACE*}
+ListRest = {(!ListStatement~ANY)*}
+ListMark = @{Plus|Minus|Asterisk|Vertical|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
 ///Red
 HorizontalRule = @{Set{3,}|Minus{3,}}
@@ -63,6 +61,8 @@ key = {Word}
 value = {Word|Integer|String}
 LB = @{"{"}
 RB = @{"}"}
+LS = @{"["}
+RS = @{"]"}
 
 //!#61AFEF: command
 CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
@@ -117,3 +117,5 @@ Colon = @{":"}
 Vertical = @{"|"}
 Plus = @{"+"}
 Minus = @{"-"}
+QuoteMark = @{">"}
+Accent = @{"`"}
