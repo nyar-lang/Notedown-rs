@@ -1,17 +1,19 @@
+#[cfg(test)]
+#[macro_use]
+extern crate quote;
 extern crate pest;
-#[macro_use]
-extern crate pest_derive;
-#[cfg(feature = "colored")]
-extern crate colored;
+#[cfg(test)]
+extern crate pest_generator;
+#[cfg(test)]
+extern crate proc_macro;
 
-mod ast;
-mod parser;
-#[macro_use]
-mod traits;
-#[allow(dead_code)]
-pub mod utils;
+#[cfg(test)]
+mod pre_build;
 
-pub use ast::AST as NotedownAST;
-pub use parser::{MathModeParser, NotedownParser, TextModeParser};
-pub use parser::{MathModeRule, NotedownRule, TextModeRule};
-pub use traits::{HTMLConfig, MarkdownConfig, ToHTML, ToMarkdown};
+mod note_down;
+mod note_math;
+mod note_text;
+
+pub use note_down::{NoteDownParser, Rule as NoteDownRule};
+pub use note_math::{NoteMathParser, Rule as NoteMathRule};
+pub use note_text::{NoteTextParser, Rule as NoteTextRule};

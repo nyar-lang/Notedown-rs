@@ -1,145 +1,77 @@
-use num::{BigInt, BigUint};
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+use crate::{HTMLConfig, ToHTML};
+use std::collections::HashMap;
+use std::fmt::{self, Display, Formatter};
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum AST {
-    Program(Vec<AST>),
-    Suite(Vec<AST>),
-    /// - `EmptyStatement`: Skip
-    EmptyStatement,
-    /// - `ImportStatement`
-    ImportStatement {
-        data: ImportStatement,
-        annotations: Option<Box<AST>>,
-    },
-    IfStatement {
-        pairs: Vec<(AST, AST)>,
-        default: Option<Box<AST>>,
-        annotations: Option<Box<AST>>,
-    },
-    LetBinding {
-        symbol: Box<AST>,
-        modifiers: Vec<String>,
-        types: Box<AST>,
-        annotations: Option<Box<AST>>,
-    },
-    /// - `Expression`
-    Expression {
-        base: Box<AST>,
-        eos: bool,
-        pos: Position,
-        annotations: Option<Box<AST>>,
-    },
-    /// - `Expression`
-    TypeExpression {
-        base: Box<AST>,
-        pos: Position,
-        annotations: Option<Box<AST>>,
-    },
-    /// - `UnaryOperators`
-    ///     - `base`
-    UnaryOperators {
-        base: Box<AST>,
-        prefix: Vec<String>,
-        suffix: Vec<String>,
-        pos: Position,
-    },
-    /// - `InfixOperators`
-    InfixOperators {
-        o: String,
-        lhs: Box<AST>,
-        rhs: Box<AST>,
-        pos: Position,
-    },
-    ///
-    ListExpression(Vec<AST>),
-    ///
-    TupleExpression(Vec<AST>),
-    /// - `SliceExpression`
-    /// the terms must `IndexExpression`
-    SliceExpression {
-        base: Box<AST>,
-        list: Vec<AST>,
-    },
-    IndexExpression(IndexExpression),
-    ApplyExpression {
-        base: Box<AST>,
-        types: Vec<AST>,
-        args: Vec<AST>,
-        kv_pairs: Vec<(AST, AST)>,
-        pos: Position,
-    },
-    /// - `Symbol`
-    Symbol {
-        name: String,
-        scope: Vec<String>,
-    },
-    /// - `Number`: raw number represent
-    NumberLiteral {
-        handler: String,
-        data: String,
-    },
-    ///
-    Number(Number),
-    ///
-    StringLiteral {
-        handler: String,
-        data: String,
-    },
-    /// - `String`: raw string
-    String(String),
-    /// - `Comment`: raw comment with handler
-    CommentLiteral {
-        handler: String,
-        data: String,
-    },
-    ///
-    Boolean(bool),
     /// - `None`: It doesn't look like anything to me
     None,
+    /// - ``
+    Statements(Vec<AST>),
+
+    /// - `Header`: TEXT, level, args
+    Header(Box<AST>, u8, HashMap<String, String>),
+
+    /// - `String`: Normal string with no style
+    String(String),
+    /// - `Bold`:
+    Bold(Box<AST>, u8),
+    /// - `Italic`:
+    Italic(Box<AST>, u8),
+    /// - `Underline`:
+    Underline(Box<AST>, u8),
+    /// - `Font`:
+    Font(Box<AST>, HashMap<String, String>),
+
+    /// - `Math`:
+    MathInline(String),
+    MathDisplay(String),
+    /// - `Code`:
+    Code(String, HashMap<String, String>),
+
+    /// - `Text`: For inline style
+    Text(Box<AST>),
+    /// -
+    Word(String),
+    Escaped(String),
+    Newline,
+    ///  - `Paragraph`:
+    Paragraph(Box<AST>),
+    /// - `Function`: input, args, kvs
+    Function(String, Vec<AST>, HashMap<String, String>),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Position {
-    pub start: (usize, usize),
-    pub end: (usize, usize),
+impl Display for AST {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match *self {
+            AST::Statements(ref e) => {
+                let fs: Vec<String> = e.iter().map(|ast| format!("{}", ast)).collect();
+                write!(f, "{}", fs.join(""))
+            }
+            AST::Paragraph(ref e) => {
+                let fs: Vec<String> = format!("{}", e)
+                    .lines()
+                    .map(|k| k.trim_end().to_string())
+                    .collect();
+                write!(f, "{}\n\n", fs.join("\n"))
+            }
+            AST::Newline => write!(f, "\n"),
+
+            AST::Word(ref s) => write!(f, "{} ", s),
+
+            AST::MathInline(ref s) => write!(f, "${}$ ", s),
+
+            _ => {
+                let a = format!("unimplemented AST::{:?}", self);
+                println!("{}", a.split("(").next().unwrap_or("Unknown"));
+                write!(f, "UnimplementedError")
+            }
+        }
+    }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum ImportStatement {
-    Local { root: u8, path: Vec<String> },
-    LocalAlias { root: u8, path: Vec<String>, alias: String },
-    URL { path: String },
-    URLAlias { path: String, alias: String },
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum IndexExpression {
-    None,
-    ///
-    Single(),
-    Normal {
-        start: Box<AST>,
-        end: Box<AST>,
-        step: Box<AST>,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum Number {
-    Integer(BigInt),
-    Integer8(i8),
-    Integer16(i16),
-    Integer32(i32),
-    Integer64(i64),
-    Integer128(i128),
-    Integer256(String),
-    Unsigned(BigUint),
-    Unsigned8(u8),
-    Unsigned16(u16),
-    Unsigned32(u32),
-    Unsigned64(u64),
-    Unsigned128(u128),
-    Unsigned256(String),
-    Decimal(String),
-    Decimal32(f32),
-    Decimal64(f64),
+impl From<&str> for AST {
+    fn from(s: &str) -> Self {
+        AST::String(s.to_string())
+    }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "notedown-parser"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["Aster <galaster@foxmail.com>"]
 description = "Notedown Text parser and formatter"
 license = "MPL-2.0"
@@ -13,14 +13,7 @@ edition = "2018"
 [dependencies]
 pest = "2"
 pest_derive = "2"
-colored ={version= "1.8.0",optional=true}
 
 [dev-dependencies]
-
-[features]
-default = ["colored"]
-
-
-[profile.release]
-lto = true
-opt-level = "s"
+pest_generator = "2.1.1"
+quote = "1.0"

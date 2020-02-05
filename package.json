@@ -2,7 +2,7 @@
     "name": "native-nyar",
     "private": true,
     "scripts": {
-        "prebuild": "cargo run --release --color=always --package nyar_prebuild --bin nyar_prebuild && cargo fmt --all",
+        "pre": "cargo test --color=always --no-run --package notedown-parser --lib pre_build && cargo fmt --all",
         "build": "cargo build --release",
         "test": "cargo build",
         "fmt": "cargo fmt --all",
