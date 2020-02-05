@@ -33,7 +33,7 @@ fn text_style_2() {
     const TEXT: &str = "text\n***";
     token_print(TEXT, NotedownRule::program);
     string_eq!(
-       "text\n***\n\n",
+        "text\n***\n\n",
         r#"Statements([Paragraph(Statements([Word("text"), Newline, Word("***")]))])"#,
         "<p>text\n***</p>"
     );

@@ -1,4 +1,8 @@
-target
-Cargo.lock
+# IDE
+.vscode
+.idea
+*.iml
 
-.idea/
+# Rust
+target/
+Cargo.lock

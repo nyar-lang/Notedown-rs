@@ -9,7 +9,7 @@ use std::collections::HashMap;
 #[cfg(feature = "colored")]
 pub fn token_print(s: &str, rule: NotedownRule) {
     let pairs: Pairs<NotedownRule> =
-        NotedownParser::parse(rule, s).unwrap_or_else(|e| panic!("{}", e));
+        NotedownParser::parse(rule, s.replace("\t", "    ")).unwrap_or_else(|e| panic!("{}", e));
     // Because ident_list is silent, the iterator will contain idents
     for pair in pairs {
         // A pair is a combination of the rule which matched and a span of input
@@ -58,6 +58,7 @@ pub fn parse(s: &str) -> AST {
             NotedownRule::EOI | NotedownRule::COMMENT | NotedownRule::NEWLINE => continue,
             NotedownRule::Header => parse_header(pair.into_inner()),
             NotedownRule::TextBlock => AST::Paragraph(Box::new(parse_text(pair.as_str()))),
+            NotedownRule::List => parse_list(&format!("\n{}",pair.as_str())),
             _ => {
                 println!("unimplemented NotedownRule::{:?}", rule);
                 AST::None
@@ -69,7 +70,7 @@ pub fn parse(s: &str) -> AST {
 }
 
 fn parse_text(raw: &str) -> AST {
-    let s = raw.trim().replace("\t", "    ");
+    let s = raw.trim();
     let pairs: Pairs<TextModeRule> =
         TextModeParser::parse(TextModeRule::text_mode, &s).unwrap_or_else(|e| panic!("{}", e));
     let mut nodes: Vec<AST> = vec![];
@@ -163,4 +164,37 @@ fn parse_math_inline(pair: Pair<TextModeRule>) -> AST {
             AST::Word(pair.as_str().to_string())
         }
     }
+}
+
+
+fn parse_list(raw: &str) -> AST {
+    let s = raw.trim();
+    let pairs: Pairs<TextModeRule> =
+        TextModeParser::parse(TextModeRule::text_mode, &s).unwrap_or_else(|e| panic!("{}", e));
+    let mut nodes: Vec<AST> = vec![];
+    for pair in pairs {
+        let rule = pair.as_rule();
+        let node = match rule {
+            TextModeRule::EOI => continue,
+            TextModeRule::SPACE_SEPARATOR => continue,
+            TextModeRule::NEWLINE => AST::Newline,
+            TextModeRule::English => AST::Word(pair.as_str().to_string()),
+            TextModeRule::Word => AST::Word(pair.as_str().to_string()),
+            TextModeRule::Escaped => {
+                let s = pair.as_str();
+                let last = &s[s.len() - 1..];
+                AST::Escaped(last.to_string())
+            }
+            TextModeRule::Math => parse_math_inline(pair),
+            TextModeRule::Style => parse_style(pair),
+            TextModeRule::StyleRest => AST::Word(pair.as_str().to_string()),
+            _ => {
+                println!("unimplemented TextModeRule::{:?}", rule);
+                AST::None
+            }
+        };
+        nodes.push(node)
+    }
+    println!("{:?}", nodes);
+    return AST::Statements(nodes);
 }
