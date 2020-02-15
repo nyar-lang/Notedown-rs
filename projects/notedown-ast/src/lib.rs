@@ -1,6 +1,6 @@
 mod ast;
-mod traits;
 mod parser;
+mod traits;
 
 pub use ast::AST;
-pub use traits::{HTMLConfig};
+pub use traits::HTMLConfig;

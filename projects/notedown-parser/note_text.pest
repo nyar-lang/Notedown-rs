@@ -1,5 +1,5 @@
-text_mode = _{SOI ~ statement*  ~  EOI}
-statement = _{StyleStatement|LineStatement|MathStatement|CodeStatement|SPACE_SEPARATOR|NEWLINE|Escaped|Command|English|Word}
+TextMode = _{SOI ~ TextStatement*  ~  EOI}
+TextStatement = _{StyleStatement|LineStatement|MathStatement|CodeStatement|SPACE_SEPARATOR|NEWLINE|Escaped|Command|English|Word}
 /*====================================================================================================================*/
 MathStatement = _{Math|MathRest}
 ///#E06C75
@@ -30,12 +30,12 @@ Asterisk = _{"*"}
 /*====================================================================================================================*/
 LineStatement = _{Line|LineRest}
 ///#61AFEF
-Line = {LineLevel ~ LineText ~ POP ~ Equal}
-LineLevel = {Equal~PUSH (Equal*)}
-LineText = {(Escape~Equal|!(Equal ~ PEEK) ~ ANY)*}
+Line = {LineLevel ~ LineText ~ POP ~ Tilde}
+LineLevel = {Tilde~PUSH (Tilde*)}
+LineText = {(Escape~Tilde|!(Tilde ~ PEEK) ~ ANY)*}
 ///Gray
-LineRest = {Equal+}
-Equal = _{"="}
+LineRest = {Tilde+}
+Tilde = _{"~"}
 /*====================================================================================================================*/
 //!#C678DD: Function|Escaped
 Command = {Function~arguments*}
@@ -50,12 +50,12 @@ S2 = _{"\""}
 /*====================================================================================================================*/
 Word = {(!(Escape|English)~SYMBOL)+|Escape}
 English = {(ASCII_ALPHA|ASCII_DIGIT)+|PUNCTUATION}
-Escaped = @{Escape~(Escape|Equal|Asterisk|Dollar|Accent)}
+Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent)}
 PUNCTUATION = @{","|"."|"?"|"!"}
 SYMBOL = _{!NonCharacter~ANY}
 /*====================================================================================================================*/
 Escape = _{"\\"}
-NonCharacter = _{Asterisk|Equal|Dollar|Accent|SPACE_SEPARATOR|NEWLINE}
+NonCharacter = _{Asterisk|Tilde|Dollar|Accent|SPACE_SEPARATOR|NEWLINE}
 /*====================================================================================================================*/
 SPACE_SEPARATOR = {" "|"\t"}
 NEWLINE = @{CR ~ LF|CR|LF}

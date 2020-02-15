@@ -2,6 +2,7 @@ use pest_generator::derive_parser;
 use std::{fs::File, io::prelude::*, path::Path};
 
 #[test]
+#[ignore]
 fn gen_parser() {
     gen_note_down();
     gen_note_text();

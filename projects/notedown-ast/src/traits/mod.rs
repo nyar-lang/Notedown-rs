@@ -31,4 +31,3 @@ impl Default for MarkdownConfig {
         MarkdownConfig {}
     }
 }
-

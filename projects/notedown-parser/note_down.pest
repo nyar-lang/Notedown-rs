@@ -24,7 +24,7 @@ TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
 //!#E06C75: CodeText
 Code = {CodeLevel ~ CodeAction? ~Word? ~ arguments? ~ CodeText ~ POP ~ CodeMark{3}}
 CodeAction = {At|Asterisk|Sharp}
-CodeLevel = {CodeMark{3}~PUSH (CodeMark*)}
+CodeLevel = {CodeMark{3}~PUSH(CodeMark*)}
 CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
 CodeMark = @{Accent}
 /*====================================================================================================================*/
@@ -40,7 +40,7 @@ program_list = _{SOI ~ ListStatement+  ~  EOI}
 ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
 ListHeadLevel = {WHITESPACE*}
 ListRest = {(!ListStatement~ANY)*}
-ListMark = @{Plus|Minus|Asterisk|Vertical|QuoteMark|Integer~Dot}
+ListMark = @{Plus|Minus|Vertical|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
 ///Red
 HorizontalRule = @{Set{3,}|Minus{3,}}
@@ -54,15 +54,11 @@ End = @{Escape ~ "end"}
 //!#56B6C2: Set
 //!#E06C75: key
 CommandBlock = !{command ~  arguments*}
-arguments = {LB  ~ (key_value|argument)* ~  RB}
+arguments = {"{"  ~ (key_value|argument)* ~  "}"}
 argument = {value  ~  Comma?}
 key_value = {key  ~  Set  ~ value  ~  Comma?}
 key = {Word}
 value = {Word|Integer|String}
-LB = @{"{"}
-RB = @{"}"}
-LS = @{"["}
-RS = @{"]"}
 
 //!#61AFEF: command
 CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
@@ -96,8 +92,8 @@ SYMBOL = @{ASCII_ALPHA}
 //!Gray:BlockComment|LineComment
 COMMENT = ${BlockComment|LineComment }
 LineComment = ${Comment  ~ WHITESPACE* ~  Colon  ~  RestOfLine}
-BlockComment = ${Comment  ~ WHITESPACE* ~  LB  ~ MultiLineComment ~  RB}
-MultiLineComment = ${(BlockComment | !RB  ~  ANY)*}
+BlockComment = ${Comment  ~ WHITESPACE* ~  "{"  ~ MultiLineComment ~  "}"}
+MultiLineComment = ${(BlockComment | !"}"  ~  ANY)*}
 Comment = @{Escape ~ "comment"}
 
 NEWLINE = @{CR ~ LF|CR|LF}

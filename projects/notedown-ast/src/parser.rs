@@ -1,11 +1,11 @@
-use std::fs::{read_to_string, File};
-use std::io::Write;
-use notedown_parser::{NoteDownParser, NoteDownRule as Rule, NoteTextParser, NoteTextRule as Text};
-use pest::Parser;
-use crate::{AST, HTMLConfig};
-use pest::iterators::Pair;
 use crate::ast::AST::Header;
 use crate::traits::ToHTML;
+use crate::{HTMLConfig, AST};
+use notedown_parser::{NoteDownParser, NoteDownRule as Rule, NoteTextParser, NoteTextRule as Text};
+use pest::iterators::Pair;
+use pest::Parser;
+use std::fs::{read_to_string, File};
+use std::io::Write;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Context {}
@@ -15,7 +15,6 @@ impl Default for Context {
         Context {}
     }
 }
-
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -60,12 +59,15 @@ impl Context {
         let mut head = AST::None;
         for pair in pairs.into_inner() {
             match pair.as_rule() {
-                Rule::Sharp => { level += 1 }
-                Rule::RestOfLine => { head = self.parse_text(pair.as_str().trim()) }
+                Rule::Sharp => level += 1,
+                Rule::RestOfLine => head = self.parse_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),
             };
         }
-        return AST::Header { 0: Box::new(head), 1: level };
+        return AST::Header {
+            0: Box::new(head),
+            1: level,
+        };
     }
     fn parse_text(&self, text: &str) -> AST {
         let pairs = NoteTextParser::parse(Text::TextMode, text).unwrap_or_else(|e| panic!("{}", e));
@@ -78,7 +80,7 @@ impl Context {
                 Text::Word => AST::String(pair.as_str().to_string()),
                 Text::Line => self.parse_line(pair),
                 Text::Code => self.parse_code_inline(pair),
-
+                Text::Math => self.parse_math(pair),
                 Text::SPACE_SEPARATOR => AST::Space,
                 Text::NEWLINE => AST::Newline,
                 _ => debug_cases!(pair),
@@ -99,7 +101,7 @@ impl Context {
         let mut text = AST::None;
         for pair in pairs.into_inner() {
             match pair.as_rule() {
-                Text::StyleLevel => { level += pair.as_str().len() }
+                Text::StyleLevel => level += pair.as_str().len(),
                 Text::StyleText => text = self.parse_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),
             };
@@ -108,7 +110,7 @@ impl Context {
             1 => AST::Italic(Box::new(text)),
             2 => AST::Bold(Box::new(text)),
             3 => AST::Bold(Box::new(AST::Italic(Box::new(text)))),
-            _ => AST::Raw(s.to_string())
+            _ => AST::Raw(s.to_string()),
         }
     }
     fn parse_line(&self, pairs: Pair<Text>) -> AST {
@@ -117,7 +119,7 @@ impl Context {
         let mut text = AST::None;
         for pair in pairs.into_inner() {
             match pair.as_rule() {
-                Text::LineLevel => { level += pair.as_str().len() }
+                Text::LineLevel => level += pair.as_str().len(),
                 Text::LineText => text = self.parse_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),
             };
@@ -126,7 +128,7 @@ impl Context {
             1 => AST::Underline(Box::new(text)),
             2 => AST::Strikethrough(Box::new(text)),
             3 => AST::Undercover(Box::new(text)),
-            _ => AST::Raw(s.to_string())
+            _ => AST::Raw(s.to_string()),
         }
     }
     fn parse_code_inline(&self, pairs: Pair<Text>) -> AST {
@@ -140,20 +142,35 @@ impl Context {
         }
         AST::Code(text.to_string())
     }
+    fn parse_math(&self, pairs: Pair<Text>) -> AST {
+        let s = pairs.as_str();
+        let mut level = 0;
+        let mut text = "";
+        for pair in pairs.into_inner() {
+            match pair.as_rule() {
+                Text::MathLevel => level += pair.as_str().len(),
+                Text::MathText => text = pair.as_str().trim(),
+                _ => debug_cases!(pair),
+            };
+        }
+        match level {
+            1 => AST::MathInline(text.to_string()),
+            2 => AST::MathDisplay(text.to_string()),
+            _ => AST::Raw(s.to_string()),
+        }
+    }
 }
-
 
 #[test]
 fn test() {
     let c = Context::default();
-    let f = c.parse(r#"
+    let f = c.parse(
+        r#"
         *斜体 Italic*,
 
         **粗体 Bold**,
 
         ***斜粗体 Bold-Italic***,
-
-        **** error ****
 
         ~下划线 Underline~
 
@@ -162,7 +179,12 @@ fn test() {
         ~~~数据删除 Undercover~~~
 
         `代码 code`
-    "#);
+
+        $x$
+
+        $$x^2$$
+    "#,
+    );
     // println!("{:#?}", f);
     println!("{}", f.to_html(HTMLConfig::default()));
     unreachable!()

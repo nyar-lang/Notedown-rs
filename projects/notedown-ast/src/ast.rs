@@ -57,9 +57,7 @@ impl Display for AST {
             AST::Paragraph(ref t) => write!(f, "{}\n", t),
 
             AST::Text(ref t) => {
-                let fs: Vec<String> = t.iter()
-                    .map(|k| format!("{}", k))
-                    .collect();
+                let fs: Vec<String> = t.iter().map(|k| format!("{}", k)).collect();
                 write!(f, "{}", fs.join(""))
             }
             AST::Raw(ref s) => write!(f, "{}", s),
@@ -71,8 +69,8 @@ impl Display for AST {
             AST::Strikethrough(ref s) => write!(f, "~~{}~~", s),
             AST::Undercover(ref s) => write!(f, "~~~{}~~~", s),
 
-            AST::MathInline(ref s) => write!(f, "${}$ ", s),
-
+            AST::MathInline(ref s) => write!(f, "${}$", s),
+            AST::MathDisplay(ref s) => write!(f, "$${}$$", s),
             _ => {
                 let a = format!("unimplemented AST::{:?}", self);
                 write!(f, "{}", a.split("(").next().unwrap_or("Unknown"))

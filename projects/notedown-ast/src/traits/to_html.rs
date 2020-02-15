@@ -1,5 +1,5 @@
 use crate::traits::ToHTML;
-use crate::{AST, HTMLConfig};
+use crate::{HTMLConfig, AST};
 
 /// Unwrap Box<AST>
 impl ToHTML for Box<AST> {
@@ -17,8 +17,8 @@ impl ToHTML for AST {
             };
         }
         match *self {
-            AST::Space => { String::from(" ") }
-            AST::Newline => { String::from("\n") }
+            AST::Space => String::from(" "),
+            AST::Newline => String::from("\n"),
 
             AST::Statements(ref e) => {
                 let mut text = String::new();
@@ -33,9 +33,11 @@ impl ToHTML for AST {
 
             AST::Paragraph(ref p) => format!("<p>{}</p>", unbox!(p)),
 
-            AST::Text(ref v) => {
-                v.iter().map(|s| unbox!(s)).collect::<Vec<String>>().join("")
-            }
+            AST::Text(ref v) => v
+                .iter()
+                .map(|s| unbox!(s))
+                .collect::<Vec<String>>()
+                .join(""),
             AST::Raw(ref s) => format!("<pre>{}</pre>`", s),
             AST::Code(ref s) => format!("<code>{}</code>`", s),
             AST::String(ref s) => format!("{}", s),
@@ -52,7 +54,8 @@ impl ToHTML for AST {
                 }
                 format!("<font{}>{}</font>", tags, unbox!(e))
             }
-            AST::MathInline(ref s) => format!("${}$ ", s),
+            AST::MathInline(ref s) => format!("<span class=\"math\">${}$</span> ", s),
+            AST::MathDisplay(ref s) => format!("<p class=\"math\">$${}$$</span> ", s),
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));
