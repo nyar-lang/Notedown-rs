@@ -1,3 +1,5 @@
+mod to_html;
+
 pub trait ToHTML {
     fn to_html(&self, cfg: HTMLConfig) -> String;
     fn to_html_default(&self) -> String {

@@ -2,9 +2,10 @@ use std::fs::{read_to_string, File};
 use std::io::Write;
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule, NoteTextParser, NoteTextRule as Text};
 use pest::Parser;
-use crate::AST;
+use crate::{AST, HTMLConfig};
 use pest::iterators::Pair;
 use crate::ast::AST::Header;
+use crate::traits::ToHTML;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Context {}
@@ -39,7 +40,10 @@ impl Context {
                 Rule::EOI => continue,
                 Rule::COMMENT => continue,
                 Rule::NEWLINE => continue,
-                Rule::TextBlock => self.parse_text(pair.as_str().trim()),
+                Rule::TextBlock => {
+                    let t = self.parse_text(pair.as_str().trim());
+                    AST::Paragraph(Box::new(t))
+                }
                 Rule::Header => self.parse_header(pair),
                 Rule::List => self.parse_list(pair.as_str().trim()),
                 Rule::Table => self.parse_table(pair.as_str().trim()),
@@ -71,7 +75,12 @@ impl Context {
                 Text::EOI => continue,
                 Text::Style => self.parse_style(pair),
                 Text::English => AST::String(pair.as_str().to_string()),
-                Text::SPACE_SEPARATOR => AST::String(String::from(" ")),
+                Text::Word => AST::String(pair.as_str().to_string()),
+                Text::Line => self.parse_line(pair),
+                Text::Code => self.parse_code_inline(pair),
+
+                Text::SPACE_SEPARATOR => AST::Space,
+                Text::NEWLINE => AST::Newline,
                 _ => debug_cases!(pair),
             };
             codes.push(code);
@@ -85,6 +94,7 @@ impl Context {
         return AST::None;
     }
     fn parse_style(&self, pairs: Pair<Text>) -> AST {
+        let s = pairs.as_str();
         let mut level = 0;
         let mut text = AST::None;
         for pair in pairs.into_inner() {
@@ -97,8 +107,38 @@ impl Context {
         match level {
             1 => AST::Italic(Box::new(text)),
             2 => AST::Bold(Box::new(text)),
-            _ => AST::String(text.to_string())
+            3 => AST::Bold(Box::new(AST::Italic(Box::new(text)))),
+            _ => AST::Raw(s.to_string())
         }
+    }
+    fn parse_line(&self, pairs: Pair<Text>) -> AST {
+        let s = pairs.as_str();
+        let mut level = 0;
+        let mut text = AST::None;
+        for pair in pairs.into_inner() {
+            match pair.as_rule() {
+                Text::LineLevel => { level += pair.as_str().len() }
+                Text::LineText => text = self.parse_text(pair.as_str().trim()),
+                _ => debug_cases!(pair),
+            };
+        }
+        match level {
+            1 => AST::Underline(Box::new(text)),
+            2 => AST::Strikethrough(Box::new(text)),
+            3 => AST::Undercover(Box::new(text)),
+            _ => AST::Raw(s.to_string())
+        }
+    }
+    fn parse_code_inline(&self, pairs: Pair<Text>) -> AST {
+        let mut text = "";
+        for pair in pairs.into_inner() {
+            match pair.as_rule() {
+                Text::CodeLevel => continue,
+                Text::CodeText => text = pair.as_str().trim(),
+                _ => debug_cases!(pair),
+            };
+        }
+        AST::Code(text.to_string())
     }
 }
 
@@ -107,8 +147,23 @@ impl Context {
 fn test() {
     let c = Context::default();
     let f = c.parse(r#"
-        **bold**, *it*
+        *斜体 Italic*,
+
+        **粗体 Bold**,
+
+        ***斜粗体 Bold-Italic***,
+
+        **** error ****
+
+        ~下划线 Underline~
+
+        ~~删除线 Strikethrough~~
+
+        ~~~数据删除 Undercover~~~
+
+        `代码 code`
     "#);
-    println!("{:#?}", f);
+    // println!("{:#?}", f);
+    println!("{}", f.to_html(HTMLConfig::default()));
     unreachable!()
 }

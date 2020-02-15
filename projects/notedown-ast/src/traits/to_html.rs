@@ -1,5 +1,5 @@
-
-
+use crate::traits::ToHTML;
+use crate::{AST, HTMLConfig};
 
 /// Unwrap Box<AST>
 impl ToHTML for Box<AST> {
@@ -17,10 +17,8 @@ impl ToHTML for AST {
             };
         }
         match *self {
-            AST::Newline => {
-                //CR or LF
-                "\n".to_string()
-            }
+            AST::Space => { String::from(" ") }
+            AST::Newline => { String::from("\n") }
 
             AST::Statements(ref e) => {
                 let mut text = String::new();
@@ -30,13 +28,23 @@ impl ToHTML for AST {
                 let trimmed: Vec<_> = text.lines().map(|s| s.trim()).collect();
                 trimmed.join("\n")
             }
-            AST::Paragraph(ref e) => format!("<p>{}</p>", unbox!(e)),
 
-            AST::Header(ref e, ref level, ref kv) => format!("{} {}{:?}", unbox!(e), level, kv),
+            AST::Header(ref e, ref level) => format!("{} {}", unbox!(e), level),
+
+            AST::Paragraph(ref p) => format!("<p>{}</p>", unbox!(p)),
+
+            AST::Text(ref v) => {
+                v.iter().map(|s| unbox!(s)).collect::<Vec<String>>().join("")
+            }
+            AST::Raw(ref s) => format!("<pre>{}</pre>`", s),
+            AST::Code(ref s) => format!("<code>{}</code>`", s),
             AST::String(ref s) => format!("{}", s),
-            AST::Bold(ref e, _) => format!("<b>{}</b>", unbox!(e)),
-            AST::Italic(ref e, _) => format!("<i>{}</i>", unbox!(e)),
-            AST::Underline(ref e, _) => format!("<u>{}</u>", unbox!(e)),
+            AST::Bold(ref s) => format!("<b>{}</b>", unbox!(s)),
+            AST::Italic(ref s) => format!("<i>{}</i>", unbox!(s)),
+            AST::Underline(ref s) => format!("<u>{}</u>", unbox!(s)),
+            AST::Strikethrough(ref s) => format!("<del>{}</del>", unbox!(s)),
+            AST::Undercover(ref s) => format!("<span class=\"undercover\">{}</span>", unbox!(s)),
+
             AST::Font(ref e, ref kv) => {
                 let mut tags = String::new();
                 for (k, v) in kv.iter() {
@@ -44,13 +52,12 @@ impl ToHTML for AST {
                 }
                 format!("<font{}>{}</font>", tags, unbox!(e))
             }
-
-            AST::Word(ref s) => format!("{} ", s),
             AST::MathInline(ref s) => format!("${}$ ", s),
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));
-                format!("{:?}", self)
+                format!("{:?}", self);
+                unreachable!()
             }
         }
     }
