@@ -1,5 +1,5 @@
 TextMode = _{SOI ~ TextStatement*  ~  EOI}
-TextStatement = _{StyleStatement|LineStatement|MathStatement|CodeStatement|SPACE_SEPARATOR|NEWLINE|Escaped|Command|English|Word}
+TextStatement = _{StyleStatement|LineStatement|MathStatement|RawStatement|SPACE_SEPARATOR|NEWLINE|Escaped|Command|English|Word}
 /*====================================================================================================================*/
 MathStatement = _{Math|MathRest}
 ///#E06C75
@@ -10,13 +10,13 @@ MathText = {(Escape~Dollar|!(Dollar ~ PEEK) ~ ANY)*}
 MathRest = {Dollar+}
 Dollar = _{"$"}
 /*====================================================================================================================*/
-CodeStatement = _{Code|CodeRest}
+RawStatement = _{Raw|RawRest}
 ///#98C379
-Code = {CodeLevel ~ CodeText ~ POP ~ Accent}
-CodeLevel = {Accent~PUSH (Accent*)}
-CodeText = {(Escape~Accent|!(Accent ~ PEEK) ~ ANY)*}
+Raw = {RawLevel ~ RawText ~ POP ~ Accent}
+RawLevel = {Accent~PUSH (Accent*)}
+RawText = {(Escape~Accent|!(Accent ~ PEEK) ~ ANY)*}
 ///Gray
-CodeRest = {Accent+}
+RawRest = {Accent+}
 Accent = _{"`"}
 /*====================================================================================================================*/
 StyleStatement = _{Style|StyleRest}

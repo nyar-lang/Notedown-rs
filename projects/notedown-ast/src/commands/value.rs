@@ -26,7 +26,6 @@ impl Display for Value {
             Value::List(_) => { unimplemented!() }
             Value::Dict(_) => { unimplemented!() }
             Value::Command(_) => { unimplemented!() }
-
         }
     }
 }

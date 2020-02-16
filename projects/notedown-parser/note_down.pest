@@ -22,7 +22,7 @@ TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
-Code = {CodeLevel ~ CodeAction? ~Word? ~ arguments? ~ CodeText ~ POP ~ CodeMark{3}}
+Code = {CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~ CodeText ~ POP ~ CodeMark{3}}
 CodeAction = {At|Asterisk|Sharp}
 CodeLevel = {CodeMark{3}~PUSH(CodeMark*)}
 CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
@@ -54,15 +54,19 @@ End = @{Escape ~ "end"}
 //!#56B6C2: Set
 //!#E06C75: key
 CommandBlock = !{command ~  arguments*}
-arguments = {"{"  ~ (key_value|argument)* ~  "}"}
+arguments = _{
+    "{"  ~ (key_value|argument)* ~  "}"
+  | "["  ~ argument_literal ~  "]"
+}
+argument_literal = {(Escape ~ (Escape|"]")|!"]" ~ ANY)*}
 argument = {value  ~  Comma?}
 key_value = {key  ~  Set  ~ value  ~  Comma?}
-key = {Word}
-value = {Word|Integer|String}
+key = {SYMBOL}
+value = {SYMBOL|Integer|String}
 
 //!#61AFEF: command
 CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
-command = @{Escape ~ Word}
+command = @{Escape ~ SYMBOL}
 RestOfLine = !{(!NEWLINE  ~  ANY)*}
 /*====================================================================================================================*/
 //!#D19A66: Integer|Decimal|DecimalBad|Exponent|ComplexHandler
@@ -73,19 +77,18 @@ Exponent = ${(Decimal|Integer)  ~ "^^" ~  (Decimal|Integer)}
 Integer = @{Zero|ASCII_DIGIT  ~  (Underline?  ~  ASCII_NONZERO_DIGIT)* }
 Zero = @{"0"}
 /*====================================================================================================================*/
-//!#98C379: String|MultiLineComment|CommandContent|CommandLine
-String = ${StringSingle|StringBlock|LiteralString| LiteralBlock}
-StringSingle = ${S2  ~  (!S2 ~  ANY)*  ~  S2 }
-StringBlock = ${S6  ~  (!S6 ~  ANY)*  ~  S6 }
-LiteralString = ${S1  ~  (!S1 ~  ANY)*  ~  S1 }
-LiteralBlock = ${S3  ~  (!S3 ~  ANY)*  ~  S3 }
+///#98C379
+String = ${
+    S1  ~  (Escape ~ (Escape|S1)|!S1 ~ ANY)*  ~  S1
+  | S2  ~  (Escape ~ (Escape|S2)|!S2 ~ ANY)*  ~  S2
+}
 S1 = _{"'"}
 S2 = _{"\""}
-S3 = _{"'''"}
-S6 = _{"\"\"\""}
 /*====================================================================================================================*/
-Word = {ASCII_ALPHA+}
-SYMBOL = @{ASCII_ALPHA}
+SYMBOL = @{
+    XID_START ~ XID_CONTINUE?
+  | Underline~XID_CONTINUE+
+}
 // NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
 // NameStartCharacter = _{Underline|ASCII_ALPHA}
 /*====================================================================================================================*/
