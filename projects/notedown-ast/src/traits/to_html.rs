@@ -1,5 +1,20 @@
-use crate::traits::ToHTML;
-use crate::{HTMLConfig, AST};
+use crate::AST;
+
+#[derive(Debug, Copy, Clone)]
+pub struct HTMLConfig {}
+
+impl Default for HTMLConfig {
+    fn default() -> Self {
+        HTMLConfig {}
+    }
+}
+
+pub trait ToHTML {
+    fn to_html(&self, cfg: HTMLConfig) -> String;
+    fn to_html_default(&self) -> String {
+        self.to_html(HTMLConfig::default())
+    }
+}
 
 /// Unwrap Box<AST>
 impl ToHTML for Box<AST> {
@@ -17,6 +32,7 @@ impl ToHTML for AST {
             };
         }
         match *self {
+            AST::None => String::from(""),
             AST::Space => String::from(" "),
             AST::Newline => String::from("\n"),
 
@@ -56,6 +72,10 @@ impl ToHTML for AST {
             }
             AST::MathInline(ref s) => format!("<span class=\"math\">${}$</span> ", s),
             AST::MathDisplay(ref s) => format!("<p class=\"math\">$${}$$</span> ", s),
+
+            AST::Command(ref s, ref keys, ref values) => {
+                unimplemented!()
+            }
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));

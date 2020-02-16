@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
+use crate::Value;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,
-    /// - ``
+    Space,
+    Newline,
+    /// - `Statements`
     Statements(Vec<AST>),
 
     /// - `Header`: TEXT, level
@@ -32,14 +35,9 @@ pub enum AST {
     MathInline(String),
     MathDisplay(String),
     /// - `Code`:
-    Command(String, HashMap<String, String>),
+    Command(String, Vec<Value>, HashMap<String, Value>),
 
     Escaped(String),
-    Space,
-    Newline,
-
-    /// - `Function`: input, args, kvs
-    Function(String, Vec<AST>, HashMap<String, String>),
 }
 
 impl Display for AST {
@@ -71,6 +69,13 @@ impl Display for AST {
 
             AST::MathInline(ref s) => write!(f, "${}$", s),
             AST::MathDisplay(ref s) => write!(f, "$${}$$", s),
+
+            AST::Command(ref s, ref args, ref kvs) => {
+                let a: Vec<String> = args.iter().map(|v| format!("{}", v)).collect();
+                let kv: Vec<String> = kvs.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
+
+                write!(f, "\\{}{}{:?}", s, format!("[{}]", a.join(", ")), format!("{{{}}}", kv.join(", ")))
+            }
             _ => {
                 let a = format!("unimplemented AST::{:?}", self);
                 write!(f, "{}", a.split("(").next().unwrap_or("Unknown"))

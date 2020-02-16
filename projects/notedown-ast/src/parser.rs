@@ -1,18 +1,19 @@
-use crate::ast::AST::Header;
-use crate::traits::ToHTML;
-use crate::{HTMLConfig, AST};
+use crate::{AST, Value};
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule, NoteTextParser, NoteTextRule as Text};
 use pest::iterators::Pair;
 use pest::Parser;
-use std::fs::{read_to_string, File};
-use std::io::Write;
+use std::fs::read_to_string;
+use std::collections::HashMap;
+use crate::utils::unescape;
 
-#[derive(Debug, Copy, Clone)]
-pub struct Context {}
+#[derive(Debug, Clone)]
+pub struct Context {
+    ast: AST
+}
 
 impl Default for Context {
     fn default() -> Self {
-        Context {}
+        Context { ast: AST::None }
     }
 }
 
@@ -26,12 +27,18 @@ macro_rules! debug_cases {
 }
 
 impl Context {
-    pub fn parse_file(&self, path_from: &str, path_to: &str) -> Result<AST, std::io::Error> {
+    pub fn free(&self) -> AST {
+        self.ast.clone()
+    }
+}
+
+impl Context {
+    pub fn parse_file(&self, path_from: &str, path_to: &str) -> Result<Context, std::io::Error> {
         let r = read_to_string(path_from)?;
         let a = self.parse(&r);
         return Ok(a);
     }
-    pub fn parse(&self, text: &str) -> AST {
+    pub fn parse(&self, text: &str) -> Context {
         let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         for pair in pairs {
@@ -39,20 +46,17 @@ impl Context {
                 Rule::EOI => continue,
                 Rule::COMMENT => continue,
                 Rule::NEWLINE => continue,
-                Rule::TextBlock => {
-                    let t = self.parse_text(pair.as_str().trim());
-                    AST::Paragraph(Box::new(t))
-                }
+                Rule::TextBlock => maybe_math(self, pair),
                 Rule::Header => self.parse_header(pair),
                 Rule::List => self.parse_list(pair.as_str().trim()),
                 Rule::Table => self.parse_table(pair.as_str().trim()),
+                Rule::CommandBlock => self.parse_command(pair),
                 _ => debug_cases!(pair),
             };
             println!("{}", code);
             codes.push(code);
         }
-
-        return AST::Statements(codes);
+        return Context { ast: AST::Statements(codes) };
     }
     fn parse_header(&self, pairs: Pair<Rule>) -> AST {
         let mut level = 0;
@@ -155,37 +159,63 @@ impl Context {
         }
         match level {
             1 => AST::MathInline(text.to_string()),
-            2 => AST::MathDisplay(text.to_string()),
+            2 => AST::MathInline(format!("\\displaystyle{{{}}}", text)),
             _ => AST::Raw(s.to_string()),
         }
     }
+    fn parse_command(&self, pairs: Pair<Rule>) -> AST {
+        let mut cmd = String::default();
+        let mut arg = Vec::default();
+        let mut kvs = HashMap::default();
+        for pair in pairs.into_inner() {
+            match pair.as_rule() {
+                Rule::command => cmd = pair.as_str().trim_start_matches('\\').to_string(),
+                Rule::argument_literal => arg.push(Value::String(unescape(pair.as_str(), ']'))),
+                Rule::key_value => {
+                    let mut k = String::new();
+                    let mut v = Value::None;
+                    for inner in pair.into_inner() {
+                        match inner.as_rule() {
+                            Rule::Set => continue,
+                            Rule::Comma => continue,
+                            Rule::key => { k = inner.as_str().to_string() }
+                            Rule::value => { v = self.parse_value(inner) }
+                            _ => debug_cases!(inner),
+                        };
+                    }
+                    kvs.insert(k, v);
+                }
+                _ => debug_cases!(pair),
+            };
+        }
+        return AST::Command(cmd, arg, kvs);
+    }
+    fn parse_value(&self, pairs: Pair<Rule>) -> Value {
+        for pair in pairs.into_inner() {
+            match pair.as_rule() {
+                Rule::String => {
+                    let s = pair.as_str().to_string();
+                    return Value::String(s);
+                }
+                Rule::SYMBOL => {
+                    let s = pair.as_str().to_string();
+                    Value::Command(AST::Command(s, vec![], Default::default()))
+                }
+                _ => debug_cases!(pair),
+            };
+        }
+        return Value::None;
+    }
 }
 
-#[test]
-fn test() {
-    let c = Context::default();
-    let f = c.parse(
-        r#"
-        *斜体 Italic*,
-
-        **粗体 Bold**,
-
-        ***斜粗体 Bold-Italic***,
-
-        ~下划线 Underline~
-
-        ~~删除线 Strikethrough~~
-
-        ~~~数据删除 Undercover~~~
-
-        `代码 code`
-
-        $x$
-
-        $$x^2$$
-    "#,
-    );
-    // println!("{:#?}", f);
-    println!("{}", f.to_html(HTMLConfig::default()));
-    unreachable!()
+fn maybe_math(ctx: &Context, pair: Pair<Rule>) -> AST {
+    let s = pair.as_str().trim();
+    if s.starts_with("$$") && s.ends_with("$$") {
+        let r = s[2..s.chars().count() - 2].to_string();
+        if !r.contains("$$") {
+            return AST::MathDisplay(r);
+        }
+    }
+    let t = ctx.parse_text(s);
+    AST::Paragraph(Box::new(t))
 }
