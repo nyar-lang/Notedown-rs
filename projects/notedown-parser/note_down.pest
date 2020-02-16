@@ -1,4 +1,5 @@
 program = _{SOI ~ statement*  ~  EOI}
+TextMode = _{SOI ~ text*  ~  EOI}
 statement = _{
     Header
   | HorizontalRule
@@ -9,9 +10,8 @@ statement = _{
   | EmptyLine{1,}
   | TextBlock
 }
-
+text = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|Escaped|Command|TextRest}
 EmptyLine = _{WHITESPACE*  ~  NEWLINE}
-Command = _{CommandLine|CommandPart| CommandBlock}
 /*====================================================================================================================*/
 //!#E06C75: Header
 Header = ${Sharp{1, 6}  ~  arguments?  ~  RestOfLine}
@@ -19,6 +19,7 @@ Header = ${Sharp{1, 6}  ~  arguments?  ~  RestOfLine}
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
 TextHeaderCharacter = _{!NEWLINE  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
+TextRest = {(!(WHITE_SPACE|NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
@@ -45,6 +46,39 @@ ListMark = @{Plus|Minus|Vertical|QuoteMark|Integer~Dot}
 ///Red
 HorizontalRule = @{Set{3,}|Minus{3,}}
 /*====================================================================================================================*/
+MathStatement = _{Math|MathRest}
+///#E06C75
+Math = {MathLevel ~ MathText ~ POP ~ Dollar}
+MathLevel = {Dollar~PUSH (Dollar*)}
+MathText = {(Escape~Dollar|!(Dollar ~ PEEK) ~ ANY)*}
+///Gray
+MathRest = {Dollar+}
+/*====================================================================================================================*/
+RawStatement = _{Raw|RawRest}
+///#98C379
+Raw = {RawLevel ~ RawText ~ POP ~ Accent}
+RawLevel = {Accent~PUSH (Accent*)}
+RawText = {(Escape~Accent|!(Accent ~ PEEK) ~ ANY)*}
+///Gray
+RawRest = {Accent+}
+/*====================================================================================================================*/
+StyleStatement = _{Style|StyleRest}
+///#D19A66
+Style = {StyleLevel ~ StyleText ~ POP ~ Asterisk}
+StyleLevel = {Asterisk~PUSH (Asterisk*)}
+StyleText = {(Escape~Asterisk|!(Asterisk ~ PEEK) ~ ANY)*}
+///Gray
+StyleRest = {Asterisk+}
+/*====================================================================================================================*/
+LineStatement = _{Line|LineRest}
+///#61AFEF
+Line = {LineLevel ~ LineText ~ POP ~ Tilde}
+LineLevel = {Tilde~PUSH (Tilde*)}
+LineText = {(Escape~Tilde|!(Tilde ~ PEEK) ~ ANY)*}
+///Gray
+LineRest = {Tilde+}
+/*====================================================================================================================*/
+Command = _{CommandLine|CommandPart| CommandBlock}
 //!#C678DD: Begin|End
 CommandPart = ${Begin ~ arguments  ~  CommandContent   ~  End  ~  arguments?}
 CommandContent = ${(CommandPart|!End ~ ANY)*}
@@ -64,7 +98,7 @@ key_value = {key  ~  Set  ~ value  ~  Comma?}
 key = {SYMBOL}
 value = {SYMBOL|Integer|String}
 
-//!#61AFEF: command
+//!#61AFEF: CommandBlock
 CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
 command = @{Escape ~ SYMBOL}
 RestOfLine = !{(!NEWLINE  ~  ANY)*}
@@ -89,6 +123,7 @@ SYMBOL = @{
     XID_START ~ XID_CONTINUE?
   | Underline~XID_CONTINUE+
 }
+Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent)}
 // NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
 // NameStartCharacter = _{Underline|ASCII_ALPHA}
 /*====================================================================================================================*/
@@ -98,12 +133,13 @@ LineComment = ${Comment  ~ WHITESPACE* ~  Colon  ~  RestOfLine}
 BlockComment = ${Comment  ~ WHITESPACE* ~  "{"  ~ MultiLineComment ~  "}"}
 MultiLineComment = ${(BlockComment | !"}"  ~  ANY)*}
 Comment = @{Escape ~ "comment"}
-
+/*====================================================================================================================*/
 NEWLINE = @{CR ~ LF|CR|LF}
-WHITESPACE = _{SPACE_SEPARATOR| TAB}
+WHITESPACE = @{SPACE_SEPARATOR|TAB}
 TAB = @{"\t"}
 CR = @{"\r"}
 LF = @{"\n"}
+/*====================================================================================================================*/
 Escape = @{"\\"}
 At = @{"@"}
 Sharp = @{"#"}
@@ -118,3 +154,5 @@ Plus = @{"+"}
 Minus = @{"-"}
 QuoteMark = @{">"}
 Accent = @{"`"}
+Dollar = @{"$"}
+Tilde = @{"~"}
