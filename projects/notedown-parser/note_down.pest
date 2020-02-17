@@ -10,7 +10,7 @@ statement = _{
   | EmptyLine{1,}
   | TextBlock
 }
-EmptyLine = _{WHITESPACE*  ~  NEWLINE}
+EmptyLine = _{SPACE_SEPARATOR*  ~  NEWLINE}
 /*====================================================================================================================*/
 //!#E06C75: Header
 Header = ${Sharp{1, 6}  ~  RestOfLine}
@@ -19,7 +19,7 @@ TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
 TextHeaderCharacter = _{!NEWLINE  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
 TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|Escaped|Command}
-TextRest = {(!(WHITE_SPACE|NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
+TextRest = {(!(NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
@@ -45,7 +45,7 @@ List = {ListMark ~ (!ListEnd~ANY)* ~ ListEnd}
 ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
 program_list = _{SOI ~ ListStatement+  ~  EOI}
 ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
-ListHeadLevel = {WHITESPACE*}
+ListHeadLevel = {SPACE_SEPARATOR*}
 ListRest = {(!ListStatement~ANY)*}
 ListMark = @{Plus|Minus|Vertical|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
@@ -130,18 +130,19 @@ SYMBOL = @{
   | Underline~XID_CONTINUE+
 }
 Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent)}
+NonSpace = _{!SPACE_SEPARATOR ~ ANY}
 // NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
 // NameStartCharacter = _{Underline|ASCII_ALPHA}
 /*====================================================================================================================*/
 //!Gray:BlockComment|LineComment
 COMMENT = ${BlockComment|LineComment }
-LineComment = ${Comment  ~ WHITESPACE* ~  Colon  ~  RestOfLine}
-BlockComment = ${Comment  ~ WHITESPACE* ~  "{"  ~ MultiLineComment ~  "}"}
+LineComment = ${Comment  ~ SPACE_SEPARATOR* ~  Colon  ~  RestOfLine}
+BlockComment = ${Comment  ~ SPACE_SEPARATOR* ~  "{"  ~ MultiLineComment ~  "}"}
 MultiLineComment = ${(BlockComment | !"}"  ~  ANY)*}
 Comment = @{Escape ~ "comment"}
 /*====================================================================================================================*/
 NEWLINE = @{CR ~ LF|CR|LF}
-WHITESPACE = @{SPACE_SEPARATOR|TAB}
+SPACE_SEPARATOR = {" "|"\t"}
 TAB = @{"\t"}
 CR = @{"\r"}
 LF = @{"\n"}

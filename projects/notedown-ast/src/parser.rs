@@ -117,7 +117,9 @@ impl Context {
             match pair.as_rule() {
                 Rule::Asterisk => continue,
                 Rule::StyleLevel => level += pair.as_str().len(),
-                Rule::StyleText => text = self.parse_text(pair.as_str().trim()),
+                Rule::StyleText =>
+                    text = self.parse_text(&unescape(pair.as_str(), "*"));
+                }
                 _ => debug_cases!(pair),
             };
         }
@@ -136,7 +138,9 @@ impl Context {
             match pair.as_rule() {
                 Rule::Tilde => continue,
                 Rule::LineLevel => level += pair.as_str().len(),
-                Rule::LineText => text = self.parse_text(pair.as_str().trim()),
+                Rule::LineText => {
+                    text = self.parse_text(&unescape(pair.as_str(), "~"));
+                }
                 _ => debug_cases!(pair),
             };
         }
@@ -148,31 +152,31 @@ impl Context {
         }
     }
     fn parse_code_inline(&self, pairs: Pair<Rule>) -> AST {
-        let mut text = "";
+        let mut text = String::new();
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::RawLevel => continue,
                 Rule::Accent => continue,
-                Rule::RawText => text = pair.as_str().trim(),
+                Rule::RawText => text = unescape(pair.as_str(), "`"),
                 _ => debug_cases!(pair),
             };
         }
-        AST::Code(text.to_string())
+        AST::Code(text)
     }
     fn parse_math(&self, pairs: Pair<Rule>) -> AST {
         let s = pairs.as_str();
         let mut level = 0;
-        let mut text = "";
+        let mut text = String::new();
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::Dollar => continue,
                 Rule::MathLevel => level += pair.as_str().len(),
-                Rule::MathText => text = pair.as_str().trim(),
+                Rule::MathText => text = unescape(pair.as_str(), "$"),
                 _ => debug_cases!(pair),
             };
         }
         match level {
-            1 => AST::MathInline(text.to_string()),
+            1 => AST::MathInline(text),
             2 => AST::MathInline(format!("\\displaystyle{{{}}}", text)),
             _ => AST::Raw(s.to_string()),
         }
@@ -184,7 +188,7 @@ impl Context {
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::command => cmd = pair.as_str().trim_start_matches('\\').to_string(),
-                Rule::argument_literal => arg.push(Value::String(unescape(pair.as_str(), ']'))),
+                Rule::argument_literal => arg.push(Value::String(unescape(pair.as_str(), "]"))),
                 Rule::key_value => {
                     let mut k = String::new();
                     let mut v = Value::None;

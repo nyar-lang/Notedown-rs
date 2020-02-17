@@ -6,8 +6,22 @@ use std::{
     io::{repeat, Read},
 };
 
-pub fn unescape(s: &str, _c: char) -> String {
-    s.to_string()
+pub fn unescape(s: &str, c: &str) -> String {
+    let mut e = String::from("\\");
+    e.push_str(c);
+    s.replace(&e, c)
+}
+
+pub fn trim_escape(s: &str) -> &str {
+    let s = s.trim();
+    let mut out = s;
+    if s.starts_with('\\') {
+        out = &out[1..]
+    }
+    if s.ends_with('\\') {
+        out = &out[..out.len() - 1]
+    }
+    return out;
 }
 
 pub fn maybe_math(ctx: &Context, pair: Pair<Rule>) -> AST {

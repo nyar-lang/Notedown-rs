@@ -55,8 +55,8 @@ impl ToHTML for AST {
             AST::Paragraph(p) => format!("<p>{}</p>", unbox!(p)),
 
             AST::Text(v) => v.iter().map(|s| unbox!(s)).collect::<Vec<String>>().join(""),
-            AST::Raw(s) => format!("<pre>{}</pre>`", s),
-            AST::Code(s) => format!("<code>{}</code>`", s),
+            AST::Raw(s) => format!("<pre>{}</pre>", s),
+            AST::Code(s) => format!("<code>{}</code>", s),
             AST::String(s) => format!("{}", s),
             AST::Bold(s) => format!("<b>{}</b>", unbox!(s)),
             AST::Italic(s) => format!("<i>{}</i>", unbox!(s)),
