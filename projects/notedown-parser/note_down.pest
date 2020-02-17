@@ -1,5 +1,5 @@
 program = _{SOI ~ statement*  ~  EOI}
-TextMode = _{SOI ~ text*  ~  EOI}
+TextMode = _{SOI ~ (TextElement|TextRest)*  ~  EOI}
 statement = _{
     Header
   | HorizontalRule
@@ -10,15 +10,15 @@ statement = _{
   | EmptyLine{1,}
   | TextBlock
 }
-text = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|Escaped|Command|TextRest}
 EmptyLine = _{WHITESPACE*  ~  NEWLINE}
 /*====================================================================================================================*/
 //!#E06C75: Header
-Header = ${Sharp{1, 6}  ~  arguments?  ~  RestOfLine}
+Header = ${Sharp{1, 6}  ~  RestOfLine}
 /*====================================================================================================================*/
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
 TextHeaderCharacter = _{!NEWLINE  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
+TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|Escaped|Command}
 TextRest = {(!(WHITE_SPACE|NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
@@ -32,6 +32,12 @@ CodeMark = @{Accent}
 //!Orange: TableMark
 Table = {TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
 TableEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
+
+TableMode = _{SOI ~ TableLine*  ~  EOI}
+TableLine = _{TableEscape |TableMark |TextElement| TableRest}
+TableEscape = @{Escape ~ TableMark}
+TableText = {(TextElement)+}
+TableRest = {(!(TableMark|Escape) ~ ANY)+}
 TableMark = @{Vertical}
 /*====================================================================================================================*/
 //!Green: ListMark

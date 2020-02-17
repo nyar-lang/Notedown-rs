@@ -11,3 +11,12 @@ fn test_text() {
     file.write_all(f.free().to_html_default().as_bytes())
         .unwrap();
 }
+
+#[test]
+fn test_style() {
+    let mut file = File::create("tests/style.md").unwrap();
+    let f = parse(include_str!("./style.notedown"));
+    // println!("{:#?}", f);
+    file.write_all(f.free().to_html_default().as_bytes())
+        .unwrap();
+}

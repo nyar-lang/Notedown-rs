@@ -34,6 +34,9 @@ pub enum AST {
     /// - `Math`:
     MathInline(String),
     MathDisplay(String),
+
+    TableAlign(u8),
+
     /// - `Code`:
     Command(String, Vec<Value>, HashMap<String, Value>),
 

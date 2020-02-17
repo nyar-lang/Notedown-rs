@@ -9,9 +9,9 @@ pub use commands::Value;
 pub use parser::Context;
 pub use traits::{HTMLConfig, MarkdownConfig, ToHTML, ToMarkdown};
 
-pub fn parse_file(path_from: &str, path_to: &str) -> Result<Context, std::io::Error> {
+pub fn parse_file(path_from: &str) -> Result<Context, std::io::Error> {
     let c = Context::default();
-    c.parse_file(path_from, path_to)
+    c.parse_file(path_from)
 }
 
 pub fn parse(text: &str) -> Context {

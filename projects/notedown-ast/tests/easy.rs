@@ -70,7 +70,6 @@ fn test_function() {
     println!("{}", input.free().to_html_default());
 }
 
-
 #[test]
 fn test_table() {
     let input = parse(
@@ -83,7 +82,6 @@ fn test_table() {
     // println!("{:#?}", f);
     println!("{}", input.free().to_html_default());
 }
-
 
 #[test]
 fn test_code() {
