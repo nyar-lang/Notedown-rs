@@ -1,6 +1,8 @@
 use crate::Value;
-use std::collections::HashMap;
-use std::fmt::{self, Display, Formatter};
+use std::{
+    collections::HashMap,
+    fmt::{self, Display, Formatter},
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AST {
@@ -35,7 +37,12 @@ pub enum AST {
     MathInline(String),
     MathDisplay(String),
 
-    TableAlign(u8),
+    Table {
+        head: Vec<AST>,
+        align: Vec<u8>,
+        terms: Vec<Vec<AST>>,
+        column: usize,
+    },
 
     /// - `Code`:
     Command(String, Vec<Value>, HashMap<String, Value>),
@@ -45,45 +52,39 @@ pub enum AST {
 
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match *self {
+        match self {
             AST::None => write!(f, ""),
             AST::Space => write!(f, " "),
             AST::Newline => write!(f, "\n"),
 
-            AST::Statements(ref e) => {
+            AST::Statements(e) => {
                 let fs: Vec<String> = e.iter().map(|ast| format!("{}", ast)).collect();
                 write!(f, "{}", fs.join(""))
             }
 
-            AST::Paragraph(ref t) => write!(f, "{}\n", t),
+            AST::Paragraph(t) => write!(f, "{}\n", t),
 
-            AST::Text(ref t) => {
+            AST::Text(t) => {
                 let fs: Vec<String> = t.iter().map(|k| format!("{}", k)).collect();
                 write!(f, "{}", fs.join(""))
             }
-            AST::Raw(ref s) => write!(f, "{}", s),
-            AST::Code(ref s) => write!(f, "`{}`", s),
-            AST::String(ref s) => write!(f, "{}", s),
-            AST::Italic(ref s) => write!(f, "*{}*", s),
-            AST::Bold(ref s) => write!(f, "**{}**", s),
-            AST::Underline(ref s) => write!(f, "~{}~", s),
-            AST::Strikethrough(ref s) => write!(f, "~~{}~~", s),
-            AST::Undercover(ref s) => write!(f, "~~~{}~~~", s),
+            AST::Raw(s) => write!(f, "{}", s),
+            AST::Code(s) => write!(f, "`{}`", s),
+            AST::String(s) => write!(f, "{}", s),
+            AST::Italic(s) => write!(f, "*{}*", s),
+            AST::Bold(s) => write!(f, "**{}**", s),
+            AST::Underline(s) => write!(f, "~{}~", s),
+            AST::Strikethrough(s) => write!(f, "~~{}~~", s),
+            AST::Undercover(s) => write!(f, "~~~{}~~~", s),
 
-            AST::MathInline(ref s) => write!(f, "${}$", s),
-            AST::MathDisplay(ref s) => write!(f, "$${}$$", s),
+            AST::MathInline(s) => write!(f, "${}$", s),
+            AST::MathDisplay(s) => write!(f, "$${}$$", s),
 
-            AST::Command(ref s, ref args, ref kvs) => {
+            AST::Command(s, args, kvs) => {
                 let a: Vec<String> = args.iter().map(|v| format!("{}", v)).collect();
                 let kv: Vec<String> = kvs.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
 
-                write!(
-                    f,
-                    "\\{}{}{:?}",
-                    s,
-                    format!("[{}]", a.join(", ")),
-                    format!("{{{}}}", kv.join(", "))
-                )
+                write!(f, "\\{}{}{:?}", s, format!("[{}]", a.join(", ")), format!("{{{}}}", kv.join(", ")))
             }
             _ => {
                 let a = format!("unimplemented AST::{:?}", self);

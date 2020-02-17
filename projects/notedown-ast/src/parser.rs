@@ -1,10 +1,13 @@
-use crate::utils::{map_escape, map_white_space, maybe_math, unescape};
-use crate::{Value, AST};
+use crate::{
+    utils::{map_escape, map_white_space, maybe_math, unescape},
+    Value, AST,
+};
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
-use pest::iterators::Pair;
-use pest::Parser;
-use std::collections::{HashMap, VecDeque};
-use std::fs::read_to_string;
+use pest::{iterators::Pair, Parser};
+use std::{
+    collections::{HashMap, VecDeque},
+    fs::read_to_string,
+};
 
 #[derive(Debug, Clone)]
 pub struct Context {
@@ -58,9 +61,7 @@ impl Context {
             println!("{}", code);
             codes.push(code);
         }
-        return Context {
-            ast: AST::Statements(codes),
-        };
+        return Context { ast: AST::Statements(codes) };
     }
     fn parse_header(&self, pairs: Pair<Rule>) -> AST {
         let mut level = 0;
@@ -76,7 +77,7 @@ impl Context {
     }
     fn parse_code(&self, pairs: Pair<Rule>) -> AST {
         let mut level = 0;
-        let mut head = AST::None;
+        let _head = AST::None;
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::CodeLevel => level = pair.as_str().len(),
@@ -99,8 +100,9 @@ impl Context {
                 Rule::Line => self.parse_line(pair),
                 Rule::Raw => self.parse_code_inline(pair),
                 Rule::Math => self.parse_math(pair),
-                Rule::TextRest => AST::String(pair.as_str().to_string()),
 
+                Rule::TextRest => AST::String(pair.as_str().to_string()),
+                Rule::RawRest => AST::String(pair.as_str().to_string()),
                 _ => debug_cases!(pair),
             };
             codes.push(code);
@@ -132,6 +134,7 @@ impl Context {
         let mut text = AST::None;
         for pair in pairs.into_inner() {
             match pair.as_rule() {
+                Rule::Tilde => continue,
                 Rule::LineLevel => level += pair.as_str().len(),
                 Rule::LineText => text = self.parse_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),
@@ -232,72 +235,40 @@ impl Context {
         if lines.len() < 3 {
             return AST::Paragraph(Box::new(AST::Raw(text.to_string())));
         }
-        let mut max = 0;
-
         let head = self.parse_table_line(&lines.pop_front().unwrap());
-        println!("{:?}", head);
-        let aligned = self.parse_table_line(&lines.pop_front().unwrap());
-        println!("{:?}", aligned);
-        unreachable!();
-        /*
-        let head = vec![];
-        for pair in table_line(lines.pop().unwrap()) {
-            match pair.as_rule() {
-                Rule::EOI => continue,
-                Rule::TableMark => continue,
-                _ => debug_cases!(pair),
-            };
-            head_cell.push(code);
+        let align = parse_table_align(&lines.pop_front().unwrap());
+        let mut terms = vec![];
+        for i in lines {
+            terms.push(self.parse_table_line(&i));
         }
-
-        let head = lines.pop().unwrap();
-        let aligned = lines.pop().unwrap();
-
-
-        println!("{:?}", pairs);
-
-        unreachable!();
-
-        //let mut lines = vec![];
-
-                let mut codes: Vec<AST> = vec![];
-                for pair in pairs {
-                    let code = match pair.as_rule() {
-                        Rule::EOI => continue,
-                        Rule::TableMark => continue,
-                        _ => debug_cases!(pair),
-                    };
-                    codes.push(code);
-                }
-        */
-        unreachable!();
-        return AST::None;
+        let mut column = vec![head.len(), align.len()];
+        column.extend(terms.iter().map(Vec::len).collect::<Vec<usize>>());
+        let column = *column.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+        return AST::Table { head, align, terms, column };
     }
     fn parse_table_line(&self, input: &str) -> Vec<AST> {
-        let pairs =
-            NoteDownParser::parse(Rule::TableMode, input).unwrap_or_else(|e| panic!("{}", e));
+        let pairs = NoteDownParser::parse(Rule::TableMode, input).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         let mut text = String::new();
         for pair in pairs {
             match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::WHITESPACE => text.push(' '),
-                Rule::TableRest => text.push_str(pair.as_str()),
                 Rule::TableMark => {
                     codes.push(self.parse_text(&text));
                     text = String::new();
                 }
-                _ => debug_cases!(pair),
+                _ => text.push_str(pair.as_str()),
             };
         }
         return codes;
     }
-    fn parse_list(&self, text: &str) -> AST {
+    fn parse_list(&self, _text: &str) -> AST {
         return AST::None;
     }
 }
 
-fn parse_table_align(input: &str) -> Vec<AST> {
+fn parse_table_align(input: &str) -> Vec<u8> {
     let pairs = NoteDownParser::parse(Rule::TableMode, input).unwrap_or_else(|e| panic!("{}", e));
     let mut codes = vec![];
     let mut text = String::new();
@@ -307,13 +278,14 @@ fn parse_table_align(input: &str) -> Vec<AST> {
             Rule::WHITESPACE => text.push(' '),
             Rule::TableRest => text.push_str(pair.as_str()),
             Rule::TableMark => {
+                let mut code = 0;
                 if text.contains(":-") {
-                    codes.push(AST::TableAlign(1))
-                } else if text.contains("-:") {
-                    codes.push(AST::TableAlign(2))
-                } else {
-                    codes.push(AST::TableAlign(0))
+                    code += 1 << 0
                 }
+                if text.contains("-:") {
+                    code += 1 << 1
+                }
+                codes.push(code);
                 text = String::new();
             }
             _ => debug_cases!(pair),

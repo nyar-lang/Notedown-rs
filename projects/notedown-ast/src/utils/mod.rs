@@ -1,11 +1,12 @@
-use crate::{Context, Value, AST};
-use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
+use crate::{Context, AST};
+use notedown_parser::NoteDownRule as Rule;
 use pest::iterators::Pair;
-use pest::Parser;
-use std::collections::{HashMap, VecDeque};
-use std::fs::read_to_string;
+use std::{
+    collections::VecDeque,
+    io::{repeat, Read},
+};
 
-pub fn unescape(s: &str, c: char) -> String {
+pub fn unescape(s: &str, _c: char) -> String {
     s.to_string()
 }
 
@@ -38,3 +39,24 @@ pub fn map_white_space(c: &str) -> AST {
         _ => AST::Space,
     }
 }
+// pub fn fill_right<T>(mut input: Vec<T>, v: usize, default: Option<T>) -> Vec<T>
+// where T: Clone,
+// Vec<T> : From<Iterator<T>>{
+// if input.len() >= v {
+// return input;
+// }
+// let d = v - input.len();
+//
+// match default {
+// None => {
+// let value = input[input.len()].clone();
+// let append: Vec<T> = vec![value].iter().cycle().take(d).collect();
+// input.extend(append.iter().cloned());
+// }
+// Some(value) => {
+// let append: Vec<T> = vec![value].iter().cycle().take(d).collect();
+// input.extend(append.iter().cloned());
+// }
+// }
+// return input;
+// }

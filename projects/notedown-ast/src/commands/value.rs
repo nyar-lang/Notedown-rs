@@ -1,7 +1,9 @@
 use crate::AST;
-use std::collections::HashMap;
-use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::HashMap,
+    fmt,
+    fmt::{Display, Formatter},
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {

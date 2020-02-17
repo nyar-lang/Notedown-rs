@@ -1,4 +1,4 @@
-use notedown_ast::{parse, HTMLConfig, ToHTML};
+use notedown_ast::{parse, ToHTML};
 
 #[test]
 fn test_text() {
@@ -74,7 +74,7 @@ fn test_function() {
 fn test_table() {
     let input = parse(
         r#"
-         |name | age
+         |name | age | level
          :-|-:
          aster | 17
     "#,
