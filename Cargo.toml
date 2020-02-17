@@ -5,3 +5,7 @@ default-members = [
     "projects/notedown-parser",
     "projects/notedown-ast",
 ]
+
+[profile.release]
+lto = true
+opt-level = "s"

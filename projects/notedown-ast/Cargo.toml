@@ -15,7 +15,3 @@ notedown_parser = {path = "../notedown-parser",version = "0.2.0"}
 [dev-dependencies]
 
 [features]
-
-[profile.release]
-lto = true
-opt-level = "s"

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::AST;
-use std::fmt::{Display, Formatter};
+use std::collections::HashMap;
 use std::fmt;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -23,9 +23,9 @@ impl Display for Value {
             Value::Integer(s) => write!(f, "{}", s),
             Value::Decimal(s) => write!(f, "{}", s),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::List(_) => { unimplemented!() }
-            Value::Dict(_) => { unimplemented!() }
-            Value::Command(_) => { unimplemented!() }
+            Value::List(_) => unimplemented!(),
+            Value::Dict(_) => unimplemented!(),
+            Value::Command(_) => unimplemented!(),
         }
     }
 }

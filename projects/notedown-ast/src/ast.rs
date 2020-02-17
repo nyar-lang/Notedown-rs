@@ -1,6 +1,6 @@
+use crate::Value;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
-use crate::Value;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AST {
@@ -74,7 +74,13 @@ impl Display for AST {
                 let a: Vec<String> = args.iter().map(|v| format!("{}", v)).collect();
                 let kv: Vec<String> = kvs.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
 
-                write!(f, "\\{}{}{:?}", s, format!("[{}]", a.join(", ")), format!("{{{}}}", kv.join(", ")))
+                write!(
+                    f,
+                    "\\{}{}{:?}",
+                    s,
+                    format!("[{}]", a.join(", ")),
+                    format!("{{{}}}", kv.join(", "))
+                )
             }
             _ => {
                 let a = format!("unimplemented AST::{:?}", self);

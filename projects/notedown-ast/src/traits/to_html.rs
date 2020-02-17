@@ -73,9 +73,7 @@ impl ToHTML for AST {
             AST::MathInline(ref s) => format!("<span class=\"math\">${}$</span> ", s),
             AST::MathDisplay(ref s) => format!("<p class=\"math\">$${}$$</span> ", s),
 
-            AST::Command(ref s, ref keys, ref values) => {
-                unimplemented!()
-            }
+            AST::Command(ref s, ref keys, ref values) => unimplemented!(),
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));
