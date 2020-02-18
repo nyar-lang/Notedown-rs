@@ -59,6 +59,11 @@ impl Context {
                     let cmd = self.parse_command(pair);
                     self.execute_cmd(cmd)
                 }
+                Rule::CommandLine => {
+                    let cmd = self.parse_command(pair);
+                    self.execute_cmd(cmd)
+                }
+
                 _ => debug_cases!(pair),
             };
             println!("{}", code);

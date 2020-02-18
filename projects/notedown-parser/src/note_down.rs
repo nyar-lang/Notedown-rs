@@ -55,10 +55,6 @@ pub enum Rule {
     LineText,
     LineRest,
     Command,
-    CommandPart,
-    CommandContent,
-    Begin,
-    End,
     CommandBlock,
     arguments,
     argument_literal,
@@ -381,27 +377,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn Command(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    self::CommandLine(state).or_else(|state| self::CommandPart(state)).or_else(|state| self::CommandBlock(state))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn CommandPart(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::CommandPart, |state| state.sequence(|state| self::Begin(state).and_then(|state| self::arguments(state)).and_then(|state| self::CommandContent(state)).and_then(|state| self::End(state)).and_then(|state| state.optional(|state| self::arguments(state))))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn CommandContent(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::CommandContent, |state| state.repeat(|state| self::CommandPart(state).or_else(|state| state.sequence(|state| state.lookahead(false, |state| self::End(state)).and_then(|state| self::ANY(state)))))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn Begin(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::Begin, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| self::Escape(state).and_then(|state| state.match_string("begin")))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn End(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::End, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| self::Escape(state).and_then(|state| state.match_string("end")))))
+                    self::CommandLine(state).or_else(|state| self::CommandBlock(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -451,7 +427,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn CommandLine(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::CommandLine, |state| state.sequence(|state| self::command(state).and_then(|state| super::hidden::skip(state)).and_then(|state| state.optional(|state| self::arguments(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::Colon(state)).and_then(|state| super::hidden::skip(state)).and_then(|state| self::RestOfLine(state))))
+                    state.rule(Rule::CommandLine, |state| state.sequence(|state| self::command(state).and_then(|state| super::hidden::skip(state)).and_then(|state| self::Colon(state)).and_then(|state| super::hidden::skip(state)).and_then(|state| self::RestOfLine(state))))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -650,8 +626,13 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn SOI(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.start_of_input()
+                fn XID_START(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_char_by(::pest::unicode::XID_START)
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ANY(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.skip(1)
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -660,13 +641,8 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn POP(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.stack_pop()
-                }
-                #[inline]
-                #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ASCII_DIGIT(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_range('0'..'9')
+                pub fn EOI(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.rule(Rule::EOI, |state| state.end_of_input())
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
@@ -680,18 +656,18 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn EOI(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::EOI, |state| state.end_of_input())
+                pub fn ASCII_DIGIT(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('0'..'9')
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                fn XID_START(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.match_char_by(::pest::unicode::XID_START)
+                pub fn SOI(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.start_of_input()
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
-                pub fn ANY(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.skip(1)
+                pub fn POP(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.stack_pop()
                 }
             }
             pub use self::visible::*;
@@ -749,10 +725,6 @@ impl ::pest::Parser<Rule> for NoteDownParser {
             Rule::LineText => rules::LineText(state),
             Rule::LineRest => rules::LineRest(state),
             Rule::Command => rules::Command(state),
-            Rule::CommandPart => rules::CommandPart(state),
-            Rule::CommandContent => rules::CommandContent(state),
-            Rule::Begin => rules::Begin(state),
-            Rule::End => rules::End(state),
             Rule::CommandBlock => rules::CommandBlock(state),
             Rule::arguments => rules::arguments(state),
             Rule::argument_literal => rules::argument_literal(state),

@@ -1,1 +1,2 @@
 mod easy;
+mod normal;

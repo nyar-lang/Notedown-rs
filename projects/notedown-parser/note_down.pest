@@ -84,16 +84,11 @@ LineText = {(Escape~Tilde|!(Tilde ~ PEEK) ~ ANY)*}
 ///Gray
 LineRest = {Tilde+}
 /*====================================================================================================================*/
-Command = _{CommandLine|CommandPart| CommandBlock}
-//!#C678DD: Begin|End
-CommandPart = ${Begin ~ arguments  ~  CommandContent   ~  End  ~  arguments?}
-CommandContent = ${(CommandPart|!End ~ ANY)*}
-Begin = @{Escape ~ "begin"}
-End = @{Escape ~ "end"}
+Command = _{CommandLine| CommandBlock}
 
 //!#56B6C2: Set
 //!#E06C75: key
-CommandBlock = !{command ~  arguments*}
+CommandBlock = !{command ~ arguments*}
 arguments = _{
     "{"  ~SPACE_SEPARATOR*~ (key_value|argument)* ~SPACE_SEPARATOR*~  "}"
   | "["  ~ argument_literal ~  "]"
@@ -109,7 +104,7 @@ function = {
 }
 
 //!#61AFEF: CommandBlock
-CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
+CommandLine = {command ~ Colon  ~  RestOfLine}
 command = @{Escape ~ SYMBOL}
 RestOfLine = !{(!NEWLINE  ~  ANY)*}
 /*====================================================================================================================*/

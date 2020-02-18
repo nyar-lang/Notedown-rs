@@ -56,7 +56,6 @@ fn test_math() {
     );
     // println!("{:#?}", f);
     println!("{}", f.free().to_html_default());
-    unreachable!()
 }
 
 #[test]

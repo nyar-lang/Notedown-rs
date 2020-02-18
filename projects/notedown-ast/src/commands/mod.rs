@@ -13,6 +13,7 @@ impl Context {
         match &ast {
             AST::Command(cmd, args, kvs) => {
                 let out = match cmd.as_str() {
+                    "comment" => Some(String::new()),
                     "netease" => meting_js("netease", args, kvs),
                     "tencent_music" => meting_js("tencent", args, kvs),
                     "kugou" => meting_js("kugou", args, kvs),
