@@ -24,6 +24,14 @@ pub fn trim_escape(s: &str) -> &str {
     return out;
 }
 
+pub fn str_escape(s: &str) -> String {
+    match s.chars().next().unwrap() {
+        '\'' => unescape(&s[1..s.len() - 1], "'"),
+        '"' => unescape(&s[1..s.len() - 1], "\""),
+        _ => s.to_string(),
+    }
+}
+
 pub fn maybe_math(ctx: &Context, pair: Pair<Rule>) -> AST {
     let s = pair.as_str().trim();
     if s.starts_with("$$") && s.ends_with("$$") {

@@ -23,7 +23,7 @@ TextRest = {(!(NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
-Code = {CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~ CodeText ~ POP ~ CodeMark{3}}
+Code = {CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~SPACE_SEPARATOR*~ CodeText ~ POP ~ CodeMark{3}}
 CodeAction = {At|Asterisk|Sharp}
 CodeLevel = {CodeMark{3}~PUSH(CodeMark*)}
 CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
@@ -101,8 +101,8 @@ arguments = _{
 argument_literal = {(Escape ~ (Escape|"]")|!"]" ~ ANY)*}
 argument = {value  ~SPACE_SEPARATOR*~  Comma? ~ SPACE_SEPARATOR*}
 key_value = {key  ~SPACE_SEPARATOR*~  Set  ~SPACE_SEPARATOR*~ value  ~SPACE_SEPARATOR*~  Comma? ~ SPACE_SEPARATOR*}
-key = {SYMBOL}
-value = {Integer|String|expression|SYMBOL}
+key = {Integer|String|SYMBOL}
+value = {Integer|String|expression|Keywords|SYMBOL}
 expression = {SYMBOL~(Dot~ function)+}
 function = {
     SYMBOL ~ ("("~SPACE_SEPARATOR*~ (key_value|argument)* ~SPACE_SEPARATOR*~  ")")?
@@ -114,10 +114,9 @@ command = @{Escape ~ SYMBOL}
 RestOfLine = !{(!NEWLINE  ~  ANY)*}
 /*====================================================================================================================*/
 //!#D19A66: Integer|Decimal|DecimalBad|Exponent|ComplexHandler
-Number = ${Exponent|Decimal|DecimalBad|Integer}
+Number = ${Decimal|DecimalBad|Integer}
 Decimal = ${Integer  ~ Dot ~  ASCII_DIGIT+}
 DecimalBad = ${Integer ~ Dot | Dot ~ ASCII_DIGIT+}
-Exponent = ${(Decimal|Integer)  ~ "^^" ~  (Decimal|Integer)}
 Integer = @{Zero|ASCII_DIGIT  ~  (Underline?  ~  ASCII_NONZERO_DIGIT)* }
 Zero = @{"0"}
 /*====================================================================================================================*/
@@ -134,6 +133,7 @@ SYMBOL = @{
   | Underline~XID_CONTINUE+
 }
 Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent)}
+Keywords = @{"true"|"false"|"null"}
 // = _{!SPACE_SEPARATOR ~ ANY}
 /*====================================================================================================================*/
 //!Gray:BlockComment|LineComment

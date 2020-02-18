@@ -1,5 +1,5 @@
 use crate::{
-    utils::{map_escape, map_white_space, maybe_math, unescape},
+    utils::{map_escape, map_white_space, maybe_math, str_escape, unescape},
     Value, AST,
 };
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
@@ -55,7 +55,10 @@ impl Context {
                 Rule::List => self.parse_list(pair.as_str().trim()),
                 Rule::Table => self.parse_table(pair.as_str().trim()),
                 Rule::Code => self.parse_code(pair),
-                Rule::CommandBlock => self.parse_command(pair),
+                Rule::CommandBlock => {
+                    let cmd = self.parse_command(pair);
+                    self.execute_cmd(cmd)
+                }
                 _ => debug_cases!(pair),
             };
             println!("{}", code);
@@ -76,15 +79,20 @@ impl Context {
         return AST::Header(Box::new(head), level);
     }
     fn parse_code(&self, pairs: Pair<Rule>) -> AST {
-        let mut level = 0;
-        let _head = AST::None;
+        let mut level = "";
+        let mut cmd = "";
+        let mut body = "";
         for pair in pairs.into_inner() {
             match pair.as_rule() {
-                Rule::CodeLevel => level = pair.as_str().len(),
+                Rule::CodeMark => continue,
+                Rule::CodeLevel => level = pair.as_str(),
+                Rule::SYMBOL => cmd = pair.as_str(),
+                Rule::CodeText => body = pair.as_str().trim_matches('\n'),
                 _ => debug_cases!(pair),
             };
         }
-        return AST::None;
+        let code = format!("{}{}\n{}{}\n", level, cmd, body, level);
+        return AST::String(code);
     }
     pub fn parse_text(&self, text: &str) -> AST {
         let pairs = NoteDownParser::parse(Rule::TextMode, text).unwrap_or_else(|e| panic!("{}", e));
@@ -187,15 +195,26 @@ impl Context {
             match pair.as_rule() {
                 Rule::command => cmd = pair.as_str().trim_start_matches('\\').to_string(),
                 Rule::argument_literal => arg.push(Value::String(unescape(pair.as_str(), "]"))),
+                Rule::argument => {
+                    let mut v = Value::None;
+                    for inner in pair.into_inner() {
+                        match inner.as_rule() {
+                            Rule::SPACE_SEPARATOR => continue,
+                            Rule::Comma => continue,
+                            Rule::value => v = self.parse_value(inner),
+                            _ => debug_cases!(inner),
+                        };
+                    }
+                    arg.push(v);
+                }
                 Rule::key_value => {
                     let mut k = String::new();
                     let mut v = Value::None;
                     for inner in pair.into_inner() {
                         match inner.as_rule() {
-                            Rule::Set => continue,
-                            Rule::Comma => continue,
                             Rule::SPACE_SEPARATOR => continue,
-                            Rule::key => k = inner.as_str().to_string(),
+                            Rule::Comma | Rule::Set => continue,
+                            Rule::key => k = str_escape(inner.as_str()),
                             Rule::value => v = self.parse_value(inner),
                             _ => debug_cases!(inner),
                         };
@@ -211,15 +230,18 @@ impl Context {
         let mut value = Value::None;
         for pair in pairs.into_inner() {
             value = match pair.as_rule() {
-                Rule::String => {
-                    let s = pair.as_str().to_string();
-                    return Value::String(s);
-                }
+                Rule::String => Value::String(str_escape(pair.as_str())),
+                Rule::Integer => Value::String(pair.as_str().to_string()),
+                Rule::Keywords => match pair.as_str() {
+                    "null" => Value::None,
+                    "true" => Value::Boolean(true),
+                    "false" => Value::Boolean(false),
+                    _ => unreachable!(),
+                },
                 Rule::SYMBOL => {
                     let s = pair.as_str().to_string();
                     Value::Command(AST::Command(s, vec![], Default::default()))
                 }
-                Rule::Integer => Value::String(pair.as_str().to_string()),
                 _ => debug_cases!(pair),
             };
         }

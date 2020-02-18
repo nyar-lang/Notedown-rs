@@ -63,7 +63,9 @@ fn test_math() {
 fn test_function() {
     let input = parse(
         r#"
-        \include[./img.png][png]
+        \netease[song][22724727]
+        \netease{id = 28629058, type = "song", autoplay = true}
+        \unknow[arg1][arg2]{arg3 = "string", "arg4" = 42}
     "#,
     );
     // println!("{:#?}", f);

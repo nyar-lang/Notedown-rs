@@ -101,12 +101,7 @@ impl ToHTML for AST {
                 format!("<table>{}<tbody>{}</tbody></table>", thead, trs.join(""))
             }
 
-            AST::Command(s, keys, values) => {
-                println!("{}", s);
-                println!("{:?}", keys);
-                println!("{:?}", values);
-                unreachable!()
-            }
+            AST::Command(s, keys, values) => format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values),
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));
