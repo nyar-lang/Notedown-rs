@@ -28,8 +28,6 @@ pub enum AST {
     Underline(Box<AST>),
     Strikethrough(Box<AST>),
     Undercover(Box<AST>),
-    /// - `Font`:
-    Font(Box<AST>, HashMap<String, String>),
 
     Code(String),
     Raw(String),
@@ -84,7 +82,7 @@ impl Display for AST {
                 let a: Vec<String> = args.iter().map(|v| format!("{}", v)).collect();
                 let kv: Vec<String> = kvs.iter().map(|(k, v)| format!("{} = {}", k, v)).collect();
 
-                write!(f, "\\{}{}{:?}", s, format!("[{}]", a.join(", ")), format!("{{{}}}", kv.join(", ")))
+                write!(f, "\\{}{{{}}}", s, [&a[..], &kv[..]].concat().join(", "))
             }
             _ => {
                 let a = format!("unimplemented AST::{:?}", self);

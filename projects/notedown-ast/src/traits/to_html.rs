@@ -63,14 +63,13 @@ impl ToHTML for AST {
             AST::Underline(s) => format!("<u>{}</u>", unbox!(s)),
             AST::Strikethrough(s) => format!("<del>{}</del>", unbox!(s)),
             AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", unbox!(s)),
-
-            AST::Font(e, kv) => {
-                let mut tags = String::new();
-                for (k, v) in kv.iter() {
-                    tags += &format!(" {}=\"{}\"", k, v);
-                }
-                format!("<font{}>{}</font>", tags, unbox!(e))
-            }
+            // AST::Font(e, kv) => {
+            // let mut tags = String::new();
+            // for (k, v) in kv.iter() {
+            // tags += &format!(" {}=\"{}\"", k, v);
+            // }
+            // format!("<font{}>{}</font>", tags, unbox!(e))
+            // }
             AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
             AST::MathDisplay(s) => format!("<p class=\"math\">$${}$$</span> ", s),
 
@@ -102,7 +101,12 @@ impl ToHTML for AST {
                 format!("<table>{}<tbody>{}</tbody></table>", thead, trs.join(""))
             }
 
-            AST::Command(_s, _keys, _values) => unimplemented!(),
+            AST::Command(s, keys, values) => {
+                println!("{}", s);
+                println!("{:?}", keys);
+                println!("{:?}", values);
+                unreachable!()
+            }
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));

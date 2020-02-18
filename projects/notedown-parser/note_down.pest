@@ -1,12 +1,12 @@
 program = _{SOI ~ statement*  ~  EOI}
 TextMode = _{SOI ~ (TextElement|TextRest)*  ~  EOI}
 statement = _{
-    Header
-  | HorizontalRule
-  | Code
-  | Table
-  | List
-  | Command
+    SPACE_SEPARATOR* ~ Header
+  | SPACE_SEPARATOR* ~ HorizontalRule
+  | SPACE_SEPARATOR* ~ Code
+  | SPACE_SEPARATOR* ~ Table
+  | SPACE_SEPARATOR* ~ List
+  | SPACE_SEPARATOR* ~ Command
   | EmptyLine{1,}
   | TextBlock
 }
@@ -95,14 +95,18 @@ End = @{Escape ~ "end"}
 //!#E06C75: key
 CommandBlock = !{command ~  arguments*}
 arguments = _{
-    "{"  ~ (key_value|argument)* ~  "}"
+    "{"  ~SPACE_SEPARATOR*~ (key_value|argument)* ~SPACE_SEPARATOR*~  "}"
   | "["  ~ argument_literal ~  "]"
 }
 argument_literal = {(Escape ~ (Escape|"]")|!"]" ~ ANY)*}
-argument = {value  ~  Comma?}
-key_value = {key  ~  Set  ~ value  ~  Comma?}
+argument = {value  ~SPACE_SEPARATOR*~  Comma? ~ SPACE_SEPARATOR*}
+key_value = {key  ~SPACE_SEPARATOR*~  Set  ~SPACE_SEPARATOR*~ value  ~SPACE_SEPARATOR*~  Comma? ~ SPACE_SEPARATOR*}
 key = {SYMBOL}
-value = {SYMBOL|Integer|String}
+value = {Integer|String|expression|SYMBOL}
+expression = {SYMBOL~(Dot~ function)+}
+function = {
+    SYMBOL ~ ("("~SPACE_SEPARATOR*~ (key_value|argument)* ~SPACE_SEPARATOR*~  ")")?
+}
 
 //!#61AFEF: CommandBlock
 CommandLine = {command  ~arguments?~  Colon  ~  RestOfLine}
@@ -126,13 +130,11 @@ S1 = _{"'"}
 S2 = _{"\""}
 /*====================================================================================================================*/
 SYMBOL = @{
-    XID_START ~ XID_CONTINUE?
+    XID_START ~ XID_CONTINUE*
   | Underline~XID_CONTINUE+
 }
 Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent)}
-NonSpace = _{!SPACE_SEPARATOR ~ ANY}
-// NameCharacter = _{ASCII_DIGIT|NameStartCharacter}
-// NameStartCharacter = _{Underline|ASCII_ALPHA}
+// = _{!SPACE_SEPARATOR ~ ANY}
 /*====================================================================================================================*/
 //!Gray:BlockComment|LineComment
 COMMENT = ${BlockComment|LineComment }

@@ -63,7 +63,7 @@ fn test_math() {
 fn test_function() {
     let input = parse(
         r#"
-        f[x]{s="s", k=v()}
+        \include[./img.png][png]
     "#,
     );
     // println!("{:#?}", f);
