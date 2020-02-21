@@ -65,6 +65,7 @@ fn test_function() {
         \netease[song][22724727]
         \netease{id = 28629058, type = "song", autoplay = true}
         \unknow[arg1][arg2]{arg3 = "string", "arg4" = 42}
+        \title: Test
     "#,
     );
     // println!("{:#?}", f);

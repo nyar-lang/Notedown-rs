@@ -1,10 +1,7 @@
 use crate::{Context, AST};
 use notedown_parser::NoteDownRule as Rule;
 use pest::iterators::Pair;
-use std::{
-    collections::VecDeque,
-    io::{repeat, Read},
-};
+
 pub use textwrap::dedent;
 
 /// https://stackoverflow.com/questions/60337455/how-to-trim-space-less-than-n-times
@@ -72,7 +69,10 @@ pub fn maybe_math(ctx: &Context, pair: Pair<Rule>) -> AST {
         }
     }
     let t = ctx.parse_text(s);
-    AST::Paragraph(Box::new(t))
+    match t {
+        AST::None => AST::None,
+        _ => AST::Paragraph(Box::new(t)),
+    }
 }
 
 pub fn map_escape(c: &str) -> AST {

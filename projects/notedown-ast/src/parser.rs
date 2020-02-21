@@ -7,11 +7,7 @@ use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use std::{
-    collections::{HashMap, VecDeque},
-    fs::read_to_string,
-    iter::repeat,
-};
+use std::collections::{HashMap, VecDeque};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -26,7 +22,7 @@ macro_rules! debug_cases {
 pub struct Context {
     ast: AST,
     cfg: Settings,
-    meta: HashMap<String, String>,
+    pub meta: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone)]
@@ -57,7 +53,7 @@ impl Context {
         let input = text.replace("\t", &" ".repeat(self.cfg.tab_size)).replace("\n\r", "\n");
         self.ast = self.parse_program(&input)
     }
-    pub fn parse_program(&self, text: &str) -> AST {
+    pub fn parse_program(&mut self, text: &str) -> AST {
         let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         for pair in pairs {
@@ -82,6 +78,7 @@ impl Context {
 
                 _ => debug_cases!(pair),
             };
+            println!("{:?}", code);
             codes.push(code);
         }
         AST::Statements(codes)
@@ -136,7 +133,7 @@ impl Context {
             };
             codes.push(code);
         }
-        return AST::Text(codes);
+        if codes.len() == 0 { AST::None } else { AST::Text(codes) }
     }
     fn parse_style(&self, pairs: Pair<Rule>) -> AST {
         let s = pairs.as_str();
@@ -213,6 +210,7 @@ impl Context {
         let mut kvs = HashMap::default();
         for pair in pairs.into_inner() {
             match pair.as_rule() {
+                Rule::Colon => continue,
                 Rule::command => cmd = pair.as_str().trim_start_matches('\\').to_string(),
                 Rule::argument_literal => arg.push(Value::String(unescape(pair.as_str(), "]"))),
                 Rule::argument => {
@@ -241,6 +239,7 @@ impl Context {
                     }
                     kvs.insert(k, v);
                 }
+                Rule::RestOfLine => arg.push(Value::from(pair.as_str())),
                 _ => debug_cases!(pair),
             };
         }
@@ -310,7 +309,7 @@ impl Context {
         }
         return codes;
     }
-    fn parse_list(&self, text: &str) -> AST {
+    fn parse_list(&mut self, text: &str) -> AST {
         let (n, ty) = List::get_type(text.lines().next().unwrap());
         let mut codes: Vec<String> = vec![];
         let mut code: Vec<String> = vec![];
@@ -385,7 +384,7 @@ impl List {
         }
         return (i, m);
     }
-    pub fn trim_indent(line: &str, indent: usize, ty: &List) -> (bool, String) {
+    pub fn trim_indent(line: &str, _indent: usize, ty: &List) -> (bool, String) {
         let mut new = false;
         let mut vec: VecDeque<_> = List::parse_pairs(line).into_iter().collect();
         match ty {

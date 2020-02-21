@@ -1,6 +1,5 @@
 use crate::AST;
 use std::{
-    collections::HashMap,
     fmt,
     fmt::{Display, Formatter},
 };

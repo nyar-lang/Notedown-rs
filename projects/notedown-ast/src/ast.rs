@@ -2,7 +2,6 @@ use crate::Value;
 use std::{
     collections::HashMap,
     fmt::{self, Display, Formatter},
-    iter::repeat,
 };
 
 #[derive(Debug, Clone, PartialEq)]
