@@ -50,7 +50,7 @@ impl ToHTML for AST {
                 trimmed.join("\n")
             }
 
-            AST::Header(e, level) => format!("{} {}", unbox!(e), level),
+            AST::Header(e, level) => format!("<h{}>{}</h{}>", level, unbox!(e), level),
 
             AST::Paragraph(p) => format!("<p>{}</p>", unbox!(p)),
 

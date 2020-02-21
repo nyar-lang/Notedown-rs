@@ -1,5 +1,5 @@
 use crate::{
-    utils::{map_escape, map_white_space, maybe_math, str_escape, unescape},
+    utils::{map_escape, map_white_space, maybe_math, str_escape, trim_dedent, unescape},
     Value, AST,
 };
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
@@ -54,7 +54,7 @@ impl Context {
 
 impl Context {
     pub fn parse(&mut self, text: &str) {
-        let input = text.replace("\t", &" ".repeat(self.cfg.tab_size));
+        let input = text.replace("\t", &" ".repeat(self.cfg.tab_size)).replace("\n\r", "\n");
         self.ast = self.parse_program(&input)
     }
     pub fn parse_program(&self, text: &str) -> AST {
@@ -82,7 +82,6 @@ impl Context {
 
                 _ => debug_cases!(pair),
             };
-            println!("{}", code);
             codes.push(code);
         }
         AST::Statements(codes)
@@ -112,7 +111,7 @@ impl Context {
                 _ => debug_cases!(pair),
             };
         }
-        let code = format!("{}{}\n{}{}\n", level, cmd, body, level);
+        let code = format!("\n\n{}{}{}{}\n\n", level, cmd, body, level);
         return AST::String(code);
     }
     pub fn parse_text(&self, text: &str) -> AST {
@@ -132,7 +131,7 @@ impl Context {
 
                 Rule::TextRest => AST::String(pair.as_str().to_string()),
                 Rule::RawRest => AST::String(pair.as_str().to_string()),
-
+                Rule::StyleRest => AST::String(pair.as_str().to_string()),
                 _ => debug_cases!(pair),
             };
             codes.push(code);
@@ -312,17 +311,17 @@ impl Context {
         return codes;
     }
     fn parse_list(&self, text: &str) -> AST {
-        let (n, ty) = List::get_type(self, text.lines().next().unwrap());
+        let (n, ty) = List::get_type(text.lines().next().unwrap());
         let mut codes: Vec<String> = vec![];
         let mut code: Vec<String> = vec![];
-        for line in text.lines() {
+        for line in trim_dedent(text, n).lines() {
             let (b, t) = List::trim_indent(line, n, &ty);
-            if b {
-                code.push(t)
+            if b && code.len() != 0 {
+                codes.push(code.join("\n"));
+                code = vec![t]
             }
             else {
-                codes.push(code.join("\n"));
-                code = vec![]
+                code.push(t);
             }
         }
         codes.push(code.join("\n"));
@@ -361,6 +360,7 @@ fn parse_table_align(input: &str) -> Vec<u8> {
     return codes;
 }
 
+#[derive(Debug)]
 enum List {
     Quote,
     Ordered,
@@ -368,7 +368,7 @@ enum List {
 }
 
 impl List {
-    pub fn get_type(ctx: &Context, input: &str) -> (usize, List) {
+    pub fn get_type(input: &str) -> (usize, List) {
         let pairs = List::parse_pairs(input);
         let mut i = 0;
         let mut m = List::Quote;
@@ -386,53 +386,41 @@ impl List {
         return (i, m);
     }
     pub fn trim_indent(line: &str, indent: usize, ty: &List) -> (bool, String) {
-        // maybe less than indent size
-        let mut s = line.chars().chain(repeat(' ').take(indent));
-        for i in 0..indent {
-            match s.next().unwrap() {
-                ' ' => continue,
-                _ => break,
-            }
-        }
-        let s = s.collect::<String>();
-
+        let mut new = false;
+        let mut vec: VecDeque<_> = List::parse_pairs(line).into_iter().collect();
         match ty {
-            List::Quote => {
-                let mut vec: VecDeque<_> = List::parse_pairs(&s).into_iter().collect();
-                match vec[0].as_rule() {
-                    Rule::ListMark => match vec[0].as_str() {
-                        ">" => {
-                            vec.pop_front();
-                        }
-                        _ => (),
-                    },
+            List::Quote => match vec[0].as_rule() {
+                Rule::ListMark => match vec[0].as_str() {
+                    ">" => {
+                        vec.pop_front();
+                    }
                     _ => (),
-                }
-                let v: Vec<&str> = vec.iter().map(|x| x.as_str()).collect();
-                return (true, v.join(""));
-            }
-            List::Ordered => {
-                let mut vec: VecDeque<_> = List::parse_pairs(&s).into_iter().collect();
-                println!("{:?}", vec);
-                unimplemented!();
-            }
-            List::Orderless => {
-                let mut vec: VecDeque<_> = List::parse_pairs(&s).into_iter().collect();
-                let mut same = true;
-                match vec[0].as_rule() {
-                    Rule::ListMark => match vec[0].as_str() {
-                        "-" => {
-                            vec.pop_front();
-                            same = false
-                        }
-                        _ => (),
-                    },
+                },
+                _ => (),
+            },
+            List::Ordered => match vec[0].as_rule() {
+                Rule::ListMark => match vec[0].as_str() {
+                    "-" | ">" => (),
+                    _ => {
+                        vec.pop_front();
+                        new = true
+                    }
+                },
+                _ => (),
+            },
+            List::Orderless => match vec[0].as_rule() {
+                Rule::ListMark => match vec[0].as_str() {
+                    "-" => {
+                        vec.pop_front();
+                        new = true
+                    }
                     _ => (),
-                }
-                let v: Vec<&str> = vec.iter().map(|x| x.as_str()).collect();
-                return (same, v.join(""));
-            }
+                },
+                _ => (),
+            },
         }
+        let v: Vec<&str> = vec.iter().map(|x| x.as_str()).collect();
+        return (new, v.join(""));
     }
     fn parse_pairs(input: &str) -> Pairs<Rule> {
         let p = NoteDownParser::parse(Rule::ListMode, input).unwrap_or_else(|e| panic!("{}", e));
