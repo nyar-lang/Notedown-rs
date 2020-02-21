@@ -3,22 +3,15 @@ use crate::{
     Value, AST,
 };
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
-use pest::{iterators::Pair, Parser};
+use pest::{
+    iterators::{Pair, Pairs},
+    Parser,
+};
 use std::{
     collections::{HashMap, VecDeque},
     fs::read_to_string,
 };
-
-#[derive(Debug, Clone)]
-pub struct Context {
-    ast: AST,
-}
-
-impl Default for Context {
-    fn default() -> Self {
-        Context { ast: AST::None }
-    }
-}
+use std::iter::repeat;
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -29,6 +22,30 @@ macro_rules! debug_cases {
     }};
 }
 
+#[derive(Debug, Clone)]
+pub struct Context {
+    ast: AST,
+    cfg: Settings,
+    meta: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Settings {
+    tab_size: usize,
+}
+
+impl Default for Context {
+    fn default() -> Self {
+        Context { ast: AST::None, cfg: Default::default(), meta: Default::default() }
+    }
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings { tab_size: 2 }
+    }
+}
+
 impl Context {
     pub fn free(&self) -> AST {
         self.ast.clone()
@@ -36,12 +53,7 @@ impl Context {
 }
 
 impl Context {
-    pub fn parse_file(&self, path_from: &str) -> Result<Context, std::io::Error> {
-        let r = read_to_string(path_from)?;
-        let a = self.parse(&r);
-        return Ok(a);
-    }
-    pub fn parse(&self, text: &str) -> Context {
+    pub fn parse(&mut self, text: &str) {
         let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         for pair in pairs {
@@ -52,7 +64,7 @@ impl Context {
                 Rule::SPACE_SEPARATOR => continue,
                 Rule::TextBlock => maybe_math(self, pair),
                 Rule::Header => self.parse_header(pair),
-                Rule::List => self.parse_list(pair.as_str().trim()),
+                Rule::List => self.parse_list(pair.as_str().trim_end()),
                 Rule::Table => self.parse_table(pair.as_str().trim()),
                 Rule::Code => self.parse_code(pair),
                 Rule::CommandBlock => {
@@ -69,7 +81,7 @@ impl Context {
             println!("{}", code);
             codes.push(code);
         }
-        return Context { ast: AST::Statements(codes) };
+        self.ast = AST::Statements(codes)
     }
     fn parse_header(&self, pairs: Pair<Rule>) -> AST {
         let mut level = 0;
@@ -295,7 +307,12 @@ impl Context {
         }
         return codes;
     }
-    fn parse_list(&self, _text: &str) -> AST {
+    fn parse_list(&self, text: &str) -> AST {
+        let (n, ty) = List::get_type(self, text.lines().next().unwrap());
+        for line in text.lines() {
+            List::trim_indent(line, n, &ty)
+        }
+        unreachable!();
         return AST::None;
     }
 }
@@ -324,4 +341,58 @@ fn parse_table_align(input: &str) -> Vec<u8> {
         };
     }
     return codes;
+}
+
+enum List {
+    Quote,
+    Ordered,
+    Orderless,
+}
+
+impl List {
+    pub fn get_type(ctx: &Context, input: &str) -> (usize, List) {
+        let pairs = List::parse_pairs(input);
+        let mut i = 0;
+        let mut m = List::Quote;
+        for pair in pairs {
+            match pair.as_rule() {
+                Rule::SPACE_SEPARATOR => match pair.as_str() {
+                    "\t" => i += ctx.cfg.tab_size,
+                    _ => i += 1,
+                },
+                Rule::ListMark => match pair.as_str() {
+                    ">" => m = List::Quote,
+                    "-" => m = List::Orderless,
+                    _ => m = List::Ordered,
+                },
+                Rule::ListEnd => return (i, m),
+                _ => debug_cases!(pair),
+            };
+        }
+        return (i, m);
+    }
+    pub fn trim_indent(line: &str, indent: usize, ty: &List) {
+        // maybe less than indent size
+        let chain = line.chars().chain(repeat(' '));
+        match ty {
+            List::Quote => {
+                let mut s = chain.clone();
+                for i in 0..indent{
+                    match s.next().unwrap() {
+                        " "
+                    }
+                }
+            }
+            List::Ordered => { unimplemented!() }
+            List::Orderless => {
+                let head: String = line.chars().chain(repeat(' ')).take(indent + 1).collect();
+                //let pairs = List::parse_pairs(&line[0..indent]);
+                println!("{}", head);
+            }
+        }
+    }
+    fn parse_pairs(input: &str) -> Pairs<Rule> {
+        let p = NoteDownParser::parse(Rule::List, input).unwrap_or_else(|e| panic!("{}", e));
+        p.into_iter().next().unwrap().into_inner()
+    }
 }

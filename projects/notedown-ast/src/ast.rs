@@ -2,6 +2,7 @@ use crate::Value;
 use std::{
     collections::HashMap,
     fmt::{self, Display, Formatter},
+    iter::repeat,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -54,6 +55,8 @@ impl Display for AST {
             AST::None => write!(f, ""),
             AST::Space => write!(f, " "),
             AST::Newline => write!(f, "\n"),
+
+            AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l as usize), a),
 
             AST::Statements(e) => {
                 let fs: Vec<String> = e.iter().map(|ast| format!("{}", ast)).collect();

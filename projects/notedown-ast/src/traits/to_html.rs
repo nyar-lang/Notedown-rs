@@ -39,7 +39,7 @@ impl ToHTML for AST {
         match self {
             AST::None => String::from(""),
             AST::Space => String::from(" "),
-            AST::Newline => String::from("\n"),
+            AST::Newline => String::from("</br>"),
 
             AST::Statements(e) => {
                 let mut text = String::new();

@@ -96,3 +96,16 @@ fn test_code() {
     // println!("{:#?}", f);
     println!("{}", input.free().to_html_default());
 }
+
+#[test]
+fn test_quote() {
+    let input = parse(
+        r#"
+        > - 1
+        > - 2
+        > - 3
+    "#,
+    );
+    // println!("{:#?}", f);
+    println!("{}", input.free().to_html_default());
+}
