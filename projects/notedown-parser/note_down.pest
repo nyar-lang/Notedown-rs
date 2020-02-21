@@ -1,11 +1,12 @@
 program = _{SOI ~ statement*  ~  EOI}
 TextMode = _{SOI ~ (TextElement|TextRest)*  ~  EOI}
+ListMode = {SPACE_SEPARATOR* ~ ListMark? ~ ListText  ~ ListEnd}
 statement = _{
     SPACE_SEPARATOR* ~ Header
   | SPACE_SEPARATOR* ~ HorizontalRule
   | SPACE_SEPARATOR* ~ Code
   | SPACE_SEPARATOR* ~ Table
-  | SPACE_SEPARATOR* ~ List
+  | List
   | SPACE_SEPARATOR* ~ Command
   | EmptyLine{1,}
   | TextBlock
@@ -41,16 +42,17 @@ TableRest = {(!(TableMark|Escape) ~ ANY)+}
 TableMark = @{Vertical}
 /*====================================================================================================================*/
 //!Green: ListMark
-List = {ListMark ~ (!ListEnd~ANY)* ~ ListEnd}
+List = {SPACE_SEPARATOR* ~ ListMark ~ ListText  ~ ListEnd}
+ListText = {(!ListEnd~ANY)*}
 ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
-program_list = _{SOI ~ ListStatement+  ~  EOI}
-ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
-ListHeadLevel = {SPACE_SEPARATOR*}
-ListRest = {(!ListStatement~ANY)*}
-ListMark = @{Plus|Minus|Vertical|QuoteMark|Integer~Dot}
+//program_list = _{SOI ~ ListStatement+  ~  EOI}
+//ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
+//ListHeadLevel = {SPACE_SEPARATOR*}
+//ListRest = {(!ListStatement~ANY)*}
+ListMark = @{Minus|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
 ///Red
-HorizontalRule = @{Set{3,}|Minus{3,}}
+HorizontalRule = @{Minus{3,}}
 /*====================================================================================================================*/
 MathStatement = _{Math|MathRest}
 ///#E06C75

@@ -1,12 +1,11 @@
 [package]
 name = "notedown_parser"
-version = "0.2.0"
-authors = ["Aster <galaster@foxmail.com>"]
-description = "Notedown Text parser and formatter"
-license = "MPL-2.0"
-readme = "README.md"
+version = "0.3.0"
+authors = ["Aster <192607617@qq.com>"]
+description = "Notedown Text parser"
 repository = "https://github.com/nyar-lang/notedown-rs"
-exclude = ["/tests/*"]
+readme = "README.md"
+license = "MPL-2.0"
 edition = "2018"
 
 

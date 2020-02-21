@@ -5,6 +5,7 @@ use std::{
     collections::VecDeque,
     io::{repeat, Read},
 };
+pub use textwrap::dedent;
 
 pub fn unescape(s: &str, c: &str) -> String {
     let mut e = String::from("\\");

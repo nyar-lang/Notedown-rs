@@ -63,13 +63,6 @@ impl ToHTML for AST {
             AST::Underline(s) => format!("<u>{}</u>", unbox!(s)),
             AST::Strikethrough(s) => format!("<del>{}</del>", unbox!(s)),
             AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", unbox!(s)),
-            // AST::Font(e, kv) => {
-            // let mut tags = String::new();
-            // for (k, v) in kv.iter() {
-            // tags += &format!(" {}=\"{}\"", k, v);
-            // }
-            // format!("<font{}>{}</font>", tags, unbox!(e))
-            // }
             AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
             AST::MathDisplay(s) => format!("<p class=\"math\">$${}$$</span> ", s),
 
@@ -99,6 +92,18 @@ impl ToHTML for AST {
                     trs.push(format!("<tr>{}</tr>", thead))
                 }
                 format!("<table>{}<tbody>{}</tbody></table>", thead, trs.join(""))
+            }
+            AST::Quote(v) => {
+                let quote = v.iter().map(|s| unbox!(s)).collect::<Vec<String>>().join("");
+                format!("<blockquote>{}</blockquote>", quote)
+            }
+            AST::Ordered(v) => {
+                let quote = v.iter().map(|s| format!("<li>{}</li>", unbox!(s))).collect::<Vec<String>>().join("");
+                format!("<ol>{}</ol>", quote)
+            }
+            AST::Orderless(v) => {
+                let quote = v.iter().map(|s| format!("<li>{}</li>", unbox!(s))).collect::<Vec<String>>().join("");
+                format!("<ul>{}</ul>", quote)
             }
 
             AST::Command(s, keys, values) => format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values),

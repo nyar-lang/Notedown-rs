@@ -102,7 +102,7 @@ fn test_quote() {
     let input = parse(
         r#"
         > - 1
-        > - 2
+        >   2
         > - 3
     "#,
     );
