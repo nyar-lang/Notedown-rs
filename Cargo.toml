@@ -4,6 +4,8 @@ members = ["projects/*"]
 default-members = [
     "projects/notedown-parser",
     "projects/notedown-ast",
+    "projects/notedown-fmt",
+    "projects/notedown-zola",
 ]
 
 [profile.release]
