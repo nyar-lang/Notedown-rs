@@ -1,6 +1,26 @@
+use pangu::spacing;
+use std::borrow::Cow;
 pub use textwrap::{dedent, indent};
 
+pub fn pangu_space(text: &str) -> Cow<str> {
+    spacing(text)
+}
+
+pub fn count_indent(text: &str) -> usize {
+    let mut spaces = 0;
+    for c in text.chars() {
+        match c {
+            ' ' => spaces += 1,
+            _ => break,
+        }
+    }
+    return spaces;
+}
+
 pub fn dedent_less_than(input: &str, indent: usize) -> String {
+    if indent == 0 {
+        return String::from(input);
+    }
     let mut out: String = String::from(input);
     let mut j: usize = 0;
     let mut is_counting = true;
@@ -13,7 +33,8 @@ pub fn dedent_less_than(input: &str, indent: usize) -> String {
                 if ws_cnt == indent {
                     is_counting = false;
                 }
-            } else {
+            }
+            else {
                 is_counting = false;
                 if out_b[i] == b'\n' {
                     is_counting = true;

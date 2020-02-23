@@ -6,6 +6,7 @@ default-members = [
     "projects/notedown-ast",
     "projects/notedown-fmt",
     "projects/notedown-zola",
+    "projects/notedown-vscode",
 ]
 
 [profile.release]

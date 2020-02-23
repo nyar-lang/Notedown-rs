@@ -1,10 +1,10 @@
+use crate::utils::{count_indent, dedent_less_than, indent, pangu_space};
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
 use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use crate::utils::{dedent_less_than, indent};
-
+use std::borrow::Cow;
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -17,13 +17,13 @@ macro_rules! debug_cases {
 
 #[derive(Debug, Clone)]
 pub struct Settings {
-    tab_size: usize,
-    end_line: bool,
+    pub tab_size: usize,
+    pub pangu_space: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { tab_size: 2, end_line: true }
+        Settings { tab_size: 2, pangu_space: true }
     }
 }
 
@@ -43,7 +43,7 @@ impl Settings {
 
                 Rule::Header => codes.push(self.format_header(pair)),
                 Rule::TextBlock => codes.push(self.format_text(pair)),
-                Rule::List=>codes.push(self.format_list(pair)),
+                Rule::List => codes.push(self.format_list(pair)),
 
                 _ => debug_cases!(pair),
             };
@@ -66,16 +66,10 @@ impl Settings {
     }
 
     fn format_text(&self, input: Pair<Rule>) -> String {
-        let text = input.as_str();
-        let mut spaces = 0;
-        for c in text.chars() {
-            match c {
-                ' ' => spaces += 1,
-                _ => break
-            }
-        }
+        let text = if self.pangu_space { pangu_space(input.as_str()) } else { Cow::from(input.as_str()) };
+        let spaces = count_indent(&text);
         let mut codes = vec![];
-        for pair in text_parse(dedent_less_than(text, spaces).trim_end()) {
+        for pair in parse_text(dedent_less_than(&text, spaces).trim_end()) {
             let code = match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::TextRest => codes.push(pair.as_str().to_string()),
@@ -101,9 +95,55 @@ impl Settings {
         }
         format!("{0}{1}{0}", "*".repeat(level), text)
     }
+    fn format_list(&self, input: Pair<Rule>) -> String {
+        let text = input.as_str();
+        let spaces = count_indent(text);
+        let mut codes = vec![];
+
+        for pair in input.into_inner() {
+            match pair.as_rule() {
+                Rule::SPACE_SEPARATOR => continue,
+                Rule::ListMark => match pair.as_str() {
+                    ">" => codes.push(self.format_quote(dedent_less_than(text, spaces).trim_end())),
+                    _ => break,
+                },
+                _ => debug_cases!(pair),
+            };
+        }
+        format!("{}", &indent(&codes.join(""), &" ".repeat(spaces)))
+    }
+    fn format_quote(&self, text: &str) -> String {
+        println!("{}", text);
+        String::from(text)
+        // let text = input.as_str();
+        // let spaces = count_indent(text);
+        // let mut codes = vec![];
+        // for pair in parse_list(dedent_less_than(text, spaces).trim_end()) {
+        // let code = match pair.as_rule() {
+        // _ => debug_cases!(pair),
+        // };
+        // }
+        // format!("{}", &indent(&codes.join(""), &" ".repeat(spaces)))
+    }
 }
 
-fn text_parse(text: &str) -> Pairs<Rule> {
+fn parse_text(text: &str) -> Pairs<Rule> {
     NoteDownParser::parse(Rule::TextMode, text).unwrap_or_else(|e| panic!("{}", e))
 }
 
+fn parse_table(text: &str) -> Pairs<Rule> {
+    NoteDownParser::parse(Rule::TableMode, text).unwrap_or_else(|e| panic!("{}", e))
+}
+
+fn parse_list(text: &str) -> Pairs<Rule> {
+    let p = NoteDownParser::parse(Rule::ListMode, text).unwrap_or_else(|e| panic!("{}", e));
+    p.into_iter().next().unwrap().into_inner()
+}
+// #[derive(Debug)]
+// enum List {
+// Quote,
+// Ordered,
+// Orderless,
+// }
+//
+// impl List {}
