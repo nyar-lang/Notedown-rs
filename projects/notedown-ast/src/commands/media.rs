@@ -1,4 +1,4 @@
-use crate::{Context, Value, AST};
+use crate::{Value, Context, AST};
 use std::collections::HashMap;
 
 macro_rules! required_arg {
@@ -18,7 +18,7 @@ macro_rules! required_arg {
 macro_rules! optional_arg {
     ($kvs:ident, $name:literal, $default:expr) => {
         match $kvs.get($name) {
-            Some(v) => v,
+            Some(v) => v.clone(),
             None => Value::from($default),
         }
     };
@@ -49,3 +49,26 @@ pub fn meting_js(server: &str, args: &Vec<Value>, kvs: &HashMap<String, Value>) 
     let out = format!("<meting-js server={:?} {}></meting-js>", server, args.join(" "));
     return Some(out);
 }
+
+pub fn fancy_quote(ctx: &mut Context, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> AST {
+    let by = match kvs.get("body") {
+        Some(v) => v.clone(),
+        None => Value::from(""),
+    };
+    let ty = match kvs.get("type") {
+        Some(v) => v.clone(),
+        None => Value::from(""),
+    };
+    match ctx.parse_program(by.as_str()) {
+        AST::Statements(body) => AST::Quote { body, style: ty.to_string() },
+        _ => AST::None,
+    }
+}
+
+pub fn image_insert(ctx: &mut Context, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
+    let src = required_arg!(kvs, "src", args, 0);
+    let ty = optional_arg!(kvs,"alt","");
+    let out = format!("<img src={}>", src);
+    return Some(out);
+}
+

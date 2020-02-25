@@ -1,70 +1,57 @@
-use crate::AST;
-use std::{
-    fmt::format,
-    iter::{repeat, Chain, Repeat},
-    slice::Iter,
-};
-
-#[derive(Debug, Copy, Clone)]
-pub struct HTMLConfig {}
-
-impl Default for HTMLConfig {
-    fn default() -> Self {
-        HTMLConfig {}
-    }
-}
+use crate::{traits::Settings, utils::build_zola, Context, NotedownTarget, NotedownTemplate, Value, AST};
+use std::{collections::HashMap, iter::repeat};
 
 pub trait ToHTML {
-    fn to_html(&self, cfg: HTMLConfig) -> String;
-    fn to_html_default(&self) -> String {
-        self.to_html(HTMLConfig::default())
+    fn to_html_with(&self, cfg: &Settings) -> String;
+    fn to_html(&self) -> String {
+        self.to_html_with(&Settings::default())
     }
 }
 
-/// Unwrap Box<AST>
-impl ToHTML for Box<AST> {
-    fn to_html(&self, cfg: HTMLConfig) -> String {
-        let unbox = self.as_ref();
-        unbox.to_html(cfg)
+impl ToHTML for Context {
+    fn to_html_with(&self, cfg: &Settings) -> String {
+        let head = self.meta.to_html_with(cfg);
+        let post = self.ast.to_html_with(cfg);
+        return format!("{}{}", head, post);
+    }
+
+    fn to_html(&self) -> String {
+        let head = self.meta.to_html_with(&self.cfg);
+        let post = self.ast.to_html_with(&self.cfg);
+        return format!("{}{}", head, post);
+    }
+}
+
+impl ToHTML for HashMap<String, Value> {
+    fn to_html_with(&self, cfg: &Settings) -> String {
+        match cfg.target {
+            NotedownTarget::Web => String::new(),
+            NotedownTarget::VSCode => String::new(),
+            NotedownTarget::Zola => String::new(),
+        }
     }
 }
 
 impl ToHTML for AST {
-    fn to_html(&self, cfg: HTMLConfig) -> String {
-        macro_rules! unbox {
-            ($e:ident) => {
-                $e.to_html(cfg)
-            };
-        }
+    fn to_html_with(&self, cfg: &Settings) -> String {
         match self {
-            AST::None => String::from(""),
-            AST::Space => String::from(" "),
-            AST::Newline => String::from("</br>"),
-
             AST::Statements(e) => {
                 let mut text = String::new();
                 for node in e {
-                    text += &unbox!(node)
+                    text += &node.to_html_with(cfg)
                 }
                 let trimmed: Vec<_> = text.lines().map(|s| s.trim()).collect();
                 trimmed.join("\n")
             }
+            AST::Header(e, level) => format!("<h{0}>{1}</h{0}>", level, e.to_html_with(cfg)),
 
-            AST::Header(e, level) => format!("<h{}>{}</h{}>", level, unbox!(e), level),
-
-            AST::Paragraph(p) => format!("<p>{}</p>", unbox!(p)),
-
-            AST::Text(v) => v.iter().map(|s| unbox!(s)).collect::<Vec<String>>().join(""),
-            AST::Raw(s) => format!("<pre>{}</pre>", s),
-            AST::Code(s) => format!("<code>{}</code>", s),
-            AST::String(s) => format!("{}", s),
-            AST::Bold(s) => format!("<b>{}</b>", unbox!(s)),
-            AST::Italic(s) => format!("<i>{}</i>", unbox!(s)),
-            AST::Underline(s) => format!("<u>{}</u>", unbox!(s)),
-            AST::Strikethrough(s) => format!("<del>{}</del>", unbox!(s)),
-            AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", unbox!(s)),
-            AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
-            AST::MathDisplay(s) => format!("<p class=\"math\">$${}$$</span> ", s),
+            AST::Paragraph(p) => format!("<p>{}</p>", p.to_html_with(cfg)),
+            AST::Text(v) => v.iter().map(|s| s.to_html_with(cfg)).collect::<Vec<String>>().join(""),
+            AST::Bold(s) => format!("<b>{}</b>", s.to_html_with(cfg)),
+            AST::Italic(s) => format!("<i>{}</i>", s.to_html_with(cfg)),
+            AST::Underline(s) => format!("<u>{}</u>", s.to_html_with(cfg)),
+            AST::Strikethrough(s) => format!("<del>{}</del>", s.to_html_with(cfg)),
+            AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", s.to_html_with(cfg)),
 
             AST::Table { head, align, terms, column } => {
                 let align_iter = align.iter().chain(repeat(&align[align.len() - 1]));
@@ -73,7 +60,7 @@ impl ToHTML for AST {
                     let mut align = align_iter.clone();
                     let mut thead = String::new();
                     for _ in 0..*column {
-                        let h = head.next().unwrap().to_html(cfg);
+                        let h = head.next().unwrap().to_html_with(cfg);
                         let a = *align.next().unwrap();
                         thead.push_str(&format!("{}", build_th(&h, a)))
                     }
@@ -85,7 +72,7 @@ impl ToHTML for AST {
                     let mut align = align_iter.clone();
                     let mut thead = String::new();
                     for _ in 0..*column {
-                        let h = head.next().unwrap().to_html(cfg);
+                        let h = head.next().unwrap().to_html_with(cfg);
                         let a = *align.next().unwrap();
                         thead.push_str(&format!("{}", build_td(&h, a)))
                     }
@@ -93,20 +80,41 @@ impl ToHTML for AST {
                 }
                 format!("<table>{}<tbody>{}</tbody></table>", thead, trs.join(""))
             }
-            AST::Quote(v) => {
-                let quote = v.iter().map(|s| unbox!(s)).collect::<Vec<String>>().join("");
-                format!("<blockquote>{}</blockquote>", quote)
+            AST::Quote { body, style } => {
+                let quote = body.iter().map(|s| s.to_html_with(cfg)).collect::<Vec<String>>().join("");
+                match style.as_str() {
+                    "info" | "danger" | "warning" | "success" => {
+                        format!("<blockquote class=\"fancyquote {}\">{}</blockquote>", style, quote)
+                    }
+                    _ => format!("<blockquote>{}</blockquote>", quote),
+                }
             }
             AST::Ordered(v) => {
-                let quote = v.iter().map(|s| format!("<li>{}</li>", unbox!(s))).collect::<Vec<String>>().join("");
+                let quote = v.iter().map(|s| format!("<li>{}</li>", s.to_html_with(cfg))).collect::<Vec<String>>().join("");
                 format!("<ol>{}</ol>", quote)
             }
             AST::Orderless(v) => {
-                let quote = v.iter().map(|s| format!("<li>{}</li>", unbox!(s))).collect::<Vec<String>>().join("");
+                let quote = v.iter().map(|s| format!("<li>{}</li>", s.to_html_with(cfg))).collect::<Vec<String>>().join("");
                 format!("<ul>{}</ul>", quote)
             }
 
             AST::Command(s, keys, values) => format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values),
+            _ => self.to_html()
+        }
+    }
+
+    fn to_html(&self) -> String {
+        match self {
+            AST::None => String::from(""),
+            AST::Space => String::from(" "),
+            AST::Newline => String::from("</br>"),
+
+            AST::Raw(s) => format!("<pre>{}</pre>", s),
+            AST::Code(s) => format!("<code>{}</code>", s),
+            AST::String(s) => format!("{}", s),
+            AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
+            AST::MathDisplay(s) => format!("<p class=\"math\">$${}$$</p> ", s),
+
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));

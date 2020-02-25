@@ -48,3 +48,20 @@ impl From<bool> for Value {
         Value::Boolean(b)
     }
 }
+
+impl Value {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Value::String(s) => s,
+            Value::Boolean(b) => if *b { "true" } else { "false" },
+            _ => unreachable!(),
+        }
+    }
+    pub fn to_string(&self) -> String {
+        match self {
+            Value::String(s) => s.clone(),
+            Value::Boolean(b) => format!("{}", b),
+            _ => unreachable!(),
+        }
+    }
+}

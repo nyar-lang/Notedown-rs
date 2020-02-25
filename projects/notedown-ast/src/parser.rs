@@ -1,6 +1,6 @@
 use crate::{
     utils::{map_escape, map_white_space, maybe_math, str_escape, trim_dedent, unescape},
-    Value, AST,
+    Context, Value, AST,
 };
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
 use pest::{
@@ -18,33 +18,21 @@ macro_rules! debug_cases {
     }};
 }
 
-#[derive(Debug, Clone)]
-pub struct Context {
-    ast: AST,
-    cfg: Settings,
-    pub meta: HashMap<String, Value>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Settings {
-    tab_size: usize,
-}
-
-impl Default for Context {
-    fn default() -> Self {
-        Context { ast: AST::None, cfg: Default::default(), meta: Default::default() }
-    }
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Settings { tab_size: 2 }
-    }
-}
-
 impl Context {
-    pub fn free(&self) -> AST {
+    pub fn post(&self) -> AST {
         self.ast.clone()
+    }
+    pub fn meta_info(&self) -> HashMap<String, Value> {
+        self.meta.clone()
+    }
+    pub fn get_name(&self) -> Option<String> {
+        match self.meta.get("name") {
+            Some(v) => match v {
+                Value::String(s) => Some(s.clone()),
+                _ => None,
+            },
+            None => None,
+        }
     }
 }
 
@@ -108,7 +96,7 @@ impl Context {
                 _ => debug_cases!(pair),
             };
         }
-        let code = format!("\n\n{}{}{}{}\n\n", level, cmd, body, level);
+        let code = format!("\n\n{0}{1}{2}{0}\n\n", level, cmd, body);
         return AST::String(code);
     }
     pub fn parse_text(&self, text: &str) -> AST {
@@ -326,7 +314,7 @@ impl Context {
         codes.push(code.join("\n"));
         let ast: Vec<_> = codes.iter().map(|c| self.parse_program(&c)).collect();
         match ty {
-            List::Quote => AST::Quote(ast),
+            List::Quote => AST::Quote { body: ast, style: String::new() },
             List::Ordered => AST::Ordered(ast),
             List::Orderless => AST::Orderless(ast),
         }
