@@ -99,7 +99,7 @@ impl ToHTML for AST {
             }
 
             AST::Command(s, keys, values) => format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values),
-            _ => self.to_html()
+            _ => self.to_html(),
         }
     }
 

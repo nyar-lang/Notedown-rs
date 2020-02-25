@@ -51,21 +51,29 @@ fn test_text_3() {
 }
 
 #[test]
-fn test_quote() {
+fn test_quote_1() {
     let s = Settings::default();
     const INPUT: &str = "
     >4
-   >3
+   3
   >2
- >1
->0
+ 1
+0
 ";
-    const OUTPUT: &str = "\
+    const OUTPUT: &str = "    >  4\n    >  3\n    >  2\n    >  1\n    >  0\n";
+    assert_eq!(s.format(&s.format(INPUT)), OUTPUT)
+}
+
+#[test]
+fn test_quote_2() {
+    let s = Settings::default();
+    const INPUT: &str = "
     4
-    3
-    2
-    1
-    0
+   >3
+  2
+ >1
+0
 ";
+    const OUTPUT: &str = "    4\n    >3\n    2\n    >1\n    0\n";
     assert_eq!(s.format(&s.format(INPUT)), OUTPUT)
 }

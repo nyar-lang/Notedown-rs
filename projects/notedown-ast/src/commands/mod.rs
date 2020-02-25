@@ -2,11 +2,13 @@ mod io;
 mod media;
 mod value;
 
-use crate::{Context, AST};
+use crate::{
+    commands::media::{fancy_quote, image_insert},
+    Context, AST,
+};
 pub use io::{import, set_categories, set_date, set_series, set_tags, set_title};
 pub use media::meting_js;
 pub use value::Value;
-use crate::commands::media::{fancy_quote, image_insert};
 
 impl Context {
     pub fn execute_cmd(&mut self, ast: AST) -> AST {

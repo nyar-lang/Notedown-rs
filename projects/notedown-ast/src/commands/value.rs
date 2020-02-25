@@ -53,7 +53,14 @@ impl Value {
     pub fn as_str(&self) -> &str {
         match self {
             Value::String(s) => s,
-            Value::Boolean(b) => if *b { "true" } else { "false" },
+            Value::Boolean(b) => {
+                if *b {
+                    "true"
+                }
+                else {
+                    "false"
+                }
+            }
             _ => unreachable!(),
         }
     }

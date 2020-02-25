@@ -2,19 +2,19 @@ program = _{SOI ~ statement*  ~  EOI}
 TextMode = _{SOI ~ (TextElement|TextRest)*  ~  EOI}
 ListMode = {SPACE_SEPARATOR* ~ ListMark? ~ ListText  ~ ListEnd}
 statement = _{
-    SPACE_SEPARATOR* ~ Header
-  | SPACE_SEPARATOR* ~ HorizontalRule
-  | SPACE_SEPARATOR* ~ Code
-  | SPACE_SEPARATOR* ~ Table
+    Header
+  | HorizontalRule
+  | Code
+  | Table
   | List
-  | SPACE_SEPARATOR* ~ Command
+  | Command
   | EmptyLine{1,}
   | TextBlock
 }
 EmptyLine = _{SPACE_SEPARATOR*  ~  NEWLINE}
 /*====================================================================================================================*/
 //!#E06C75: Header
-Header = ${Sharp{1, 6}  ~  RestOfLine}
+Header = ${SPACE_SEPARATOR* ~ Sharp{1, 6}  ~  RestOfLine}
 /*====================================================================================================================*/
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
 TextHeaderCharacter = _{!NEWLINE  ~ ANY}
@@ -24,14 +24,14 @@ TextRest = {(!(NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
-Code = {CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~SPACE_SEPARATOR*~ CodeText ~ POP ~ CodeMark{3}}
+Code = {SPACE_SEPARATOR* ~ CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~SPACE_SEPARATOR*~ CodeText ~ POP ~ CodeMark{3}}
 CodeAction = {At|Asterisk|Sharp}
 CodeLevel = {CodeMark{3}~PUSH(CodeMark*)}
 CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
 CodeMark = @{Accent}
 /*====================================================================================================================*/
 //!Orange: TableMark
-Table = {TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
+Table = {SPACE_SEPARATOR* ~ TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
 TableEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
 
 TableMode = _{SOI ~ TableLine*  ~  EOI}
@@ -52,7 +52,7 @@ ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
 ListMark = @{Minus|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
 ///Red
-HorizontalRule = @{Minus{3,}}
+HorizontalRule = @{SPACE_SEPARATOR* ~ Minus{3,}}
 /*====================================================================================================================*/
 MathStatement = _{Math|MathRest}
 ///#E06C75
@@ -86,7 +86,7 @@ LineText = {(Escape~Tilde|!(Tilde ~ PEEK) ~ ANY)*}
 ///Gray
 LineRest = {Tilde+}
 /*====================================================================================================================*/
-Command = _{CommandLine| CommandBlock}
+Command = _{SPACE_SEPARATOR* ~ (CommandLine| CommandBlock)}
 
 //!#56B6C2: Set
 //!#E06C75: key
@@ -129,7 +129,7 @@ SYMBOL = @{
     XID_START ~ XID_CONTINUE*
   | Underline~XID_CONTINUE+
 }
-Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent)}
+Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent|NEWLINE)}
 Keywords = @{"true"|"false"|"null"}
 // = _{!SPACE_SEPARATOR ~ ANY}
 /*====================================================================================================================*/

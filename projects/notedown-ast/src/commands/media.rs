@@ -1,4 +1,4 @@
-use crate::{Value, Context, AST};
+use crate::{Context, Value, AST};
 use std::collections::HashMap;
 
 macro_rules! required_arg {
@@ -67,8 +67,7 @@ pub fn fancy_quote(ctx: &mut Context, args: &Vec<Value>, kvs: &HashMap<String, V
 
 pub fn image_insert(ctx: &mut Context, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
     let src = required_arg!(kvs, "src", args, 0);
-    let ty = optional_arg!(kvs,"alt","");
+    let ty = optional_arg!(kvs, "alt", "");
     let out = format!("<img src={}>", src);
     return Some(out);
 }
-

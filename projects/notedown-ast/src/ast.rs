@@ -41,7 +41,10 @@ pub enum AST {
         terms: Vec<Vec<AST>>,
         column: usize,
     },
-    Quote(Vec<AST>),
+    Quote {
+        body: Vec<AST>,
+        style: String,
+    },
     Ordered(Vec<AST>),
     Orderless(Vec<AST>),
 
@@ -83,8 +86,8 @@ impl Display for AST {
             AST::MathInline(s) => write!(f, "${}$", s),
             AST::MathDisplay(s) => write!(f, "$${}$$", s),
 
-            AST::Quote(v) => {
-                let s: Vec<_> = v.iter().map(|a| format!("> {}", a)).collect();
+            AST::Quote { body, .. } => {
+                let s: Vec<_> = body.iter().map(|a| format!("> {}", a)).collect();
                 write!(f, "{}", s.join("\n"))
             }
             AST::Orderless(v) => {
@@ -108,5 +111,11 @@ impl Display for AST {
 impl From<&str> for AST {
     fn from(s: &str) -> Self {
         AST::String(s.to_string())
+    }
+}
+
+impl From<String> for AST {
+    fn from(s: String) -> Self {
+        AST::String(s)
     }
 }

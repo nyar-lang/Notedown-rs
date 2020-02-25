@@ -42,7 +42,7 @@ impl Settings {
                 Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
 
                 Rule::Header => codes.push(self.format_header(pair)),
-                Rule::TextBlock => codes.push(self.format_text(pair)),
+                Rule::TextBlock => codes.push(self.format_text(pair.as_str())),
                 Rule::List => codes.push(self.format_list(pair)),
 
                 _ => debug_cases!(pair),
@@ -57,7 +57,7 @@ impl Settings {
             let code = match pair.as_rule() {
                 Rule::SPACE_SEPARATOR => continue,
                 Rule::Sharp => level += 1,
-                Rule::RestOfLine => text = self.format_text(pair),
+                Rule::RestOfLine => text = self.format_text(pair.as_str()),
                 _ => debug_cases!(pair),
             };
         }
@@ -65,8 +65,8 @@ impl Settings {
         String::new()
     }
 
-    fn format_text(&self, input: Pair<Rule>) -> String {
-        let text = if self.pangu_space { pangu_space(input.as_str()) } else { Cow::from(input.as_str()) };
+    fn format_text(&self, input: &str) -> String {
+        let text = if self.pangu_space { pangu_space(input) } else { Cow::from(input) };
         let spaces = count_indent(&text);
         let mut codes = vec![];
         for pair in parse_text(dedent_less_than(&text, spaces).trim_end()) {
@@ -107,14 +107,22 @@ impl Settings {
                     ">" => codes.push(self.format_quote(dedent_less_than(text, spaces).trim_end())),
                     _ => break,
                 },
-                _ => debug_cases!(pair),
+                _ => break,
             };
         }
         format!("{}", &indent(&codes.join(""), &" ".repeat(spaces)))
     }
     fn format_quote(&self, text: &str) -> String {
-        println!("{}", text);
-        String::from(text)
+        let mut lines = vec![];
+        for l in text.lines() {
+            match l.chars().next().unwrap() {
+                '>' => lines.push(&l[1..]),
+                _ => lines.push(l),
+            }
+        }
+        let f = self.format_text(&lines.join("\n"));
+        let ls: Vec<String> = f.lines().map(|l| format!("> {}", l)).collect();
+        return ls.join("\n");
         // let text = input.as_str();
         // let spaces = count_indent(text);
         // let mut codes = vec![];
