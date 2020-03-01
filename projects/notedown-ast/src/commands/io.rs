@@ -1,4 +1,4 @@
-use crate::{Context, Value};
+use crate::{utils::trim_split_or, Context, Value};
 use std::collections::HashMap;
 
 pub fn import(_args: &Vec<Value>, _kvs: &HashMap<String, Value>) {
@@ -6,11 +6,10 @@ pub fn import(_args: &Vec<Value>, _kvs: &HashMap<String, Value>) {
 }
 
 pub fn set_title(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
-    let title = match &args[0] {
-        Value::String(s) => Value::String(s.trim().to_string()),
-        _ => Value::from("Untitled"),
+    match &args[0] {
+        Value::String(s) => ctx.meta.title = Some(s.trim().to_string()),
+        _ => (),
     };
-    ctx.meta.insert(String::from("title"), title);
     Some(String::new())
 }
 
@@ -25,36 +24,29 @@ pub fn set_date(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
         }
         _ => return None,
     };
-    ctx.meta.insert(String::from("title"), title);
     Some(String::new())
 }
 
 pub fn set_tags(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
-    let title = match &args[0] {
-        Value::String(s) => {
-            let t = s.trim().to_string();
-            Value::String(t)
-        }
-        _ => Value::None,
+    match &args[0] {
+        Value::String(s) => ctx.meta.tags = trim_split_or(s),
+        _ => (),
     };
-    ctx.meta.insert(String::from("tags"), title);
     Some(String::new())
 }
 
 pub fn set_categories(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
-    let title = match &args[0] {
-        Value::String(s) => Value::String(s.trim().to_string()),
-        _ => Value::from(""),
+    match &args[0] {
+        Value::String(s) => ctx.meta.categories = trim_split_or(s),
+        _ => (),
     };
-    ctx.meta.insert(String::from("categories"), title);
     Some(String::new())
 }
 
 pub fn set_series(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
-    let title = match &args[0] {
-        Value::String(s) => Value::String(s.trim().to_string()),
-        _ => Value::from(""),
+    match &args[0] {
+        Value::String(s) => ctx.meta.series = trim_split_or(s),
+        _ => (),
     };
-    ctx.meta.insert(String::from("series"), title);
     Some(String::new())
 }

@@ -21,7 +21,7 @@ impl Context {
                     "title" => set_title(self, args),
                     "date" => set_date(self, args),
                     "tags" => set_tags(self, args),
-                    "categories" => set_categories(self, args),
+                    "categories" | "cats" => set_categories(self, args),
                     "series" => set_series(self, args),
 
                     "quote" => return fancy_quote(self, args, kvs),

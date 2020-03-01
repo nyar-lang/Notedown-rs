@@ -18,23 +18,7 @@ macro_rules! debug_cases {
     }};
 }
 
-impl Context {
-    pub fn post(&self) -> AST {
-        self.ast.clone()
-    }
-    pub fn meta_info(&self) -> HashMap<String, Value> {
-        self.meta.clone()
-    }
-    pub fn get_name(&self) -> Option<String> {
-        match self.meta.get("name") {
-            Some(v) => match v {
-                Value::String(s) => Some(s.clone()),
-                _ => None,
-            },
-            None => None,
-        }
-    }
-}
+impl Context {}
 
 impl Context {
     pub fn parse(&mut self, text: &str) {
@@ -76,6 +60,7 @@ impl Context {
         let mut head = AST::None;
         for pair in pairs.into_inner() {
             match pair.as_rule() {
+                Rule::SPACE_SEPARATOR => continue,
                 Rule::Sharp => level += 1,
                 Rule::RestOfLine => head = self.parse_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),

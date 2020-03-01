@@ -1,7 +1,9 @@
 use crate::{Context, AST};
 use notedown_parser::NoteDownRule as Rule;
 use pest::iterators::Pair;
+
 mod meta_info;
+
 pub use meta_info::build_zola;
 pub use textwrap::dedent;
 
@@ -51,6 +53,10 @@ pub fn trim_escape(s: &str) -> &str {
         out = &out[..out.len() - 1]
     }
     return out;
+}
+
+pub fn trim_split_or(s: &str) -> Vec<String> {
+    s.split(|c| c == ',' || c == '|').map(|s| s.trim().to_string()).collect()
 }
 
 pub fn str_escape(s: &str) -> String {

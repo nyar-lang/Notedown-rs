@@ -1,15 +1,19 @@
-use crate::{traits::Settings, utils::build_zola, Context, NotedownTarget, NotedownTemplate, Value, AST};
-use std::{collections::HashMap, iter::repeat};
+use crate::{
+    traits::{NotedownConfig, NotedownMeta},
+    utils::build_zola,
+    Context, NotedownTarget, AST,
+};
+use std::iter::repeat;
 
 pub trait ToHTML {
-    fn to_html_with(&self, cfg: &Settings) -> String;
+    fn to_html_with(&self, cfg: &NotedownConfig) -> String;
     fn to_html(&self) -> String {
-        self.to_html_with(&Settings::default())
+        self.to_html_with(&NotedownConfig::default())
     }
 }
 
 impl ToHTML for Context {
-    fn to_html_with(&self, cfg: &Settings) -> String {
+    fn to_html_with(&self, cfg: &NotedownConfig) -> String {
         let head = self.meta.to_html_with(cfg);
         let post = self.ast.to_html_with(cfg);
         return format!("{}{}", head, post);
@@ -22,18 +26,18 @@ impl ToHTML for Context {
     }
 }
 
-impl ToHTML for HashMap<String, Value> {
-    fn to_html_with(&self, cfg: &Settings) -> String {
+impl ToHTML for NotedownMeta {
+    fn to_html_with(&self, cfg: &NotedownConfig) -> String {
         match cfg.target {
             NotedownTarget::Web => String::new(),
             NotedownTarget::VSCode => String::new(),
-            NotedownTarget::Zola => String::new(),
+            NotedownTarget::Zola => build_zola(self),
         }
     }
 }
 
 impl ToHTML for AST {
-    fn to_html_with(&self, cfg: &Settings) -> String {
+    fn to_html_with(&self, cfg: &NotedownConfig) -> String {
         match self {
             AST::Statements(e) => {
                 let mut text = String::new();

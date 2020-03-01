@@ -1,8 +1,6 @@
-use crate::Value;
+use crate::{NotedownMeta, Value};
 use std::collections::HashMap;
 
-pub fn build_zola(dict: &HashMap<String, Value>) -> String {
-    println!("{:?}", dict);
-    unimplemented!();
+pub fn build_zola(dict: &NotedownMeta) -> String {
     String::new()
 }

@@ -13,5 +13,5 @@ edition = "2018"
 pest = "2.1.2"
 
 [dev-dependencies]
-pest_generator = "2.1.1"
+pest_generator = "2.1.2"
 quote = "1.0"
