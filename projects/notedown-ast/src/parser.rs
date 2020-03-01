@@ -50,7 +50,7 @@ impl Context {
 
                 _ => debug_cases!(pair),
             };
-            println!("{:?}", code);
+            // println!("{:?}", code);
             codes.push(code);
         }
         AST::Statements(codes)

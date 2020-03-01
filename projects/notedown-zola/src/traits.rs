@@ -1,59 +1,39 @@
-use notedown_ast::{Context, NotedownMeta, ToHTML};
-use std::fs::{read_to_string, File, Metadata};
+use notedown_ast::{Context, MissingCommand, NotedownTarget, ToHTML};
+use std::fs::File;
 
-use std::{io::Write, path::Path};
-use walkdir::{DirEntry, Error};
+use std::{fs, io::Write, panic, path::PathBuf};
+use walkdir::DirEntry;
 
 pub trait ZolaBackend {
     fn parse_source(&mut self, path_from: &str) -> Result<(), std::io::Error>;
     fn write_target(&self) -> Result<(), std::io::Error>;
 }
-// impl ZolaBackend for Context {
-// fn parse_source(&mut self, path_from: &str) -> Result<(), std::io::Error> {
-// let r = read_to_string(path_from)?;
-// self.parse(&r);
-// return Ok(());
-// }
-// fn write_target(&self) -> Result<(), std::io::Error> {
-// let mut file = match self.get_name() {
-// None => File::create("Untitled")?,
-// Some(s) => File::create(s)?,
-// };
-// let mut cfg = HTMLConfig::default();
-// cfg.target = String::from("zola");
-// file.write_all(self.to_html_with(&cfg).as_bytes())?;
-// return Ok(());
-// }
-// }
 
-#[test]
-fn parse() {
-    let mut c = Context::default();
-    c.parse(
-        r#"
-    \tags: a, b, c
-    \cats: e | f | g
-    # a
-
-
-
-    "#,
-    );
-    println!("{}", c.to_html())
-}
-
-pub fn parse_file(dir: DirEntry) -> Context {
-    let mut cfg = Context::default();
-    if let Ok(meta) = dir.metadata() {
+pub fn file_to_zola(path: DirEntry, out: &PathBuf) -> Result<(), &'static str> {
+    let mut ctx = Context::default();
+    ctx.cfg.template = MissingCommand::Zola;
+    ctx.cfg.target = NotedownTarget::Zola;
+    if let Ok(meta) = path.metadata() {
         if let Ok(time) = meta.created() {
-            cfg.meta.created_time = Some(time);
+            ctx.meta.created_time = Some(time);
         }
         if let Ok(time) = meta.modified() {
-            cfg.meta.modified_time = Some(time);
+            ctx.meta.modified_time = Some(time);
         }
     }
-    cfg.meta.file_path = Some(dir.into_path());
-    println!("path: {:?}", cfg.meta.file_path);
-
-    return cfg;
+    ctx.meta.file_path = Some(path.clone().into_path()); //FIXME: remove clone
+    ctx.meta.file_name = Some(path.path().file_stem().unwrap().to_str().unwrap().to_string());
+    ctx.meta.title = ctx.meta.file_name.clone();
+    ctx.parse(&fs::read_to_string(path.clone().into_path()).expect("can't read the file"));
+    let html = match panic::catch_unwind(|| ctx.to_html()) {
+        Ok(s) => s,
+        Err(_) => return Err("can not parse this file"),
+    };
+    let mut out = out.clone();
+    out.push(&ctx.meta.file_name.unwrap());
+    out.set_extension("md");
+    let mut file = File::create(&out).expect("can not create file");
+    file.write_all(html.as_bytes()).expect("can not write to file");
+    println!("Build: {:?}", out);
+    Ok(())
 }

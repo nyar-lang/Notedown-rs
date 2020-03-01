@@ -4,7 +4,7 @@ mod to_markdown;
 use crate::AST;
 use std::{path::PathBuf, time::SystemTime};
 pub use to_html::ToHTML;
-pub use to_markdown::{MarkdownConfig, ToMarkdown};
+pub use to_markdown::ToMarkdown;
 
 #[derive(Debug)]
 pub struct Context {

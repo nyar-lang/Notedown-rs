@@ -3,11 +3,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn rs_render(input: &str) -> String {
-    let mut c = Context {
-        ast: AST::None,
-        meta: Default::default(),
-        cfg: NotedownMeta { tab_size: 2, template: MissingCommand::Vue, target: NotedownTarget::Web },
-    };
+    let mut c = Context::default();
     c.parse(input);
     c.to_html()
 }

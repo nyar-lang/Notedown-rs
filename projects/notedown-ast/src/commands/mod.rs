@@ -4,7 +4,7 @@ mod value;
 
 use crate::{
     commands::media::{fancy_quote, image_insert},
-    Context, AST,
+    Context, MissingCommand, NotedownTarget, AST,
 };
 pub use io::{import, set_categories, set_date, set_series, set_tags, set_title};
 pub use media::meting_js;
@@ -40,6 +40,18 @@ impl Context {
                 }
             }
             _ => AST::None,
+        }
+    }
+    pub fn execute_cmd_missing(&mut self, ast: AST) -> String {
+        match &ast {
+            AST::Command(cmd, args, kvs) => match cmd.as_str().to_lowercase().as_str() {
+                "toc" => String::new(),
+                _ => match self.cfg.template {
+                    MissingCommand::Vue => format!("<{0}>{1:?}{2:?}</{0}>", cmd, kvs, args),
+                    MissingCommand::Zola => format!("{{% {0} %}}", cmd),
+                },
+            },
+            _ => String::new(),
         }
     }
 }

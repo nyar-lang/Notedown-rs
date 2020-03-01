@@ -1,15 +1,8 @@
-#[derive(Debug, Copy, Clone)]
-pub struct MarkdownConfig {}
-
-impl Default for MarkdownConfig {
-    fn default() -> Self {
-        MarkdownConfig {}
-    }
-}
+use crate::traits::NotedownConfig;
 
 pub trait ToMarkdown {
-    fn to_md(&self, cfg: MarkdownConfig) -> String;
-    fn to_md_default(&self) -> String {
-        self.to_md(MarkdownConfig::default())
+    fn to_markdown_with(&self, cfg: &NotedownConfig) -> String;
+    fn to_markdown(&self) -> String {
+        self.to_markdown_with(&NotedownConfig::default())
     }
 }
