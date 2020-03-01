@@ -11,7 +11,7 @@ exclude = ["/tests/*"]
 
 [dependencies]
 notedown_ast = {path = "../notedown-ast",version = "0.3.0"}
-
+walkdir = "2.3.1"
 
 
 [features]
