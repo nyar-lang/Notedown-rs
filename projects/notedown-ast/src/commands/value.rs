@@ -1,10 +1,10 @@
 use crate::AST;
 use std::{
     fmt,
-    fmt::{Display, Formatter},
+    fmt::{Debug, Display, Formatter},
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Value {
     None,
     String(String),
@@ -16,10 +16,10 @@ pub enum Value {
     Command(AST),
 }
 
-impl Display for Value {
+impl Debug for Value {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Value::None => write!(f, ""),
+            Value::None => write!(f, "none"),
             Value::String(s) => write!(f, "{:?}", s),
             // Value::Integer(s) => write!(f, "{}", s),
             // Value::Decimal(s) => write!(f, "{}", s),
@@ -27,6 +27,15 @@ impl Display for Value {
             Value::List(_) => unimplemented!(),
             // Value::Dict(_) => unimplemented!(),
             Value::Command(_) => unimplemented!(),
+        }
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Value::None => write!(f, ""),
+            _ => write!(f, "{:?}", self),
         }
     }
 }
@@ -67,6 +76,13 @@ impl Value {
     pub fn to_string(&self) -> String {
         match self {
             Value::String(s) => s.clone(),
+            Value::Boolean(b) => format!("{}", b),
+            _ => unreachable!(),
+        }
+    }
+    pub fn trim(&self) -> String {
+        match self {
+            Value::String(s) => s.trim().to_string(),
             Value::Boolean(b) => format!("{}", b),
             _ => unreachable!(),
         }

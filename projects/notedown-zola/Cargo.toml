@@ -1,6 +1,6 @@
 [package]
 name = "notedown_zola"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/nyar-lang/Notedown-rs"
@@ -10,8 +10,8 @@ edition = "2018"
 exclude = ["/tests/*"]
 
 [dependencies]
-notedown_ast = {path = "../notedown-ast",version = "0.3.0"}
+notedown_ast = {path = "../notedown-ast",version = "0.3.1"}
 walkdir = "2.3.1"
-
+chrono = "0.4.10"
 
 [features]

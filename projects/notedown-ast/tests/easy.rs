@@ -88,6 +88,7 @@ fn test_function() {
         \netease{id = 28629058, type = "song", autoplay = true}
         \unknow[arg1][arg2]{arg3 = "string", "arg4" = 42}
         \title: Test
+        \date: 2018-01-08
     "#;
     let output = r#"
         <meting-jsserver="netease"type="song"id="22724727"></meting-js>
@@ -123,7 +124,7 @@ fn test_code() {
     "#,
     );
     // println!("{:#?}", f);
-    println!("{}", input.post().to_html());
+    println!("{}", input.to_html());
 }
 
 #[test]
@@ -142,10 +143,10 @@ fn test_quote() {
 #[test]
 fn test_escaping() {
     let input = r#"
-        \#
+     \\
     "#;
     let output = r#"
-        <blockquote><ul><li><p>1</br>  2</p></li><li><p>3</p></li></ul></blockquote>
+        <p>\</p>
     "#;
     trim_eq(input, output)
 }

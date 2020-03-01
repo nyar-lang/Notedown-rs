@@ -67,7 +67,7 @@ pub fn str_escape(s: &str) -> String {
     }
 }
 
-pub fn maybe_math(ctx: &Context, pair: Pair<Rule>) -> AST {
+pub fn maybe_math(ctx: &mut Context, pair: Pair<Rule>) -> AST {
     let s = pair.as_str().trim();
     if s.starts_with("$$") && s.ends_with("$$") {
         let r = s[2..s.chars().count() - 2].to_string();
@@ -88,6 +88,7 @@ pub fn map_escape(c: &str) -> AST {
         "\\|" => AST::from("|"),
         "\\#" => AST::from("#"),
         "\\-" => AST::from("-"),
+        "\\\\" => AST::from("\\"),
         "\\\n" => AST::None,
         _ => {
             println!("escaping {:?}=>", c);

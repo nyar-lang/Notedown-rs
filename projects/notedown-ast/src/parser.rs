@@ -34,6 +34,7 @@ impl Context {
                 Rule::COMMENT => continue,
                 Rule::NEWLINE => continue,
                 Rule::SPACE_SEPARATOR => continue,
+                Rule::HorizontalRule => AST::from("<hr/>"),
                 Rule::TextBlock => maybe_math(self, pair),
                 Rule::Header => self.parse_header(pair),
                 Rule::List => self.parse_list(pair.as_str().trim_end()),
@@ -47,7 +48,6 @@ impl Context {
                     let cmd = self.parse_command(pair);
                     self.execute_cmd(cmd)
                 }
-
                 _ => debug_cases!(pair),
             };
             // println!("{:?}", code);
@@ -55,7 +55,7 @@ impl Context {
         }
         AST::Statements(codes)
     }
-    fn parse_header(&self, pairs: Pair<Rule>) -> AST {
+    fn parse_header(&mut self, pairs: Pair<Rule>) -> AST {
         let mut level = 0;
         let mut head = AST::None;
         for pair in pairs.into_inner() {
@@ -74,6 +74,7 @@ impl Context {
         let mut body = "";
         for pair in pairs.into_inner() {
             match pair.as_rule() {
+                Rule::SPACE_SEPARATOR => continue,
                 Rule::CodeMark => continue,
                 Rule::CodeLevel => level = pair.as_str(),
                 Rule::SYMBOL => cmd = pair.as_str(),
@@ -84,7 +85,7 @@ impl Context {
         let code = format!("\n\n{0}{1}{2}{0}\n\n", level, cmd, body);
         return AST::String(code);
     }
-    pub fn parse_text(&self, text: &str) -> AST {
+    pub fn parse_text(&mut self, text: &str) -> AST {
         let pairs = NoteDownParser::parse(Rule::TextMode, text).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         for pair in pairs {
@@ -102,13 +103,22 @@ impl Context {
                 Rule::TextRest => AST::String(pair.as_str().to_string()),
                 Rule::RawRest => AST::String(pair.as_str().to_string()),
                 Rule::StyleRest => AST::String(pair.as_str().to_string()),
+                Rule::MathRest => AST::String(pair.as_str().to_string()),
+                Rule::CommandLine => {
+                    let cmd = self.parse_command(pair);
+                    self.execute_cmd(cmd)
+                }
+                Rule::CommandBlock => {
+                    let cmd = self.parse_command(pair);
+                    self.execute_cmd(cmd)
+                }
                 _ => debug_cases!(pair),
             };
             codes.push(code);
         }
         if codes.len() == 0 { AST::None } else { AST::Text(codes) }
     }
-    fn parse_style(&self, pairs: Pair<Rule>) -> AST {
+    fn parse_style(&mut self, pairs: Pair<Rule>) -> AST {
         let s = pairs.as_str();
         let mut level = 0;
         let mut text = AST::None;
@@ -127,7 +137,7 @@ impl Context {
             _ => AST::Raw(s.to_string()),
         }
     }
-    fn parse_line(&self, pairs: Pair<Rule>) -> AST {
+    fn parse_line(&mut self, pairs: Pair<Rule>) -> AST {
         let s = pairs.as_str();
         let mut level = 0;
         let mut text = AST::None;
@@ -239,7 +249,7 @@ impl Context {
         }
         return value;
     }
-    fn parse_table(&self, text: &str) -> AST {
+    fn parse_table(&mut self, text: &str) -> AST {
         let mut lines: VecDeque<String> = VecDeque::new();
         for i in text.lines() {
             let mut l = String::from(i.trim());
@@ -265,7 +275,7 @@ impl Context {
         let column = *column.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
         return AST::Table { head, align, terms, column };
     }
-    fn parse_table_line(&self, input: &str) -> Vec<AST> {
+    fn parse_table_line(&mut self, input: &str) -> Vec<AST> {
         let pairs = NoteDownParser::parse(Rule::TableMode, input).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         let mut text = String::new();

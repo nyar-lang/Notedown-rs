@@ -36,7 +36,7 @@ impl Settings {
         let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         for pair in pairs {
-            let code = match pair.as_rule() {
+            let _code = match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::NEWLINE => continue,
                 Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
@@ -54,7 +54,7 @@ impl Settings {
         let mut level = 0;
         let mut text = String::new();
         for pair in pairs.into_inner() {
-            let code = match pair.as_rule() {
+            let _code = match pair.as_rule() {
                 Rule::SPACE_SEPARATOR => continue,
                 Rule::Sharp => level += 1,
                 Rule::RestOfLine => text = self.format_text(pair.as_str()),
@@ -70,7 +70,7 @@ impl Settings {
         let spaces = count_indent(&text);
         let mut codes = vec![];
         for pair in parse_text(dedent_less_than(&text, spaces).trim_end()) {
-            let code = match pair.as_rule() {
+            let _code = match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::TextRest => codes.push(pair.as_str().to_string()),
                 Rule::Style => codes.push(self.format_style(pair)),
@@ -84,9 +84,9 @@ impl Settings {
     fn format_style(&self, pairs: Pair<Rule>) -> String {
         let mut level = 0;
         let mut text = "";
-        let mut codes = String::new();
+        let _codes = String::new();
         for pair in pairs.into_inner() {
-            let code = match pair.as_rule() {
+            let _code = match pair.as_rule() {
                 Rule::Asterisk => continue,
                 Rule::StyleLevel => level += 1,
                 Rule::StyleText => text = pair.as_str(),

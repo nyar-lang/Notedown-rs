@@ -2,7 +2,8 @@ mod to_html;
 mod to_markdown;
 
 use crate::AST;
-use std::{path::PathBuf, time::SystemTime};
+use chrono::NaiveDateTime;
+use std::path::PathBuf;
 pub use to_html::ToHTML;
 pub use to_markdown::ToMarkdown;
 
@@ -24,8 +25,8 @@ pub struct NotedownConfig {
 pub struct NotedownMeta {
     pub file_name: Option<String>,
     pub file_path: Option<PathBuf>,
-    pub created_time: Option<SystemTime>,
-    pub modified_time: Option<SystemTime>,
+    pub created_time: Option<NaiveDateTime>,
+    pub modified_time: Option<NaiveDateTime>,
     pub title: Option<String>,
     pub tags: Vec<String>,
     pub categories: Vec<String>,
