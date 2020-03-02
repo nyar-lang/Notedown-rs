@@ -1,6 +1,6 @@
 use crate::{
     utils::{map_escape, map_white_space, maybe_math, str_escape, trim_dedent, unescape},
-    Context, Value, AST,
+    Context, Value, AST, GLOBAL_CONFIG,
 };
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
 use pest::{
@@ -22,7 +22,8 @@ impl Context {}
 
 impl Context {
     pub fn parse(&mut self, text: &str) {
-        let input = text.replace("\t", &" ".repeat(self.cfg.tab_size)).replace("\n\r", "\n");
+        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
+        let input = text.replace("\t", &" ".repeat(cfg.tab_size)).replace("\n\r", "\n");
         self.ast = self.parse_program(&input)
     }
     pub fn parse_program(&mut self, text: &str) -> AST {

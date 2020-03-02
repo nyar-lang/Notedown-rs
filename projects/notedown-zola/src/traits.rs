@@ -1,12 +1,10 @@
 use chrono::{DateTime, Utc};
-use notedown_ast::{Context, MissingCommand, NotedownTarget, ToHTML};
+use notedown_ast::{Context, ToHTML};
 use std::{fs, fs::File, io::Write, panic, path::PathBuf};
 use walkdir::DirEntry;
 
 pub fn file_to_zola(path: DirEntry, out: &PathBuf) -> Result<(), &'static str> {
     let mut ctx = Context::default();
-    ctx.cfg.template = MissingCommand::Zola;
-    ctx.cfg.target = NotedownTarget::Zola;
     if let Ok(meta) = path.metadata() {
         if let Ok(time) = meta.created() {
             ctx.meta.created_time = Some(DateTime::<Utc>::from(time).naive_utc());

@@ -1,33 +1,25 @@
 use crate::{
-    traits::{NotedownConfig, NotedownMeta},
-    utils::build_zola,
-    Context, NotedownTarget, AST,
+    traits::NotedownMeta,
+    utils::{build_td, build_th, build_zola},
+    Context, NotedownTarget, AST, GLOBAL_CONFIG,
 };
 use std::iter::repeat;
 
 pub trait ToHTML {
-    fn to_html_with(&self, cfg: &NotedownConfig) -> String;
-    fn to_html(&self) -> String {
-        self.to_html_with(&NotedownConfig::default())
-    }
+    fn to_html(&self) -> String;
 }
 
 impl ToHTML for Context {
-    fn to_html_with(&self, cfg: &NotedownConfig) -> String {
-        let head = self.meta.to_html_with(cfg);
-        let post = self.ast.to_html_with(cfg);
-        return format!("{}{}", head, post);
-    }
-
     fn to_html(&self) -> String {
-        let head = self.meta.to_html_with(&self.cfg);
-        let post = self.ast.to_html_with(&self.cfg);
+        let head = self.meta.to_html();
+        let post = self.ast.to_html();
         return format!("{}{}", head, post);
     }
 }
 
 impl ToHTML for NotedownMeta {
-    fn to_html_with(&self, cfg: &NotedownConfig) -> String {
+    fn to_html(&self) -> String {
+        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
         match cfg.target {
             NotedownTarget::Web => String::new(),
             NotedownTarget::VSCode => String::new(),
@@ -37,25 +29,26 @@ impl ToHTML for NotedownMeta {
 }
 
 impl ToHTML for AST {
-    fn to_html_with(&self, cfg: &NotedownConfig) -> String {
+    fn to_html(&self) -> String {
+        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
         match self {
             AST::Statements(e) => {
                 let mut text = String::new();
                 for node in e {
-                    text += &node.to_html_with(cfg)
+                    text += &node.to_html()
                 }
                 let trimmed: Vec<_> = text.lines().map(|s| s.trim()).collect();
                 trimmed.join("\n")
             }
-            AST::Header(e, level) => format!("<h{0}>{1}</h{0}>", level, e.to_html_with(cfg)),
+            AST::Header(e, level) => format!("<h{0}>{1}</h{0}>", level, e.to_html()),
 
-            AST::Paragraph(p) => format!("<p>{}</p>", p.to_html_with(cfg)),
-            AST::Text(v) => v.iter().map(|s| s.to_html_with(cfg)).collect::<Vec<String>>().join(""),
-            AST::Bold(s) => format!("<b>{}</b>", s.to_html_with(cfg)),
-            AST::Italic(s) => format!("<i>{}</i>", s.to_html_with(cfg)),
-            AST::Underline(s) => format!("<u>{}</u>", s.to_html_with(cfg)),
-            AST::Strikethrough(s) => format!("<del>{}</del>", s.to_html_with(cfg)),
-            AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", s.to_html_with(cfg)),
+            AST::Paragraph(p) => format!("<p>{}</p>", p.to_html()),
+            AST::Text(v) => v.iter().map(|s| s.to_html()).collect::<Vec<String>>().join(""),
+            AST::Bold(s) => format!("<b>{}</b>", s.to_html()),
+            AST::Italic(s) => format!("<i>{}</i>", s.to_html()),
+            AST::Underline(s) => format!("<u>{}</u>", s.to_html()),
+            AST::Strikethrough(s) => format!("<del>{}</del>", s.to_html()),
+            AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", s.to_html()),
 
             AST::Table { head, align, terms, column } => {
                 let align_iter = align.iter().chain(repeat(&align[align.len() - 1]));
@@ -64,7 +57,7 @@ impl ToHTML for AST {
                     let mut align = align_iter.clone();
                     let mut thead = String::new();
                     for _ in 0..*column {
-                        let h = head.next().unwrap().to_html_with(cfg);
+                        let h = head.next().unwrap().to_html();
                         let a = *align.next().unwrap();
                         thead.push_str(&format!("{}", build_th(&h, a)))
                     }
@@ -76,7 +69,7 @@ impl ToHTML for AST {
                     let mut align = align_iter.clone();
                     let mut thead = String::new();
                     for _ in 0..*column {
-                        let h = head.next().unwrap().to_html_with(cfg);
+                        let h = head.next().unwrap().to_html();
                         let a = *align.next().unwrap();
                         thead.push_str(&format!("{}", build_td(&h, a)))
                     }
@@ -85,7 +78,7 @@ impl ToHTML for AST {
                 format!("<table>{}<tbody>{}</tbody></table>", thead, trs.join(""))
             }
             AST::Quote { body, style } => {
-                let quote = body.iter().map(|s| s.to_html_with(cfg)).collect::<Vec<String>>().join("");
+                let quote = body.iter().map(|s| s.to_html()).collect::<Vec<String>>().join("");
                 match style.as_str() {
                     "info" | "danger" | "warning" | "success" => {
                         format!("<blockquote class=\"fancyquote {}\">{}</blockquote>", style, quote)
@@ -94,21 +87,16 @@ impl ToHTML for AST {
                 }
             }
             AST::Ordered(v) => {
-                let quote = v.iter().map(|s| format!("<li>{}</li>", s.to_html_with(cfg))).collect::<Vec<String>>().join("");
+                let quote = v.iter().map(|s| format!("<li>{}</li>", s.to_html())).collect::<Vec<String>>().join("");
                 format!("<ol>{}</ol>", quote)
             }
             AST::Orderless(v) => {
-                let quote = v.iter().map(|s| format!("<li>{}</li>", s.to_html_with(cfg))).collect::<Vec<String>>().join("");
+                let quote = v.iter().map(|s| format!("<li>{}</li>", s.to_html())).collect::<Vec<String>>().join("");
                 format!("<ul>{}</ul>", quote)
             }
 
             AST::Command(s, keys, values) => format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values),
-            _ => self.to_html(),
-        }
-    }
 
-    fn to_html(&self) -> String {
-        match self {
             AST::None => String::from(""),
             AST::Space => String::from(" "),
             AST::Newline => String::from("</br>"),
@@ -126,23 +114,5 @@ impl ToHTML for AST {
                 unreachable!()
             }
         }
-    }
-}
-
-fn build_th(input: &str, e: u8) -> String {
-    match e {
-        1 => format!("<th align=\"left\">{}</th>", input),
-        2 => format!("<th align=\"right\">{}</th>", input),
-        3 => format!("<th align=\"center\">{}</th>", input),
-        _ => format!("<th>{}</th>", input),
-    }
-}
-
-fn build_td(input: &str, e: u8) -> String {
-    match e {
-        1 => format!("<td align=\"left\">{}</td>", input),
-        2 => format!("<td align=\"right\">{}</td>", input),
-        3 => format!("<td align=\"center\">{}</td>", input),
-        _ => format!("<td>{}</td>", input),
     }
 }

@@ -1,9 +1,14 @@
 use crate::{utils::trim_split_or, Context, Value};
 use chrono::{NaiveDate, NaiveDateTime};
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, VecDeque},
+    path::PathBuf,
+};
 
-pub fn import(_args: &Vec<Value>, _kvs: &HashMap<String, Value>) -> Option<String> {
+pub fn import(ctx: &Context, mut _args: VecDeque<Value>, mut _kvs: HashMap<String, Value>) -> Option<String> {
     let code = String::new();
+    let file_path = ctx.meta.file_path.clone();
+    println!("{:?}", file_path);
     return Some(code);
 }
 

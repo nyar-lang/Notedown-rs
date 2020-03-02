@@ -6,11 +6,11 @@ use crate::{
         io::set_file_name,
         media::{fancy_quote, image_insert, link_insert},
     },
-    Context, MissingCommand, AST,
+    Context, MissingCommand, AST, GLOBAL_CONFIG,
 };
 pub use io::{import, set_categories, set_date, set_series, set_tags, set_title};
 pub use media::meting_js;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 pub use value::Value;
 
 impl Context {
@@ -39,8 +39,9 @@ impl Context {
                     "series" => set_series(self, args),
 
                     "quote" => return fancy_quote(self, args, kvs!()),
+                    "import" => import(self, args!(), kvs!()),
                     "img" | "image" => image_insert(self, args!(), kvs!()),
-                    "link" => link_insert(self, args!(), kvs!()),
+                    "link" => link_insert(args!(), kvs!()),
 
                     "netease" => meting_js("netease", args, kvs),
                     "kugou" => meting_js("kugou", args, kvs),
@@ -58,10 +59,11 @@ impl Context {
         }
     }
     pub fn execute_cmd_missing(&mut self, ast: AST) -> String {
+        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
         match &ast {
             AST::Command(cmd, args, kvs) => match cmd.as_str().to_lowercase().as_str() {
                 "toc" => String::new(),
-                _ => match self.cfg.template {
+                _ => match cfg.template {
                     MissingCommand::Vue => format!("<{0}>{1:?}{2:?}</{0}>", cmd, kvs, args),
                     MissingCommand::Zola => format!("{{% {0} %}}", cmd),
                 },

@@ -2,8 +2,10 @@ use crate::{Context, AST};
 use notedown_parser::NoteDownRule as Rule;
 use pest::iterators::Pair;
 
+mod html;
 mod meta_info;
 
+pub use html::{build_td, build_th};
 pub use meta_info::build_zola;
 pub use textwrap::dedent;
 

@@ -3,14 +3,14 @@ mod to_markdown;
 
 use crate::AST;
 use chrono::NaiveDateTime;
-use std::path::PathBuf;
+use lazy_static::{self, LazyStatic};
+use std::{path::PathBuf, sync::Mutex};
 pub use to_html::ToHTML;
 pub use to_markdown::ToMarkdown;
 
 #[derive(Debug)]
 pub struct Context {
     pub ast: AST,
-    pub cfg: NotedownConfig,
     pub meta: NotedownMeta,
 }
 
@@ -49,7 +49,7 @@ pub enum NotedownTarget {
 
 impl Default for Context {
     fn default() -> Self {
-        Context { ast: AST::None, cfg: Default::default(), meta: Default::default() }
+        Context { ast: AST::None, meta: Default::default() }
     }
 }
 
@@ -78,5 +78,36 @@ impl Default for NotedownMeta {
             series: vec![],
             weights: 0,
         }
+    }
+}
+
+// lazy_static! { pub static ref GlobalConfig: Mutex<NotedownConfig> = Mutex::new(NotedownConfig::default()); }
+#[allow(dead_code)]
+pub struct GlobalConfig {
+    private_field: (),
+}
+
+#[doc(hidden)]
+pub static GLOBAL_CONFIG: GlobalConfig = GlobalConfig { private_field: () };
+
+impl lazy_static::__Deref for GlobalConfig {
+    type Target = Mutex<NotedownConfig>;
+    fn deref(&self) -> &Mutex<NotedownConfig> {
+        #[inline(always)]
+        fn __static_ref_initialize() -> Mutex<NotedownConfig> {
+            Mutex::new(NotedownConfig::default())
+        }
+        #[inline(always)]
+        fn __stability() -> &'static Mutex<NotedownConfig> {
+            static LAZY: lazy_static::lazy::Lazy<Mutex<NotedownConfig>> = lazy_static::lazy::Lazy::INIT;
+            LAZY.get(__static_ref_initialize)
+        }
+        __stability()
+    }
+}
+
+impl LazyStatic for GlobalConfig {
+    fn initialize(lazy: &Self) {
+        let _ = &**lazy;
     }
 }

@@ -6,7 +6,7 @@ pub mod utils;
 
 pub use ast::AST;
 pub use commands::Value;
-pub use traits::{Context, MissingCommand, NotedownMeta, NotedownTarget, ToHTML, ToMarkdown};
+pub use traits::{Context, MissingCommand, NotedownConfig, NotedownMeta, NotedownTarget, ToHTML, ToMarkdown, GLOBAL_CONFIG};
 
 pub fn parse(text: &str) -> Context {
     let mut c = Context::default();

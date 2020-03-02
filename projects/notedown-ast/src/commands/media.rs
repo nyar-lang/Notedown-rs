@@ -29,11 +29,15 @@ macro_rules! required_arg {
     };
 }
 
-macro_rules! optional_arg {
-    ($kvs:ident, $name:literal, $default:expr) => {
-        match $kvs.get($name) {
-            Some(v) => v.clone(),
-            None => Value::from($default),
+macro_rules! named_arg {
+    ($kvs:ident, $name:literal, $args:ident, $attr:ident) => {
+        match $kvs.remove($name) {
+            Some(v) => $attr.push(format!(concat!($name, "={:?}"), v.trim())),
+            None => {
+                if let Some(v) = $args.pop_front() {
+                    $attr.push(format!(concat!($name, "={:?}"), v.trim()))
+                }
+            }
         }
     };
 }
@@ -76,15 +80,7 @@ pub fn fancy_quote(ctx: &mut Context, _args: &Vec<Value>, mut kvs: HashMap<Strin
 
 pub fn image_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
     let mut attr = vec![];
-    match kvs.remove("src") {
-        Some(v) => {
-            attr.push(format!(concat!("src", "={:?}"), v.trim()));
-        }
-        None => match args.pop_front() {
-            None => return None,
-            Some(v) => attr.push(format!(concat!("src", "={:?}"), v.trim())),
-        },
-    }
+    must_arg!(kvs, "src", args, attr);
     let link = match kvs.remove("link") {
         Some(v) => Some(format!("href={:?}", v.trim())),
         None => match args.pop_front() {
@@ -92,14 +88,7 @@ pub fn image_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<Str
             None => None,
         },
     };
-    match kvs.remove("alt") {
-        Some(v) => attr.push(format!("alt={:?}", v.trim())),
-        None => {
-            if let Some(v) = args.pop_front() {
-                attr.push(format!("alt={:?}", v.trim()))
-            }
-        }
-    }
+    named_arg!(kvs, "alt", args, attr);
     for (k, v) in kvs {
         attr.push(format!("{}={:?}", k, v.trim()))
     }
@@ -110,7 +99,7 @@ pub fn image_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<Str
     }
 }
 
-pub fn link_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
+pub fn link_insert(mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
     let link = match kvs.remove("href") {
         Some(v) => v.trim().to_string(),
         None => match args.pop_front() {
@@ -125,5 +114,9 @@ pub fn link_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<Stri
             None => link.clone(),
         },
     };
-    return Some(format!("<a href={:?}>{}</a>", link, alt));
+    let mut attr = vec![format!("href={:?}", link)];
+    for (k, v) in kvs {
+        attr.push(format!("{}={:?}", k, v.trim()))
+    }
+    return Some(format!("<a href={:?}>{}</a>", attr.join(" "), alt));
 }
