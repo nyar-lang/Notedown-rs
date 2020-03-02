@@ -1,7 +1,6 @@
 mod io;
 mod media;
 mod value;
-
 use crate::{
     commands::{
         io::set_file_name,
@@ -11,12 +10,23 @@ use crate::{
 };
 pub use io::{import, set_categories, set_date, set_series, set_tags, set_title};
 pub use media::meting_js;
+use std::collections::{HashMap, VecDeque};
 pub use value::Value;
 
 impl Context {
     pub fn execute_cmd(&mut self, ast: AST) -> AST {
         match &ast {
             AST::Command(cmd, args, kvs) => {
+                macro_rules! args {
+                    () => {
+                        VecDeque::from(args.clone())
+                    };
+                }
+                macro_rules! kvs {
+                    () => {
+                        kvs.clone()
+                    };
+                }
                 let out = match cmd.as_str().to_lowercase().as_str() {
                     "comment" => Some(String::new()),
                     "toc" => return ast,
@@ -28,9 +38,9 @@ impl Context {
                     "categories" | "cats" => set_categories(self, args),
                     "series" => set_series(self, args),
 
-                    "quote" => return fancy_quote(self, args, kvs),
-                    "img" | "image" => image_insert(self, args, kvs),
-                    "link" => link_insert(self, args, kvs),
+                    "quote" => return fancy_quote(self, args, kvs!()),
+                    "img" | "image" => image_insert(self, args!(), kvs!()),
+                    "link" => link_insert(self, args!(), kvs!()),
 
                     "netease" => meting_js("netease", args, kvs),
                     "kugou" => meting_js("kugou", args, kvs),

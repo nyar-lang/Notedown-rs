@@ -1,5 +1,5 @@
 use crate::{utils::trim_split_or, Context, Value};
-use chrono::{DateTime, NaiveDate, NaiveDateTime};
+use chrono::{NaiveDate, NaiveDateTime};
 use std::collections::HashMap;
 
 pub fn import(_args: &Vec<Value>, _kvs: &HashMap<String, Value>) -> Option<String> {

@@ -80,11 +80,10 @@ impl Value {
             _ => unreachable!(),
         }
     }
-    pub fn trim(&self) -> String {
+    pub fn trim(&self) -> &str {
         match self {
-            Value::String(s) => s.trim().to_string(),
-            Value::Boolean(b) => format!("{}", b),
-            _ => unreachable!(),
+            Value::String(s) => s.trim(),
+            _ => self.as_str(),
         }
     }
 }

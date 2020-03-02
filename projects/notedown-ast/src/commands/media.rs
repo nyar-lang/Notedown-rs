@@ -1,6 +1,20 @@
 use crate::{Context, Value, AST};
 use std::collections::{HashMap, VecDeque};
 
+macro_rules! must_arg {
+    ($kvs:ident, $name:literal, $args:ident, $attr:ident) => {
+        match $kvs.remove($name) {
+            Some(v) => {
+                $attr.push(format!(concat!($name, "={:?}"), v.trim()));
+            }
+            None => match $args.pop_front() {
+                None => return None,
+                Some(v) => $attr.push(format!(concat!($name, "={:?}"), v.trim())),
+            },
+        }
+    };
+}
+
 macro_rules! required_arg {
     ($kvs:ident, $name:literal, $args:ident, $index:literal) => {
         match $kvs.get($name) {
@@ -45,13 +59,13 @@ pub fn meting_js(server: &str, args: &Vec<Value>, kvs: &HashMap<String, Value>) 
     return Some(format!("<meting-js server={:?} {}></meting-js>", server, args.join(" ")));
 }
 
-pub fn fancy_quote(ctx: &mut Context, _args: &Vec<Value>, kvs: &HashMap<String, Value>) -> AST {
-    let by = match kvs.get("body") {
-        Some(v) => v.clone(),
+pub fn fancy_quote(ctx: &mut Context, _args: &Vec<Value>, mut kvs: HashMap<String, Value>) -> AST {
+    let by = match kvs.remove("body") {
+        Some(v) => v,
         None => Value::from(""),
     };
-    let ty = match kvs.get("type") {
-        Some(v) => v.clone(),
+    let ty = match kvs.remove("type") {
+        Some(v) => v,
         None => Value::from(""),
     };
     match ctx.parse_program(by.as_str()) {
@@ -60,47 +74,54 @@ pub fn fancy_quote(ctx: &mut Context, _args: &Vec<Value>, kvs: &HashMap<String, 
     }
 }
 
-pub fn image_insert(_: &Context, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
-    let mut args = VecDeque::from(args.clone());
-    let mut dict = vec![];
-    match kvs.get("src") {
-        Some(v) => dict.push(format!("src={:?}", v.trim())),
+pub fn image_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
+    let mut attr = vec![];
+    match kvs.remove("src") {
+        Some(v) => {
+            attr.push(format!(concat!("src", "={:?}"), v.trim()));
+        }
         None => match args.pop_front() {
             None => return None,
-            Some(v) => dict.push(format!("src={:?}", v.trim())),
+            Some(v) => attr.push(format!(concat!("src", "={:?}"), v.trim())),
         },
     }
-    match kvs.get("alt") {
-        Some(v) => dict.push(format!("alt={:?}", v.trim())),
+    let link = match kvs.remove("link") {
+        Some(v) => Some(format!("href={:?}", v.trim())),
+        None => match args.pop_front() {
+            Some(v) => Some(format!("href={:?}", v.trim())),
+            None => None,
+        },
+    };
+    match kvs.remove("alt") {
+        Some(v) => attr.push(format!("alt={:?}", v.trim())),
         None => {
             if let Some(v) = args.pop_front() {
-                dict.push(format!("alt={:?}", v.trim()))
+                attr.push(format!("alt={:?}", v.trim()))
             }
         }
     }
-    let img = format!("<img {}>", dict.join(" "));
-    match kvs.get("link") {
-        Some(v) => Some(format!("<a href={:?}>{}</a>", v.trim(), img)),
-        None => match args.pop_front() {
-            Some(v) => Some(format!("<a href={:?}>{}</a>", v.trim(), img)),
-            None => Some(img),
-        },
+    for (k, v) in kvs {
+        attr.push(format!("{}={:?}", k, v.trim()))
+    }
+    let img = format!("<img {}>", attr.join(" "));
+    match link {
+        None => Some(img),
+        Some(h) => Some(format!("<a {}>{}</a>", h, img)),
     }
 }
 
-pub fn link_insert(_: &Context, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
-    let mut args = VecDeque::from(args.clone());
-    let link = match kvs.get("href") {
-        Some(v) => v.trim(),
+pub fn link_insert(_: &Context, mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
+    let link = match kvs.remove("href") {
+        Some(v) => v.trim().to_string(),
         None => match args.pop_front() {
             None => return None,
-            Some(v) => v.trim(),
+            Some(v) => v.trim().to_string(),
         },
     };
-    let alt = match kvs.get("alt") {
-        Some(v) => v.trim(),
+    let alt = match kvs.remove("alt") {
+        Some(v) => v.trim().to_string(),
         None => match args.pop_front() {
-            Some(v) => v.trim(),
+            Some(v) => v.trim().to_string(),
             None => link.clone(),
         },
     };
