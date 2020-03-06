@@ -1,7 +1,7 @@
 use crate::{
     traits::NotedownMeta,
     utils::{build_td, build_th, build_zola},
-    Context, NotedownTarget, AST, GLOBAL_CONFIG,
+    Context, NotedownBackend, AST, GLOBAL_CONFIG,
 };
 use std::iter::repeat;
 
@@ -13,7 +13,7 @@ impl ToHTML for Context {
     fn to_html(&self) -> String {
         let head = self.meta.to_html();
         let post = self.ast.to_html();
-        return format!("{}{}", head, post);
+        return format!("{}\n\n{}\n", head, post.trim_end());
     }
 }
 
@@ -21,16 +21,15 @@ impl ToHTML for NotedownMeta {
     fn to_html(&self) -> String {
         let ref cfg = GLOBAL_CONFIG.lock().unwrap();
         match cfg.target {
-            NotedownTarget::Web => String::new(),
-            NotedownTarget::VSCode => String::new(),
-            NotedownTarget::Zola => build_zola(self),
+            NotedownBackend::Web => String::new(),
+            NotedownBackend::VSCode => String::new(),
+            NotedownBackend::Zola => build_zola(self),
         }
     }
 }
 
 impl ToHTML for AST {
     fn to_html(&self) -> String {
-        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
         match self {
             AST::Statements(e) => {
                 let mut text = String::new();
@@ -95,7 +94,10 @@ impl ToHTML for AST {
                 format!("<ul>{}</ul>", quote)
             }
 
-            AST::Command(s, keys, values) => format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values),
+            AST::Command(s, keys, values) => {
+                let ref cfg = GLOBAL_CONFIG.lock().unwrap();
+                format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values)
+            }
 
             AST::None => String::from(""),
             AST::Space => String::from(" "),

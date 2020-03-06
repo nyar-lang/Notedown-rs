@@ -19,7 +19,7 @@ Header = ${SPACE_SEPARATOR* ~ Sharp{1, 6}  ~  RestOfLine}
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
 TextHeaderCharacter = _{!NEWLINE  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
-TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|Escaped|Command}
+TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|CommandInline|Escaped}
 TextRest = {(!(NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
@@ -49,10 +49,10 @@ ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
 //ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
 //ListHeadLevel = {SPACE_SEPARATOR*}
 //ListRest = {(!ListStatement~ANY)*}
-ListMark = @{Minus|QuoteMark|Integer~Dot}
+ListMark = @{Minus|Plus|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
 ///Red
-HorizontalRule = @{SPACE_SEPARATOR* ~ Minus{3,}}
+HorizontalRule = @{SPACE_SEPARATOR* ~ (Minus{3,}|Plus{3,})}
 /*====================================================================================================================*/
 MathStatement = _{Math|MathRest}
 ///#E06C75
@@ -86,8 +86,8 @@ LineText = {(Escape~Tilde|!(Tilde ~ PEEK) ~ ANY)*}
 ///Gray
 LineRest = {Tilde+}
 /*====================================================================================================================*/
-Command = _{SPACE_SEPARATOR* ~ (CommandLine| CommandBlock)}
-
+Command = _{SPACE_SEPARATOR* ~ (CommandInline)}
+CommandInline = _{CommandLine| CommandBlock}
 //!#56B6C2: Set
 //!#E06C75: key
 CommandBlock = !{command ~ arguments*}
@@ -129,7 +129,7 @@ SYMBOL = @{
     XID_START ~ XID_CONTINUE*
   | Underline~XID_CONTINUE+
 }
-Escaped = @{Escape~(Escape|Tilde|Asterisk|Dollar|Accent|NEWLINE)}
+Escaped = @{Escape~ANY}
 Keywords = @{"true"|"false"|"null"}
 // = _{!SPACE_SEPARATOR ~ ANY}
 /*====================================================================================================================*/

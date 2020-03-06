@@ -53,6 +53,7 @@ pub enum Rule {
     LineText,
     LineRest,
     Command,
+    CommandInline,
     CommandBlock,
     arguments,
     argument_literal,
@@ -165,7 +166,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn TextElement(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.restore_on_err(|state| self::StyleStatement(state)).or_else(|state| state.restore_on_err(|state| self::LineStatement(state))).or_else(|state| state.restore_on_err(|state| self::MathStatement(state))).or_else(|state| state.restore_on_err(|state| self::RawStatement(state))).or_else(|state| self::NEWLINE(state)).or_else(|state| self::Escaped(state)).or_else(|state| self::Command(state))
+                    state.restore_on_err(|state| self::StyleStatement(state)).or_else(|state| state.restore_on_err(|state| self::LineStatement(state))).or_else(|state| state.restore_on_err(|state| self::MathStatement(state))).or_else(|state| state.restore_on_err(|state| self::RawStatement(state))).or_else(|state| self::NEWLINE(state)).or_else(|state| self::CommandInline(state)).or_else(|state| self::Escaped(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -255,12 +256,12 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn ListMark(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::ListMark, |state| state.atomic(::pest::Atomicity::Atomic, |state| self::Minus(state).or_else(|state| self::QuoteMark(state)).or_else(|state| state.sequence(|state| self::Integer(state).and_then(|state| self::Dot(state))))))
+                    state.rule(Rule::ListMark, |state| state.atomic(::pest::Atomicity::Atomic, |state| self::Minus(state).or_else(|state| self::Plus(state)).or_else(|state| self::QuoteMark(state)).or_else(|state| state.sequence(|state| self::Integer(state).and_then(|state| self::Dot(state))))))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn HorizontalRule(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::HorizontalRule, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| state.repeat(|state| self::SPACE_SEPARATOR(state)).and_then(|state| self::Minus(state)).and_then(|state| self::Minus(state)).and_then(|state| self::Minus(state)).and_then(|state| state.repeat(|state| self::Minus(state))))))
+                    state.rule(Rule::HorizontalRule, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| state.repeat(|state| self::SPACE_SEPARATOR(state)).and_then(|state| state.sequence(|state| self::Minus(state).and_then(|state| self::Minus(state)).and_then(|state| self::Minus(state)).and_then(|state| state.repeat(|state| self::Minus(state)))).or_else(|state| state.sequence(|state| self::Plus(state).and_then(|state| self::Plus(state)).and_then(|state| self::Plus(state)).and_then(|state| state.repeat(|state| self::Plus(state)))))))))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -365,7 +366,12 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn Command(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.sequence(|state| state.sequence(|state| state.optional(|state| self::SPACE_SEPARATOR(state).and_then(|state| state.repeat(|state| state.sequence(|state| super::hidden::skip(state).and_then(|state| self::SPACE_SEPARATOR(state))))))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::CommandLine(state).or_else(|state| self::CommandBlock(state))))
+                    state.sequence(|state| state.sequence(|state| state.optional(|state| self::SPACE_SEPARATOR(state).and_then(|state| state.repeat(|state| state.sequence(|state| super::hidden::skip(state).and_then(|state| self::SPACE_SEPARATOR(state))))))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::CommandInline(state)))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn CommandInline(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    self::CommandLine(state).or_else(|state| self::CommandBlock(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -475,7 +481,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn Escaped(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::Escaped, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| self::Escape(state).and_then(|state| self::Escape(state).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state)).or_else(|state| self::NEWLINE(state))))))
+                    state.rule(Rule::Escaped, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| self::Escape(state).and_then(|state| self::ANY(state)))))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -711,6 +717,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
             Rule::LineText => rules::LineText(state),
             Rule::LineRest => rules::LineRest(state),
             Rule::Command => rules::Command(state),
+            Rule::CommandInline => rules::CommandInline(state),
             Rule::CommandBlock => rules::CommandBlock(state),
             Rule::arguments => rules::arguments(state),
             Rule::argument_literal => rules::argument_literal(state),

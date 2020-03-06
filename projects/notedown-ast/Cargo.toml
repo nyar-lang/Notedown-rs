@@ -1,6 +1,6 @@
 [package]
 name = "notedown_ast"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/nyar-lang/Notedown-rs"

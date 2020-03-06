@@ -16,5 +16,5 @@ pub fn build_zola(meta: &NotedownMeta) -> String {
     if meta.categories.len() != 0 {
         code.push_str(&format!("categories = {:?}\n", meta.categories));
     }
-    return format!("+++\n{}+++\n\n", code);
+    return format!("+++\n{}+++", code);
 }

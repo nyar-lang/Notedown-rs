@@ -4,7 +4,7 @@ mod to_markdown;
 use crate::AST;
 use chrono::NaiveDateTime;
 use lazy_static::{self, LazyStatic};
-use std::{path::PathBuf, sync::Mutex};
+use std::{collections::HashMap, path::PathBuf, sync::Mutex};
 pub use to_html::ToHTML;
 pub use to_markdown::ToMarkdown;
 
@@ -18,7 +18,7 @@ pub struct Context {
 pub struct NotedownConfig {
     pub tab_size: usize,
     pub template: MissingCommand,
-    pub target: NotedownTarget,
+    pub target: NotedownBackend,
 }
 
 #[derive(Debug, Clone)]
@@ -31,7 +31,8 @@ pub struct NotedownMeta {
     pub tags: Vec<String>,
     pub categories: Vec<String>,
     pub series: Vec<String>,
-    pub weights: usize,
+    pub weight: usize,
+    pub references: HashMap<Box<str>, String>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -41,7 +42,7 @@ pub enum MissingCommand {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum NotedownTarget {
+pub enum NotedownBackend {
     Web,
     VSCode,
     Zola,
@@ -59,7 +60,7 @@ impl Default for NotedownConfig {
             // basic
             tab_size: 2,
             template: MissingCommand::Vue,
-            target: NotedownTarget::Web,
+            target: NotedownBackend::Web,
         }
     }
 }
@@ -76,12 +77,14 @@ impl Default for NotedownMeta {
             tags: vec![],
             categories: vec![],
             series: vec![],
-            weights: 0,
+            weight: 0,
+            references: Default::default(),
         }
     }
 }
 
-// lazy_static! { pub static ref GlobalConfig: Mutex<NotedownConfig> = Mutex::new(NotedownConfig::default()); }
+// lazy_static! { pub static ref GLOBAL_CONFIG: Mutex<NotedownConfig> = Mutex::new(NotedownConfig::default()); }
+
 #[allow(dead_code)]
 pub struct GlobalConfig {
     private_field: (),

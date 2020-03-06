@@ -26,7 +26,7 @@ impl Debug for Value {
             Value::Boolean(b) => write!(f, "{}", b),
             Value::List(_) => unimplemented!(),
             // Value::Dict(_) => unimplemented!(),
-            Value::Command(_) => unimplemented!(),
+            Value::Command(node) => write!(f, "{}", node),
         }
     }
 }

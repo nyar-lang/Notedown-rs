@@ -86,15 +86,11 @@ pub fn maybe_math(ctx: &mut Context, pair: Pair<Rule>) -> AST {
 
 pub fn map_escape(c: &str) -> AST {
     match c {
-        "\\*" => AST::from("*"),
-        "\\|" => AST::from("|"),
-        "\\#" => AST::from("#"),
-        "\\-" => AST::from("-"),
-        "\\\\" => AST::from("\\"),
+        "\\\r" => AST::None,
         "\\\n" => AST::None,
         _ => {
-            println!("escaping {:?}=>", c);
-            unreachable!()
+            // println!("escaping {:?}=>", c);
+            AST::from(c.chars().last().unwrap())
         }
     }
 }

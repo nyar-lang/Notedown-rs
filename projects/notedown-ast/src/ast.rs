@@ -108,6 +108,12 @@ impl Display for AST {
     }
 }
 
+impl From<char> for AST {
+    fn from(s: char) -> Self {
+        AST::String(s.to_string())
+    }
+}
+
 impl From<&str> for AST {
     fn from(s: &str) -> Self {
         AST::String(s.to_string())
