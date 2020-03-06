@@ -1,5 +1,5 @@
 use pangu::spacing;
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 pub use textwrap::{dedent, indent};
 
 pub fn pangu_space(text: &str) -> Cow<str> {
@@ -18,33 +18,19 @@ pub fn count_indent(text: &str) -> usize {
 }
 
 pub fn dedent_less_than(input: &str, indent: usize) -> String {
-    if indent == 0 {
-        return String::from(input);
-    }
-    let mut out: String = String::from(input);
-    let mut j: usize = 0;
-    let mut is_counting = true;
-    let mut ws_cnt = 0;
-    unsafe {
-        let out_b = out.as_bytes_mut();
-        for i in 0..out_b.len() {
-            if is_counting == true && out_b[i] == b' ' {
-                ws_cnt += 1;
-                if ws_cnt == indent {
-                    is_counting = false;
+    let new_text = input.lines().map(|line| {
+        let mut max = indent;
+        line.chars()
+            .skip_while(|c| {
+                if max == 0 {
+                    false
                 }
-            }
-            else {
-                is_counting = false;
-                if out_b[i] == b'\n' {
-                    is_counting = true;
-                    ws_cnt = 0;
+                else {
+                    max -= 1;
+                    c.is_whitespace()
                 }
-                out_b[j] = out_b[i];
-                j += 1;
-            }
-        }
-    }
-    out.truncate(j);
-    out
+            })
+            .collect::<String>()
+    });
+    new_text.collect::<Vec<_>>().join("\n")
 }

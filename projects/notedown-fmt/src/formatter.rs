@@ -38,17 +38,19 @@ impl Settings {
         for pair in pairs {
             let _code = match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::NEWLINE => continue,
+                Rule::NEWLINE => codes.push(String::from("\n")),
                 Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
 
                 Rule::Header => codes.push(self.format_header(pair)),
                 Rule::TextBlock => codes.push(self.format_text(pair.as_str())),
                 Rule::List => codes.push(self.format_list(pair)),
-
+                Rule::CommandLine => codes.push(self.format_command_line(pair)),
+                Rule::Code => codes.push(self.format_code(pair)),
+                Rule::CommandBlock => codes.push(self.format_command_block(pair)),
                 _ => debug_cases!(pair),
             };
         }
-        return codes.join("\n");
+        return codes.join("");
     }
     fn format_header(&self, pairs: Pair<Rule>) -> String {
         let mut level = 0;
@@ -57,36 +59,35 @@ impl Settings {
             let _code = match pair.as_rule() {
                 Rule::SPACE_SEPARATOR => continue,
                 Rule::Sharp => level += 1,
-                Rule::RestOfLine => text = self.format_text(pair.as_str()),
+                Rule::RestOfLine => text = self.format_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),
             };
         }
-        println!("{0} {1}", "#".repeat(level), text);
-        String::new()
+        format!("{0} {1}", "#".repeat(level), text)
     }
 
     fn format_text(&self, input: &str) -> String {
         let text = if self.pangu_space { pangu_space(input) } else { Cow::from(input) };
         let spaces = count_indent(&text);
         let mut codes = vec![];
-        for pair in parse_text(dedent_less_than(&text, spaces).trim_end()) {
-            let _code = match pair.as_rule() {
+        for pair in parse_text(dedent_less_than(text.trim_end(), spaces).trim_end()) {
+            match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::TextRest => codes.push(pair.as_str().to_string()),
                 Rule::Style => codes.push(self.format_style(pair)),
                 Rule::StyleRest => codes.push(pair.as_str().to_string()),
                 Rule::NEWLINE => codes.push(String::from("\n")),
+                Rule::Raw => codes.push(pair.as_str().to_string()),
                 _ => debug_cases!(pair),
             };
         }
-        format!("{}", &indent(&codes.join(""), &" ".repeat(spaces)))
+        if spaces == 0 { codes.join("") } else { format!("{}", indent(&codes.join(""), &" ".repeat(spaces))) }
     }
     fn format_style(&self, pairs: Pair<Rule>) -> String {
         let mut level = 0;
         let mut text = "";
-        let _codes = String::new();
         for pair in pairs.into_inner() {
-            let _code = match pair.as_rule() {
+            match pair.as_rule() {
                 Rule::Asterisk => continue,
                 Rule::StyleLevel => level += 1,
                 Rule::StyleText => text = pair.as_str(),
@@ -132,6 +133,49 @@ impl Settings {
         // };
         // }
         // format!("{}", &indent(&codes.join(""), &" ".repeat(spaces)))
+    }
+    fn format_code(&self, input: Pair<Rule>) -> String {
+        // let mut codes = vec![];
+        let mut level = 0;
+        let mut cmd = "";
+        let mut txt = "";
+        for pair in input.into_inner() {
+            match pair.as_rule() {
+                Rule::CodeMark => continue,
+                Rule::CodeLevel => level = pair.as_str().len(),
+                Rule::SYMBOL => cmd = pair.as_str(),
+                Rule::CodeText => txt = pair.as_str().trim(),
+                _ => debug_cases!(pair),
+            };
+        }
+        format!("{0}{1}\n{2}\n{0}", "`".repeat(level), cmd, txt)
+    }
+    fn format_command_line(&self, input: Pair<Rule>) -> String {
+        // let mut codes = vec![];
+        let mut cmd = "";
+        let mut rst = "";
+        for pair in input.into_inner() {
+            match pair.as_rule() {
+                Rule::SPACE_SEPARATOR => continue,
+                Rule::Colon => continue,
+                Rule::command => cmd = pair.as_str(),
+                Rule::RestOfLine => rst = pair.as_str().trim(),
+                _ => unreachable!(),
+            };
+        }
+        format!("{}: {}", cmd, rst)
+    }
+    fn format_command_block(&self, input: Pair<Rule>) -> String {
+        // let mut codes = vec![];
+        let mut cmd = "";
+        let mut rst = "";
+        for pair in input.into_inner() {
+            match pair.as_rule() {
+                Rule::command => cmd = pair.as_str(),
+                _ => debug_cases!(pair),
+            };
+        }
+        format!("{}{}", cmd, rst)
     }
 }
 
