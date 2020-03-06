@@ -10,7 +10,7 @@ edition = "2018"
 exclude = ["/tests/*"]
 
 [dependencies]
-notedown_ast = {path = "../notedown-ast",version = "0.3.1"}
+notedown_ast = {path = "../notedown-ast",version = "0.3.2"}
 walkdir = "2.3.1"
 chrono = "0.4.10"
 

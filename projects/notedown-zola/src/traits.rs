@@ -22,7 +22,14 @@ pub fn file_to_zola(path: DirEntry, out: &PathBuf) -> Result<(), &'static str> {
         Err(_) => return Err("can't read the file"),
     };
     let html = match panic::catch_unwind(|| ctx.to_html()) {
-        Ok(s) => s,
+        Ok(s) => {
+            if cfg!(windows) {
+                s.replace('\n', "\r\n")
+            }
+            else {
+                s
+            }
+        }
         Err(_) => return Err("can not build this file"),
     };
     let mut out = out.clone();

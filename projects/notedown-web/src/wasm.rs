@@ -1,4 +1,4 @@
-use notedown_ast::{Context, MissingCommand, NotedownMeta, NotedownTarget, ToHTML, AST};
+use notedown_ast::{Context, MissingCommand, NotedownBackend, NotedownMeta, ToHTML, AST};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
