@@ -2,12 +2,16 @@ use crate::{
     utils::{map_escape, map_white_space, maybe_math, str_escape, trim_dedent, unescape},
     Context, Value, AST, GLOBAL_CONFIG,
 };
+use carbon_lib::{utils::CarbonHTML, CarbonError, Config};
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
 use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    ptr::hash,
+};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -69,22 +73,46 @@ impl Context {
         }
         return AST::Header(Box::new(head), level);
     }
-    fn parse_code(&self, pairs: Pair<Rule>) -> AST {
-        let mut level = "";
+    fn parse_code(&mut self, pairs: Pair<Rule>) -> AST {
+        let mut carbon = Config::default();
         let mut cmd = "";
-        let mut body = "";
+        let mut body = String::new();
+        let mut kvs = HashMap::new();
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::SPACE_SEPARATOR => continue,
                 Rule::CodeMark => continue,
-                Rule::CodeLevel => level = pair.as_str(),
+                Rule::CodeLevel => continue,
                 Rule::SYMBOL => cmd = pair.as_str(),
-                Rule::CodeText => body = pair.as_str().trim_matches('\n'),
+                Rule::CodeText => {
+                    let s = pair.as_str().trim_matches('\n');
+                    let mut i = 0;
+                    for c in s.chars() {
+                        match c {
+                            ' ' => i += 1,
+                            _ => break,
+                        }
+                    }
+                    if i == 0 { body = String::from(s) } else { body = trim_dedent(s, i) }
+                }
                 _ => debug_cases!(pair),
             };
         }
-        let code = format!("\n\n{0}{1}{2}{0}\n\n", level, cmd, body);
-        return AST::String(code);
+        carbon.html_type = CarbonHTML::Raw;
+        if cmd == "" {
+            carbon.syntax = String::from("txt")
+        }
+        else {
+            carbon.syntax = String::from(cmd)
+        }
+        match carbon.render_html(&body) {
+            Ok(o) => AST::String(o),
+            Err(_) => {
+                kvs.insert(String::from("body"), Value::from(body));
+                let cmd = AST::Command(String::from(cmd), vec![], kvs);
+                self.execute_cmd(cmd)
+            }
+        }
     }
     pub fn parse_text(&mut self, text: &str) -> AST {
         let pairs = NoteDownParser::parse(Rule::TextMode, text).unwrap_or_else(|e| panic!("{}", e));
@@ -104,13 +132,19 @@ impl Context {
                 Rule::TextRest => AST::String(pair.as_str().to_string()),
                 Rule::RawRest => AST::String(pair.as_str().to_string()),
                 Rule::StyleRest => AST::String(pair.as_str().to_string()),
+                Rule::LineRest => AST::String(pair.as_str().to_string()),
                 Rule::MathRest => AST::String(pair.as_str().to_string()),
+
                 Rule::CommandLine => {
                     let cmd = self.parse_command(pair);
                     self.execute_cmd(cmd)
                 }
                 Rule::CommandBlock => {
                     let cmd = self.parse_command(pair);
+                    self.execute_cmd(cmd)
+                }
+                Rule::URL => {
+                    let cmd = AST::Command(String::from("link"), vec![Value::from(pair.as_str())], Default::default());
                     self.execute_cmd(cmd)
                 }
                 _ => debug_cases!(pair),

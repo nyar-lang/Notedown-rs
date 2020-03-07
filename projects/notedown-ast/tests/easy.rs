@@ -150,3 +150,28 @@ fn test_escaping() {
     "#;
     trim_eq(input, output)
 }
+
+#[test]
+fn test_url() {
+    let input = r#"
+        https://www.zhihu.com/question/311834230/answer/595009063
+        http://mathworld.wolfram.com/PrimeFormulas.html
+
+        Page210
+        http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf
+        ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf
+    "#;
+    let output = r#"
+            <p>
+                <ahref="href=\"https://www.zhihu.com/question/311834230/answer/595009063\"">https://www.zhihu.com/question/311834230/answer/595009063</a>
+                </br>
+                <ahref="href=\"http://mathworld.wolfram.com/PrimeFormulas.html\"">http://mathworld.wolfram.com/PrimeFormulas.html</a>
+            </p>
+            <p>
+                Page210</br><ahref="href=\"http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf\"">http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf</a>
+                </br>
+                <ahref="href=\"ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf\"">ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf</a>
+            </p>
+        "#;
+    trim_eq(input, output)
+}
