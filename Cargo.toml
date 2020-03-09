@@ -1,10 +1,7 @@
-publish = false
-
 [workspace]
-
 members = ["projects/*"]
 default-members = [
-    "projects/notedown-parser",
+#   "projects/notedown-parser",
     "projects/notedown-ast",
     "projects/notedown-fmt",
     "projects/notedown-web",

@@ -36,7 +36,7 @@ impl Settings {
         let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
         let mut codes = vec![];
         for pair in pairs {
-            let _code = match pair.as_rule() {
+            match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::NEWLINE => codes.push(String::from("\n")),
                 Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
@@ -47,10 +47,17 @@ impl Settings {
                 Rule::CommandLine => codes.push(self.format_command_line(pair)),
                 Rule::Code => codes.push(self.format_code(pair)),
                 Rule::CommandBlock => codes.push(self.format_command_block(pair)),
+                Rule::HorizontalRule => codes.push(pair.as_str().to_string()),
                 _ => debug_cases!(pair),
             };
         }
-        return codes.join("");
+        let mut out: String = codes.join("");
+        if let Some(s) = out.chars().last() {
+            if s != '\n' {
+                out.push('\n');
+            }
+        }
+        return out;
     }
     fn format_header(&self, pairs: Pair<Rule>) -> String {
         let mut level = 0;
@@ -73,11 +80,19 @@ impl Settings {
         for pair in parse_text(dedent_less_than(text.trim_end(), spaces).trim_end()) {
             match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::TextRest => codes.push(pair.as_str().to_string()),
-                Rule::Style => codes.push(self.format_style(pair)),
-                Rule::StyleRest => codes.push(pair.as_str().to_string()),
+                Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
                 Rule::NEWLINE => codes.push(String::from("\n")),
+
                 Rule::Raw => codes.push(pair.as_str().to_string()),
+                Rule::URL => codes.push(pair.as_str().to_string()),
+                Rule::Math => codes.push(self.format_math(pair)),
+                Rule::Style => codes.push(self.format_style(pair)),
+
+                Rule::TextRest => codes.push(pair.as_str().to_string()),
+                Rule::StyleRest => codes.push(pair.as_str().to_string()),
+                Rule::MathRest => codes.push(pair.as_str().to_string()),
+
+                Rule::CommandBlock => codes.push(self.format_command_block(pair)),
                 _ => debug_cases!(pair),
             };
         }
@@ -89,12 +104,25 @@ impl Settings {
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::Asterisk => continue,
-                Rule::StyleLevel => level += 1,
-                Rule::StyleText => text = pair.as_str(),
+                Rule::StyleLevel => level = pair.as_str().len(),
+                Rule::StyleText => text = pair.as_str().trim(),
                 _ => debug_cases!(pair),
             };
         }
         format!("{0}{1}{0}", "*".repeat(level), text)
+    }
+    fn format_math(&self, pairs: Pair<Rule>) -> String {
+        let mut level = 0;
+        let mut text = "";
+        for pair in pairs.into_inner() {
+            match pair.as_rule() {
+                Rule::Dollar => continue,
+                Rule::MathLevel => level = pair.as_str().len(),
+                Rule::MathText => text = pair.as_str().trim(),
+                _ => debug_cases!(pair),
+            };
+        }
+        format!("{0}{1}{0}", "$".repeat(level), text)
     }
     fn format_list(&self, input: Pair<Rule>) -> String {
         let text = input.as_str();
@@ -168,14 +196,16 @@ impl Settings {
     fn format_command_block(&self, input: Pair<Rule>) -> String {
         // let mut codes = vec![];
         let mut cmd = "";
-        let mut rst = "";
+        let mut args = vec![];
         for pair in input.into_inner() {
             match pair.as_rule() {
                 Rule::command => cmd = pair.as_str(),
+                Rule::argument => args.push(pair.as_str()),
                 _ => debug_cases!(pair),
             };
         }
-        format!("{}{}", cmd, rst)
+
+        if args.len() != 0 { format!("{}{:?}", cmd, args) } else { String::from(cmd) }
     }
 }
 

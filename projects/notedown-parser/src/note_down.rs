@@ -14,6 +14,7 @@ pub enum Rule {
     TextBlockLine,
     TextElement,
     TextRest,
+    URL,
     Code,
     CodeAction,
     CodeLevel,
@@ -78,10 +79,6 @@ pub enum Rule {
     Escaped,
     Keywords,
     COMMENT,
-    LineComment,
-    BlockComment,
-    MultiLineComment,
-    Comment,
     NEWLINE,
     SPACE_SEPARATOR,
     TAB,
@@ -166,12 +163,17 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn TextElement(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.restore_on_err(|state| self::StyleStatement(state)).or_else(|state| state.restore_on_err(|state| self::LineStatement(state))).or_else(|state| state.restore_on_err(|state| self::MathStatement(state))).or_else(|state| state.restore_on_err(|state| self::RawStatement(state))).or_else(|state| self::NEWLINE(state)).or_else(|state| self::CommandInline(state)).or_else(|state| self::Escaped(state))
+                    state.restore_on_err(|state| self::StyleStatement(state)).or_else(|state| state.restore_on_err(|state| self::LineStatement(state))).or_else(|state| state.restore_on_err(|state| self::MathStatement(state))).or_else(|state| state.restore_on_err(|state| self::RawStatement(state))).or_else(|state| self::NEWLINE(state)).or_else(|state| self::SPACE_SEPARATOR(state)).or_else(|state| self::CommandInline(state)).or_else(|state| self::URL(state)).or_else(|state| self::Escaped(state))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn TextRest(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::TextRest, |state| state.sequence(|state| state.sequence(|state| state.lookahead(false, |state| self::NEWLINE(state).or_else(|state| self::Escape(state)).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::ANY(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| state.sequence(|state| state.optional(|state| state.sequence(|state| state.lookahead(false, |state| self::NEWLINE(state).or_else(|state| self::Escape(state)).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::ANY(state))).and_then(|state| state.repeat(|state| state.sequence(|state| super::hidden::skip(state).and_then(|state| state.sequence(|state| state.lookahead(false, |state| self::NEWLINE(state).or_else(|state| self::Escape(state)).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::ANY(state))))))))))))
+                    state.rule(Rule::TextRest, |state| state.sequence(|state| state.sequence(|state| state.lookahead(false, |state| self::NEWLINE(state).or_else(|state| self::SPACE_SEPARATOR(state)).or_else(|state| self::Escape(state)).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::ANY(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| state.sequence(|state| state.optional(|state| state.sequence(|state| state.lookahead(false, |state| self::NEWLINE(state).or_else(|state| self::SPACE_SEPARATOR(state)).or_else(|state| self::Escape(state)).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::ANY(state))).and_then(|state| state.repeat(|state| state.sequence(|state| super::hidden::skip(state).and_then(|state| state.sequence(|state| state.lookahead(false, |state| self::NEWLINE(state).or_else(|state| self::SPACE_SEPARATOR(state)).or_else(|state| self::Escape(state)).or_else(|state| self::Tilde(state)).or_else(|state| self::Asterisk(state)).or_else(|state| self::Dollar(state)).or_else(|state| self::Accent(state))).and_then(|state| super::hidden::skip(state)).and_then(|state| self::ANY(state))))))))))))
+                }
+                #[inline]
+                #[allow(non_snake_case, unused_variables)]
+                pub fn URL(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::URL, |state| state.sequence(|state| state.sequence(|state| self::ASCII_ALPHA(state).and_then(|state| state.repeat(|state| self::ASCII_ALPHA(state)))).and_then(|state| state.match_string("://")).and_then(|state| state.sequence(|state| state.lookahead(false, |state| self::SPACE_SEPARATOR(state).or_else(|state| self::NEWLINE(state))).and_then(|state| self::ANY(state)))).and_then(|state| state.repeat(|state| state.sequence(|state| state.lookahead(false, |state| self::SPACE_SEPARATOR(state).or_else(|state| self::NEWLINE(state))).and_then(|state| self::ANY(state))))))))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -491,27 +493,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
                 pub fn COMMENT(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::COMMENT, |state| self::BlockComment(state).or_else(|state| self::LineComment(state))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn LineComment(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::LineComment, |state| state.sequence(|state| self::Comment(state).and_then(|state| state.repeat(|state| self::SPACE_SEPARATOR(state))).and_then(|state| self::Colon(state)).and_then(|state| self::RestOfLine(state)))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn BlockComment(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::BlockComment, |state| state.sequence(|state| self::Comment(state).and_then(|state| state.repeat(|state| self::SPACE_SEPARATOR(state))).and_then(|state| state.match_string("{")).and_then(|state| self::MultiLineComment(state)).and_then(|state| state.match_string("}")))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn MultiLineComment(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::MultiLineComment, |state| state.repeat(|state| self::BlockComment(state).or_else(|state| state.sequence(|state| state.lookahead(false, |state| state.match_string("}")).and_then(|state| self::ANY(state)))))))
-                }
-                #[inline]
-                #[allow(non_snake_case, unused_variables)]
-                pub fn Comment(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
-                    state.rule(Rule::Comment, |state| state.atomic(::pest::Atomicity::Atomic, |state| state.sequence(|state| self::Escape(state).and_then(|state| state.match_string("comment")))))
+                    state.atomic(::pest::Atomicity::CompoundAtomic, |state| state.rule(Rule::COMMENT, |state| state.sequence(|state| self::Escape(state).and_then(|state| state.match_string("comment")).and_then(|state| state.repeat(|state| self::SPACE_SEPARATOR(state))).and_then(|state| self::Colon(state)).and_then(|state| self::RestOfLine(state)))))
                 }
                 #[inline]
                 #[allow(non_snake_case, unused_variables)]
@@ -655,6 +637,11 @@ impl ::pest::Parser<Rule> for NoteDownParser {
                 }
                 #[inline]
                 #[allow(dead_code, non_snake_case, unused_variables)]
+                pub fn ASCII_ALPHA(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
+                    state.match_range('a'..'z').or_else(|state| state.match_range('A'..'Z'))
+                }
+                #[inline]
+                #[allow(dead_code, non_snake_case, unused_variables)]
                 fn XID_CONTINUE(state: Box<::pest::ParserState<Rule>>) -> ::pest::ParseResult<Box<::pest::ParserState<Rule>>> {
                     state.match_char_by(::pest::unicode::XID_CONTINUE)
                 }
@@ -678,6 +665,7 @@ impl ::pest::Parser<Rule> for NoteDownParser {
             Rule::TextBlockLine => rules::TextBlockLine(state),
             Rule::TextElement => rules::TextElement(state),
             Rule::TextRest => rules::TextRest(state),
+            Rule::URL => rules::URL(state),
             Rule::Code => rules::Code(state),
             Rule::CodeAction => rules::CodeAction(state),
             Rule::CodeLevel => rules::CodeLevel(state),
@@ -742,10 +730,6 @@ impl ::pest::Parser<Rule> for NoteDownParser {
             Rule::Escaped => rules::Escaped(state),
             Rule::Keywords => rules::Keywords(state),
             Rule::COMMENT => rules::COMMENT(state),
-            Rule::LineComment => rules::LineComment(state),
-            Rule::BlockComment => rules::BlockComment(state),
-            Rule::MultiLineComment => rules::MultiLineComment(state),
-            Rule::Comment => rules::Comment(state),
             Rule::NEWLINE => rules::NEWLINE(state),
             Rule::SPACE_SEPARATOR => rules::SPACE_SEPARATOR(state),
             Rule::TAB => rules::TAB(state),

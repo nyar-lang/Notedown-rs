@@ -19,8 +19,10 @@ Header = ${SPACE_SEPARATOR* ~ Sharp{1, 6}  ~  RestOfLine}
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
 TextHeaderCharacter = _{!NEWLINE  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
-TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|CommandInline|Escaped}
-TextRest = {(!(NEWLINE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
+TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|SPACE_SEPARATOR|CommandInline|URL|Escaped}
+TextRest = {(!(NEWLINE|SPACE_SEPARATOR|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
+
+URL = ${ASCII_ALPHA+ ~ "://" ~ (!(SPACE_SEPARATOR|NEWLINE)~ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
@@ -134,11 +136,11 @@ Keywords = @{"true"|"false"|"null"}
 // = _{!SPACE_SEPARATOR ~ ANY}
 /*====================================================================================================================*/
 //!Gray:BlockComment|LineComment
-COMMENT = ${BlockComment|LineComment }
-LineComment = ${Comment  ~ SPACE_SEPARATOR* ~  Colon  ~  RestOfLine}
-BlockComment = ${Comment  ~ SPACE_SEPARATOR* ~  "{"  ~ MultiLineComment ~  "}"}
-MultiLineComment = ${(BlockComment | !"}"  ~  ANY)*}
-Comment = @{Escape ~ "comment"}
+COMMENT = ${Escape ~ "comment"  ~ SPACE_SEPARATOR* ~  Colon  ~  RestOfLine }
+//LineComment      = ${Comment  ~ SPACE_SEPARATOR* ~  Colon  ~  RestOfLine}
+//BlockComment     = ${Comment  ~ SPACE_SEPARATOR* ~  "{"  ~ MultiLineComment ~  "}"}
+//MultiLineComment = ${(BlockComment | !"}"  ~  ANY)*}
+//Comment          = @{Escape ~ "comment"}
 /*====================================================================================================================*/
 NEWLINE = @{CR ~ LF|CR|LF}
 SPACE_SEPARATOR = {" "|"\t"}

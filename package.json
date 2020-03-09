@@ -9,6 +9,7 @@
         "push": "yarn test && git push",
         "reset": "git reset Head~ --soft",
         "pub": "cargo-publish-all --yes --allow-dirty",
-        "zola": "cargo build --release --color=always --package notedown_zola"
+        "zola": "cargo build --release --color=always --package notedown_zola",
+        "vsc": "cd projects/notedown-vscode && wasm-pack build --target nodejs && wasm-pack publish"
     }
 }
