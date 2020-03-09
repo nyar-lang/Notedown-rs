@@ -14,7 +14,10 @@ pub fn import(ctx: &Context, mut _args: VecDeque<Value>, mut _kvs: HashMap<Strin
 
 pub fn set_title(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
     if let Value::String(s) = &args[0] {
-        ctx.meta.title = Some(s.trim().to_string())
+        let title = s.trim();
+        if title.len() != 0 {
+            ctx.meta.title = Some(title.to_string())
+        }
     };
     Some(String::new())
 }
@@ -34,21 +37,30 @@ pub fn set_date(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
 
 pub fn set_file_name(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
     if let Value::String(s) = &args[0] {
-        ctx.meta.file_name = Some(s.trim().to_string())
+        let file_name = s.trim();
+        if file_name.len() != 0 {
+            ctx.meta.file_name = Some(file_name.to_string())
+        }
     };
     Some(String::new())
 }
 
 pub fn set_tags(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
     if let Value::String(s) = &args[0] {
-        ctx.meta.tags = trim_split_or(s)
+        let tags = s.trim();
+        if tags.len() != 0 {
+            ctx.meta.tags = trim_split_or(tags)
+        }
     };
     Some(String::new())
 }
 
 pub fn set_categories(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
     if let Value::String(s) = &args[0] {
-        ctx.meta.categories = trim_split_or(s)
+        let cats = s.trim();
+        if cats.len() != 0 {
+            ctx.meta.categories = trim_split_or(cats)
+        }
     };
     Some(String::new())
 }

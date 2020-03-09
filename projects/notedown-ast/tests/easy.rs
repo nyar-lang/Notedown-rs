@@ -84,16 +84,16 @@ fn test_math() {
 #[test]
 fn test_function() {
     let input = r#"
-        \netease[song][22724727]
-        \netease{id = 28629058, type = "song", autoplay = true}
-        \unknow[arg1][arg2]{arg3 = "string", "arg4" = 42}
         \title: Test
         \date: 2018-01-08
+        \netease[song][22724727]
+        \netease{id = 28629058, type = "song", autoplay = true}
+        \link[https://github.com/nyar-lang/notedown-rs]
     "#;
     let output = r#"
         <meting-jsserver="netease"type="song"id="22724727"></meting-js>
-        <meting-jsserver="netease"type="song"id="28629"autoplay="true"></meting-js>
-        <pre>\unknow{"arg1","arg2",arg3="string",arg4="42"}</pre>
+        <meting-jsserver="netease"type="song"id="28629"autoplay=true></meting-js>
+        <ahref="https://github.com/nyar-lang/notedown-rs">https://github.com/nyar-lang/notedown-rs</a>
     "#;
     trim_eq(input, output)
 }
@@ -163,14 +163,16 @@ fn test_url() {
     "#;
     let output = r#"
             <p>
-                <ahref="href=\"https://www.zhihu.com/question/311834230/answer/595009063\"">https://www.zhihu.com/question/311834230/answer/595009063</a>
+                <ahref="https://www.zhihu.com/question/311834230/answer/595009063">https://www.zhihu.com/question/311834230/answer/595009063</a>
                 </br>
-                <ahref="href=\"http://mathworld.wolfram.com/PrimeFormulas.html\"">http://mathworld.wolfram.com/PrimeFormulas.html</a>
+                <ahref="http://mathworld.wolfram.com/PrimeFormulas.html">http://mathworld.wolfram.com/PrimeFormulas.html</a>
             </p>
             <p>
-                Page210</br><ahref="href=\"http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf\"">http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf</a>
+                Page210
                 </br>
-                <ahref="href=\"ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf\"">ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf</a>
+                <ahref="http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf">http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf</a>
+                </br>
+                <ahref="ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf">ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf</a>
             </p>
         "#;
     trim_eq(input, output)
