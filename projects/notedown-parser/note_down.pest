@@ -113,11 +113,11 @@ command = @{Escape ~ SYMBOL}
 RestOfLine = !{(!NEWLINE  ~  ANY)*}
 /*====================================================================================================================*/
 //!#D19A66: Integer|Decimal|DecimalBad|Exponent|ComplexHandler
-Number = ${Decimal|DecimalBad|Integer}
+Number = ${Sign? ~ (Decimal|DecimalBad|Integer)}
 Decimal = ${Integer  ~ Dot ~  ASCII_DIGIT+}
 DecimalBad = ${Integer ~ Dot | Dot ~ ASCII_DIGIT+}
-Integer = @{Zero|ASCII_DIGIT  ~  (Underline?  ~  ASCII_NONZERO_DIGIT)* }
-Zero = @{"0"}
+Integer = @{"0"|ASCII_NONZERO_DIGIT  ~  ASCII_DIGIT*}
+Sign = @{Plus|Minus}
 /*====================================================================================================================*/
 ///#98C379
 String = ${
