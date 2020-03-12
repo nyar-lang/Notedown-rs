@@ -6,15 +6,15 @@ use carbon_lib::{utils::CarbonHTML, CarbonError, Config};
 
 #[cfg(feature = "desktop")]
 pub fn try_render_code(cmd: String, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
-    let body = match kvs.remove("body") {
+    let body = match kvs.get("body") {
         Some(s) => s.trim().to_string(),
         None => return None,
     };
     let mut title: Option<String> = None;
-    match kvs.remove("title") {
+    match kvs.get("title") {
         Some(s) => title = Some(s.to_string()),
         None => {
-            if let Some(s) = args.pop_front() {
+            if let Some(s) = args.get(0) {
                 title = Some(s.to_string())
             }
         }
@@ -29,7 +29,7 @@ pub fn try_render_code(cmd: String, args: &Vec<Value>, kvs: &HashMap<String, Val
     }
 }
 
-#[cfg(feature = "default")]
+#[cfg(not(feature = "desktop"))]
 pub fn try_render_code(cmd: String, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
     Some(format!("\\{}{:?}{:?}", cmd, args, kvs))
 }

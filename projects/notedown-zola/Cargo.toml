@@ -1,6 +1,6 @@
 [package]
 name = "notedown_zola"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/nyar-lang/Notedown-rs"
@@ -15,7 +15,7 @@ chrono = "0.4.10"
 
 [dependencies.notedown_ast]
 path = "../notedown-ast"
-version = "0.3.2"
+version = "0.4.0"
 default-features = false
 features = ["desktop"]
 

@@ -4,12 +4,12 @@ mod traits;
 mod utils;
 
 use crate::{traits::file_to_zola, utils::filter_files};
-use notedown_ast::{MissingCommand, NotedownBackend, NotedownConfig, GLOBAL_CONFIG};
+use notedown_ast::{NotedownBackend, NotedownConfig, GLOBAL_CONFIG};
 use std::{fs, path::PathBuf};
 
 fn reinitialize() {
     let mut x = GLOBAL_CONFIG.lock().unwrap();
-    *x = NotedownConfig { tab_size: 2, template: MissingCommand::Zola, target: NotedownBackend::Zola };
+    *x = NotedownConfig { tab_size: 2, target: NotedownBackend::Zola };
 }
 
 #[cfg(not(test))]

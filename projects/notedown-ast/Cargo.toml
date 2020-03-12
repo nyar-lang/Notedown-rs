@@ -1,21 +1,23 @@
 [package]
 name = "notedown_ast"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
 repository = "https://github.com/nyar-lang/Notedown-rs"
 readme = "README.md"
 license = "MPL-2.0"
 edition = "2018"
-exclude = ["/tests/*"]
 
 [dependencies]
 pest = "2.1.2"
-textwrap = "0.11"
+text-utils = "0.2.1"
 chrono = "0.4.10"
 lazy_static = "1.4.0"
 carbon-lib = {version = "0.2.1", optional = true}
-notedown_parser = {path = "../notedown-parser",version = "0.4.0"}
+
+[dependencies.notedown_parser]
+path = "../notedown-parser"
+version = "0.4.2"
 
 [dev-dependencies]
 

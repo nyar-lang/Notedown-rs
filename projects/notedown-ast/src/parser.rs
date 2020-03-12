@@ -1,5 +1,5 @@
 use crate::{
-    utils::{map_escape, map_white_space, maybe_math, str_escape, trim_dedent, unescape},
+    utils::{map_escape, map_white_space, maybe_math, str_escape, unescape},
     Context, Value, AST, GLOBAL_CONFIG,
 };
 
@@ -9,6 +9,7 @@ use pest::{
     Parser,
 };
 use std::collections::{HashMap, VecDeque};
+use text_utils::dedent_less_than;
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -305,7 +306,7 @@ impl Context {
         let (n, ty) = List::get_type(text.lines().next().unwrap());
         let mut codes: Vec<String> = vec![];
         let mut code: Vec<String> = vec![];
-        for line in trim_dedent(text, n).lines() {
+        for line in dedent_less_than(text, n).lines() {
             let (b, t) = List::trim_indent(line, n, &ty);
             if b && code.len() != 0 {
                 codes.push(code.join("\n"));

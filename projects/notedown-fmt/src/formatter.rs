@@ -1,10 +1,11 @@
-use crate::utils::{count_indent, dedent_less_than, indent, pangu_space};
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
+use pangu::spacing;
 use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
 use std::borrow::Cow;
+use text_utils::{dedent_less_than, indent, indent_count};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -74,8 +75,8 @@ impl Settings {
     }
 
     fn format_text(&self, input: &str) -> String {
-        let text = if self.pangu_space { pangu_space(input) } else { Cow::from(input) };
-        let spaces = count_indent(&text);
+        let text = if self.pangu_space { spacing(input) } else { Cow::from(input) };
+        let spaces = indent_count(&text);
         let mut codes = vec![];
         for pair in parse_text(dedent_less_than(text.trim_end(), spaces).trim_end()) {
             match pair.as_rule() {
@@ -96,7 +97,7 @@ impl Settings {
                 _ => debug_cases!(pair),
             };
         }
-        if spaces == 0 { codes.join("") } else { format!("{}", indent(&codes.join(""), &" ".repeat(spaces))) }
+        if spaces == 0 { codes.join("") } else { format!("{}", indent(&codes.join(""), spaces)) }
     }
     fn format_style(&self, pairs: Pair<Rule>) -> String {
         let mut level = 0;
@@ -126,7 +127,7 @@ impl Settings {
     }
     fn format_list(&self, input: Pair<Rule>) -> String {
         let text = input.as_str();
-        let spaces = count_indent(text);
+        let spaces = indent_count(text);
         let mut codes = vec![];
 
         for pair in input.into_inner() {
@@ -139,7 +140,7 @@ impl Settings {
                 _ => break,
             };
         }
-        format!("{}", &indent(&codes.join(""), &" ".repeat(spaces)))
+        format!("{}", indent(&codes.join(""), spaces))
     }
     fn format_quote(&self, text: &str) -> String {
         let mut lines = vec![];
@@ -204,7 +205,6 @@ impl Settings {
                 _ => debug_cases!(pair),
             };
         }
-
         if args.len() != 0 { format!("{}{:?}", cmd, args) } else { String::from(cmd) }
     }
 }
