@@ -83,7 +83,7 @@ impl Value {
     pub fn trim(&self) -> &str {
         match self {
             Value::String(s) => s.trim(),
-            _ => self.as_str(),
+            _ => self.as_str().trim(),
         }
     }
 }

@@ -2,34 +2,15 @@ mod io;
 mod media;
 mod value;
 
-use crate::{
-    commands::{
-        io::set_file_name,
-        media::{fancy_quote, image_insert, link_insert},
-    },
-    Context, MissingCommand, AST, GLOBAL_CONFIG,
-};
-#[cfg(feature = "desktop")]
-use carbon_lib::{utils::CarbonHTML, CarbonError, Config};
-pub use io::{import, set_categories, set_date, set_series, set_tags, set_title};
-pub use media::meting_js;
-use std::collections::{HashMap, VecDeque};
+use crate::{Context, MissingCommand, AST, GLOBAL_CONFIG};
+pub use io::{import, set_categories, set_date, set_file_name, set_series, set_tags, set_title};
+pub use media::{fancy_quote, image_insert, link_insert, meting_js, try_render_code};
 pub use value::Value;
 
 impl Context {
     pub fn execute_cmd(&mut self, ast: AST) -> AST {
         match &ast {
             AST::Command(cmd, args, kvs) => {
-                macro_rules! args {
-                    () => {
-                        VecDeque::from(args.clone())
-                    };
-                }
-                macro_rules! kvs {
-                    () => {
-                        kvs.clone()
-                    };
-                }
                 let cmd = cmd.as_str().to_lowercase();
                 let out = match cmd.as_str() {
                     "comment" => Some(String::new()),
@@ -42,17 +23,17 @@ impl Context {
                     "categories" | "cats" => set_categories(self, args),
                     "series" => set_series(self, args),
 
-                    "quote" => return fancy_quote(self, args, kvs!()),
-                    "import" => import(self, args!(), kvs!()),
-                    "img" | "image" => image_insert(self, args!(), kvs!()),
-                    "link" => link_insert(args, kvs!()),
+                    "quote" => return fancy_quote(self, args, kvs),
+                    "import" => import(self, args, kvs),
+                    "img" | "image" => image_insert(self, args, kvs),
+                    "link" => link_insert(self, args, kvs),
 
                     "netease" => meting_js("netease", args, kvs),
                     "kugou" => meting_js("kugou", args, kvs),
                     "xiami" => meting_js("xiami", args, kvs),
                     "baidu_music" => meting_js("baidu", args, kvs),
                     "tencent_music" => meting_js("tencent", args, kvs),
-                    _ => try_render(cmd, args!(), kvs!()),
+                    _ => try_render_code(cmd, args, kvs),
                 };
                 match out {
                     None => AST::Raw(format!("{}", ast)),
@@ -75,34 +56,4 @@ impl Context {
             _ => String::new(),
         }
     }
-}
-
-#[cfg(feature = "desktop")]
-fn try_render(cmd: String, mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
-    let body = match kvs.remove("body") {
-        Some(s) => s.trim().to_string(),
-        None => return None,
-    };
-    let mut title: Option<String> = None;
-    match kvs.remove("title") {
-        Some(s) => title = Some(s.to_string()),
-        None => {
-            if let Some(s) = args.pop_front() {
-                title = Some(s.to_string())
-            }
-        }
-    };
-    let mut carbon = Config::default();
-    carbon.html_type = CarbonHTML::Raw;
-    carbon.syntax = cmd;
-    carbon.file_title = title;
-    match carbon.render_html(&body) {
-        Err(_) => return None,
-        Ok(o) => Some(o),
-    }
-}
-
-#[cfg(not(feature = "desktop"))]
-fn try_render(cmd: String, mut args: VecDeque<Value>, mut kvs: HashMap<String, Value>) -> Option<String> {
-    Some(format!("\\{}{:?}{:?}", cmd, args, kvs))
 }
