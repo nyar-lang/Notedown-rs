@@ -17,7 +17,6 @@ pub struct Context {
 #[derive(Debug, Clone)]
 pub struct NotedownConfig {
     pub tab_size: usize,
-    pub template: MissingCommand,
     pub target: NotedownBackend,
 }
 
@@ -36,14 +35,9 @@ pub struct NotedownMeta {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum MissingCommand {
-    Vue,
-    Zola,
-}
-
-#[derive(Debug, Copy, Clone)]
 pub enum NotedownBackend {
     Web,
+    Vue,
     VSCode,
     Zola,
 }
@@ -59,7 +53,6 @@ impl Default for NotedownConfig {
         NotedownConfig {
             // basic
             tab_size: 2,
-            template: MissingCommand::Vue,
             target: NotedownBackend::Web,
         }
     }

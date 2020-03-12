@@ -21,9 +21,8 @@ impl ToHTML for NotedownMeta {
     fn to_html(&self) -> String {
         let ref cfg = GLOBAL_CONFIG.lock().unwrap();
         match cfg.target {
-            NotedownBackend::Web => String::new(),
-            NotedownBackend::VSCode => String::new(),
             NotedownBackend::Zola => build_zola(self),
+            _ => String::new(),
         }
     }
 }

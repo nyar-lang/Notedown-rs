@@ -87,12 +87,12 @@ fn test_function() {
         \title: Test
         \date: 2018-01-08
         \netease[song][22724727]
-        \netease{id = 28629058, type = "song", autoplay = true}
+        \netease{"song", 28629058, autoplay = true}
         \link[https://github.com/nyar-lang/notedown-rs]
     "#;
     let output = r#"
         <meting-jsserver="netease"type="song"id="22724727"></meting-js>
-        <meting-jsserver="netease"type="song"id="28629"autoplay=true></meting-js>
+        <meting-jsserver="netease"type="song"id="28629058"autoplay="true"></meting-js>
         <ahref="https://github.com/nyar-lang/notedown-rs">https://github.com/nyar-lang/notedown-rs</a>
     "#;
     trim_eq(input, output)

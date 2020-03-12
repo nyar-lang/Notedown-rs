@@ -8,10 +8,7 @@ use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use std::{
-    collections::{HashMap, VecDeque},
-    ptr::hash,
-};
+use std::collections::{HashMap, VecDeque};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
