@@ -1,4 +1,5 @@
 use crate::{utils::trim_split_or, Context, Value};
+#[cfg(feature = "desktop")]
 use chrono::{NaiveDate, NaiveDateTime};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -19,6 +20,12 @@ pub fn set_title(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
     Some(String::new())
 }
 
+#[cfg(feature = "default")]
+pub fn set_date(_: &mut Context, _: &Vec<Value>) -> Option<String> {
+    Some(String::new())
+}
+
+#[cfg(feature = "desktop")]
 pub fn set_date(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
     // notice that parse no trim needed
     if let Value::String(s) = &args[0] {

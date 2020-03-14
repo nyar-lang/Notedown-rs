@@ -1,6 +1,6 @@
 use crate::{
     traits::NotedownMeta,
-    utils::{build_td, build_th, build_zola},
+    utils::{self, build_td, build_th},
     Context, NotedownBackend, AST, GLOBAL_CONFIG,
 };
 use std::iter::repeat;
@@ -20,8 +20,14 @@ impl ToHTML for Context {
 impl ToHTML for NotedownMeta {
     fn to_html(&self) -> String {
         let ref cfg = GLOBAL_CONFIG.lock().unwrap();
+        #[cfg(feature = "desktop")]
         match cfg.target {
-            NotedownBackend::Zola => build_zola(self),
+            NotedownBackend::Zola => utils::build_zola(self),
+            _ => String::new(),
+        }
+        #[cfg(feature = "default")]
+        match cfg.target {
+            NotedownBackend::VSCode => String::new(),
             _ => String::new(),
         }
     }
@@ -105,9 +111,15 @@ impl ToHTML for AST {
             AST::Raw(s) => format!("<pre>{}</pre>", s),
             AST::Code(s) => format!("<code>{}</code>", s),
             AST::String(s) => format!("{}", s),
-            AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
-            AST::MathDisplay(s) => format!("<p class=\"math\">$${}$$</p> ", s),
 
+            //#[cfg(feature = "default")]
+            AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
+            // #[cfg(feature = "desktop")]
+            // AST::MathInline(s) => utils::rex_math_inline(s),
+            //#[cfg(feature = "default")]
+            AST::MathDisplay(s) => format!("<p class=\"math\">$${}$$</p> ", s),
+            // #[cfg(feature = "desktop")]
+            // AST::MathDisplay(s) => utils::rex_math_display(s),
             _ => {
                 let a = format!("HTML unimplemented AST::{:?}", self);
                 println!("{}", a.split("(").next().unwrap_or("Unknown"));

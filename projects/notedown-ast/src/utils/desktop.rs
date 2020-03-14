@@ -1,4 +1,5 @@
 use crate::NotedownMeta;
+use rex::{layout::Style, svg::render_to_string, RenderSettings};
 
 pub fn build_zola(meta: &NotedownMeta) -> String {
     let mut code = String::with_capacity(100);
@@ -17,4 +18,20 @@ pub fn build_zola(meta: &NotedownMeta) -> String {
         code.push_str(&format!("categories = {:?}\n", meta.categories));
     }
     return format!("+++\n{}+++", code);
+}
+
+pub fn rex_math_display(math: &str) -> String {
+    let cfg = RenderSettings { strict: false, style: Style::Display, debug: false, ..RenderSettings::default() };
+    match render_to_string(&cfg, math) {
+        Ok(o) => o,
+        Err(_) => String::from(math),
+    }
+}
+
+pub fn rex_math_inline(math: &str) -> String {
+    let cfg = RenderSettings { strict: false, style: Style::Text, debug: false, ..RenderSettings::default() };
+    match render_to_string(&cfg, math) {
+        Ok(o) => o,
+        Err(_) => String::from(math),
+    }
 }

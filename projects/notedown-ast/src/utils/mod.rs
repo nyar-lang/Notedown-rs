@@ -2,11 +2,13 @@ use crate::{Context, AST};
 use notedown_parser::NoteDownRule as Rule;
 use pest::iterators::Pair;
 
+#[cfg(feature = "desktop")]
+mod desktop;
 mod html;
-mod meta_info;
 
+#[cfg(feature = "desktop")]
+pub use desktop::{build_zola, rex_math_display, rex_math_inline};
 pub use html::{build_td, build_th};
-pub use meta_info::build_zola;
 
 pub fn unescape(s: &str, c: &str) -> String {
     let mut e = String::from("\\");

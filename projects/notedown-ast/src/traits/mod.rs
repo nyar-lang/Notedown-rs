@@ -2,6 +2,7 @@ mod to_html;
 mod to_markdown;
 
 use crate::AST;
+#[cfg(feature = "desktop")]
 use chrono::NaiveDateTime;
 use lazy_static::{self, LazyStatic};
 use std::{collections::HashMap, path::PathBuf, sync::Mutex};
@@ -24,7 +25,9 @@ pub struct NotedownConfig {
 pub struct NotedownMeta {
     pub file_name: Option<String>,
     pub file_path: Option<PathBuf>,
+    #[cfg(feature = "desktop")]
     pub created_time: Option<NaiveDateTime>,
+    #[cfg(feature = "desktop")]
     pub modified_time: Option<NaiveDateTime>,
     pub title: Option<String>,
     pub tags: Vec<String>,
@@ -64,7 +67,9 @@ impl Default for NotedownMeta {
             // extra
             file_name: None,
             file_path: None,
+            #[cfg(feature = "desktop")]
             created_time: None,
+            #[cfg(feature = "desktop")]
             modified_time: None,
             title: None,
             tags: vec![],
