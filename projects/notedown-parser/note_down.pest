@@ -1,6 +1,6 @@
 program = _{SOI ~ statement*  ~  EOI}
 TextMode = _{SOI ~ (TextElement|TextRest)*  ~  EOI}
-ListMode = {SPACE_SEPARATOR* ~ ListMark? ~ ListText  ~ ListEnd}
+ListMode = {WHITE_SPACE* ~ ListMark? ~ ListText  ~ ListEnd}
 statement = _{
     Header
   | HorizontalRule
@@ -11,29 +11,29 @@ statement = _{
   | EmptyLine{1,}
   | TextBlock
 }
-EmptyLine = _{SPACE_SEPARATOR*  ~  NEWLINE}
+EmptyLine = _{WHITE_SPACE*  ~  LINE_SEPARATOR}
 /*====================================================================================================================*/
 //!#E06C75: Header
-Header = ${SPACE_SEPARATOR* ~ Sharp{1, 6}  ~  RestOfLine}
+Header = ${WHITE_SPACE* ~ Sharp{1, 6}  ~  RestOfLine}
 /*====================================================================================================================*/
 TextBlock = {TextHeaderCharacter  ~  TextBlockLine*}
-TextHeaderCharacter = _{!NEWLINE  ~ ANY}
+TextHeaderCharacter = _{!LINE_SEPARATOR  ~ ANY}
 TextBlockLine = _{!(EmptyLine{2,}|Sharp)  ~ ANY}
-TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|NEWLINE|SPACE_SEPARATOR|CommandInline|URL|Escaped}
-TextRest = {(!(NEWLINE|SPACE_SEPARATOR|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
+TextElement = _{StyleStatement|LineStatement|MathStatement|RawStatement|LINE_SEPARATOR|WHITE_SPACE|CommandLine|URL|Escaped}
+TextRest = {(!(LINE_SEPARATOR|WHITE_SPACE|Escape|Tilde|Asterisk|Dollar|Accent) ~ ANY)+}
 
-URL = ${ASCII_ALPHA+ ~ "://" ~ (!(SPACE_SEPARATOR|NEWLINE)~ANY)+}
+URL = ${ASCII_ALPHA+ ~ "://" ~ (!PATTERN_WHITE_SPACE ~ ANY)+}
 /*====================================================================================================================*/
 //!#61AFEF: Code
 //!#E06C75: CodeText
-Code = {SPACE_SEPARATOR* ~ CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~SPACE_SEPARATOR*~ CodeText ~ POP ~ CodeMark{3}}
+Code = {WHITE_SPACE* ~ CodeLevel ~ CodeAction? ~SYMBOL? ~ arguments? ~WHITE_SPACE*~ CodeText ~ POP ~ CodeMark{3}}
 CodeAction = {At|Asterisk|Sharp}
 CodeLevel = {CodeMark{3}~PUSH(CodeMark*)}
 CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
 CodeMark = @{Accent}
 /*====================================================================================================================*/
 //!Orange: TableMark
-Table = {SPACE_SEPARATOR* ~ TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
+Table = {WHITE_SPACE* ~ TableMark ~ (!TableEnd~ANY)* ~ TableEnd}
 TableEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
 
 TableMode = _{SOI ~ TableLine*  ~  EOI}
@@ -44,17 +44,13 @@ TableRest = {(!(TableMark|Escape) ~ ANY)+}
 TableMark = @{Vertical}
 /*====================================================================================================================*/
 //!Green: ListMark
-List = {SPACE_SEPARATOR* ~ ListMark ~ ListText  ~ ListEnd}
+List = {WHITE_SPACE* ~ ListMark ~ ListText  ~ ListEnd}
 ListText = {(!ListEnd~ANY)*}
 ListEnd = {EmptyLine{2}|EmptyLine~EOI|EOI}
-//program_list = _{SOI ~ ListStatement+  ~  EOI}
-//ListStatement = {NEWLINE~ListHeadLevel~ListMark~ ListRest}
-//ListHeadLevel = {SPACE_SEPARATOR*}
-//ListRest = {(!ListStatement~ANY)*}
 ListMark = @{Minus|Plus|QuoteMark|Integer~Dot}
 /*====================================================================================================================*/
 ///Red
-HorizontalRule = @{SPACE_SEPARATOR* ~ (Minus{3,}|Plus{3,})}
+HorizontalRule = @{WHITE_SPACE* ~ (Minus{3,}|Plus{3,})}
 /*====================================================================================================================*/
 MathStatement = _{Math|MathRest}
 ///#E06C75
@@ -83,34 +79,35 @@ StyleRest = {Asterisk+}
 LineStatement = _{Line|LineRest}
 ///#61AFEF
 Line = {LineLevel ~ LineText ~ POP ~ Tilde}
-LineLevel = {Tilde~PUSH (Tilde*)}
-LineText = {(Escape~Tilde|!(Tilde ~ PEEK) ~ ANY)*}
+LineLevel = {Tilde ~ PUSH(Tilde*)}
+LineText = {(Escape ~ Tilde|!(Tilde ~ PEEK) ~ ANY)*}
 ///Gray
 LineRest = {Tilde+}
 /*====================================================================================================================*/
-Command = _{SPACE_SEPARATOR* ~ (CommandInline)}
-CommandInline = _{CommandLine| CommandBlock}
+//!#61AFEF: CommandLine|CommandBlock|CommandSection
+Command = _{WHITE_SPACE* ~ (CommandLine|CommandBlock|CommandSection)}
+CommandLine = ${command ~ Colon  ~  RestOfLine}
 //!#56B6C2: Set
 //!#E06C75: key
-CommandBlock = !{command ~ arguments*}
+CommandBlock = !{command ~ (WHITE_SPACE* ~ arguments)*}
 arguments = _{
-    "{"  ~SPACE_SEPARATOR*~ (key_value|argument)* ~SPACE_SEPARATOR*~  "}"
-  | "["  ~ argument_literal ~  "]"
+    "["  ~ argument_literal ~  "]"
+  | "{"  ~(PATTERN_WHITE_SPACE*~ (key_value|argument) ~PATTERN_WHITE_SPACE*)*~  "}"
 }
-argument_literal = {(Escape ~ (Escape|"]")|!"]" ~ ANY)*}
-argument = {value  ~SPACE_SEPARATOR*~  Comma? ~ SPACE_SEPARATOR*}
-key_value = {key  ~SPACE_SEPARATOR*~  Set  ~SPACE_SEPARATOR*~ value  ~SPACE_SEPARATOR*~  Comma? ~ SPACE_SEPARATOR*}
+CommandSection = !{Begin ~ (Push ~ statement+)* ~End}
+argument_literal={(!"]" ~ ANY)*}
+argument = {value  ~ PATTERN_WHITE_SPACE* ~  Comma?}
+key_value = {key  ~PATTERN_WHITE_SPACE*~  Set  ~PATTERN_WHITE_SPACE*~ value  ~PATTERN_WHITE_SPACE*~  Comma?}
 key = {Integer|String|SYMBOL}
-value = {Integer|String|expression|Keywords|SYMBOL}
-expression = {SYMBOL~(Dot~ function)+}
-function = {
-    SYMBOL ~ ("("~SPACE_SEPARATOR*~ (key_value|argument)* ~SPACE_SEPARATOR*~  ")")?
-}
+value = {Integer|String|Keywords|SYMBOL}
+//expression = {SYMBOL~(Dot~ function)+}
+//function = {SYMBOL ~ ("("~PATTERN_WHITE_SPACE*~ (key_value|argument)* ~PATTERN_WHITE_SPACE*~  ")")?}
 
-//!#61AFEF: CommandBlock
-CommandLine = {command ~ Colon  ~  RestOfLine}
 command = @{Escape ~ SYMBOL}
-RestOfLine = !{(!NEWLINE  ~  ANY)*}
+RestOfLine = !{(!LINE_SEPARATOR  ~  ANY)*}
+Begin = @{"\\begin" ~ (WHITE_SPACE* ~ arguments)*}
+End = @{"\\end" ~ (WHITE_SPACE* ~ arguments)*}
+Push = @{"\\push" ~ (WHITE_SPACE* ~ arguments)*}
 /*====================================================================================================================*/
 //!#D19A66: Integer|Decimal|DecimalBad|Exponent|ComplexHandler
 Number = ${Sign? ~ (Decimal|DecimalBad|Integer)}
@@ -133,20 +130,20 @@ SYMBOL = @{
 }
 Escaped = @{Escape~ANY}
 Keywords = @{"true"|"false"|"null"}
-// = _{!SPACE_SEPARATOR ~ ANY}
 /*====================================================================================================================*/
 //!Gray:BlockComment|LineComment
-COMMENT = ${Escape ~ "comment"  ~ SPACE_SEPARATOR* ~  Colon  ~  RestOfLine }
+COMMENT = ${Escape ~ "comment"  ~ WHITE_SPACE* ~  Colon  ~  RestOfLine }
 //LineComment      = ${Comment  ~ SPACE_SEPARATOR* ~  Colon  ~  RestOfLine}
 //BlockComment     = ${Comment  ~ SPACE_SEPARATOR* ~  "{"  ~ MultiLineComment ~  "}"}
 //MultiLineComment = ${(BlockComment | !"}"  ~  ANY)*}
 //Comment          = @{Escape ~ "comment"}
 /*====================================================================================================================*/
-NEWLINE = @{CR ~ LF|CR|LF}
-SPACE_SEPARATOR = {" "|"\t"}
-TAB = @{"\t"}
-CR = @{"\r"}
-LF = @{"\n"}
+LINE_SEPARATOR = @{NEWLINE}
+WHITE_SPACE = @{SPACE_SEPARATOR}
+PATTERN_WHITE_SPACE = @{NEWLINE|SPACE_SEPARATOR|"\t"}
+//TAB = @{"\t"}
+//CR = @{"\r"}
+//LF = @{"\n"}
 /*====================================================================================================================*/
 Escape = @{"\\"}
 At = @{"@"}
