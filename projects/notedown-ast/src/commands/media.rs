@@ -1,38 +1,7 @@
 use crate::{Context, Value, AST};
 use std::collections::HashMap;
 
-#[cfg(feature = "desktop")]
-use carbon_lib::{utils::CarbonHTML, CarbonError, Config};
-
-#[cfg(feature = "desktop")]
-pub fn try_render_code(cmd: String, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
-    let body = match kvs.get("body") {
-        Some(s) => s.trim().to_string(),
-        None => return None,
-    };
-    let mut title: Option<String> = None;
-    match kvs.get("title") {
-        Some(s) => title = Some(s.to_string()),
-        None => {
-            if let Some(s) = args.get(0) {
-                title = Some(s.to_string())
-            }
-        }
-    };
-    let mut carbon = Config::default();
-    carbon.html_type = CarbonHTML::Raw;
-    carbon.syntax = cmd;
-    carbon.file_title = title;
-    match carbon.render_html(&body) {
-        Err(_) => return None,
-        Ok(o) => Some(o),
-    }
-}
-
-#[cfg(not(feature = "desktop"))]
-pub fn try_render_code(cmd: String, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
-    Some(format!("\\{}{:?}{:?}", cmd, args, kvs))
-}
+use text_utils::url_decode;
 
 pub fn meting_js(server: &str, args: &Vec<Value>, kvs: &HashMap<String, Value>) -> Option<String> {
     let (mut ty, mut id) = Default::default();
@@ -104,11 +73,11 @@ pub fn link_insert(_: &Context, args: &Vec<Value>, kvs: &HashMap<String, Value>)
     match &args[..] {
         [a] => {
             link = a.to_string();
-            alt = a.to_string();
+            alt = url_decode(a.as_str()).unwrap();
         }
         [l, a] => {
             link = l.to_string();
-            alt = a.to_string();
+            alt = url_decode(a.as_str()).unwrap();
         }
         _ => return None,
     }

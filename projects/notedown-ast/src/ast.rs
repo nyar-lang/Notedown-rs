@@ -49,7 +49,7 @@ pub enum AST {
     Orderless(Vec<AST>),
 
     /// - `Code`:
-    Command(String, Vec<Value>, HashMap<String, Value>),
+    Command(Box<str>, Vec<Value>, HashMap<String, Value>),
 
     Escaped(String),
 }

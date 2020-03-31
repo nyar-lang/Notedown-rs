@@ -10,12 +10,13 @@ edition = "2018"
 
 [dependencies]
 pest = "2.1.2"
+# linked-hash-map = "0.5.2"
 text-utils = "0.2.2"
 pangu = "0.2"
 
 [dependencies.notedown_parser]
-# path = "../notedown-parser"
-version = "0.4.2"
+path = "../notedown-parser"
+version = "0.5.0"
 
 [dev-dependencies]
 

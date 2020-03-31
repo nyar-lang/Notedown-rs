@@ -4,8 +4,10 @@ mod to_markdown;
 use crate::AST;
 #[cfg(feature = "desktop")]
 use chrono::NaiveDateTime;
-use lazy_static::{self, LazyStatic};
-use std::{collections::HashMap, path::PathBuf, sync::Mutex};
+use lazy_static::{self, lazy::Lazy, LazyStatic};
+#[cfg(feature = "desktop")]
+use std::path::PathBuf;
+use std::{collections::HashMap, sync::Mutex};
 pub use to_html::ToHTML;
 pub use to_markdown::ToMarkdown;
 
@@ -24,6 +26,7 @@ pub struct NotedownConfig {
 #[derive(Debug, Clone)]
 pub struct NotedownMeta {
     pub file_name: Option<String>,
+    #[cfg(feature = "desktop")]
     pub file_path: Option<PathBuf>,
     #[cfg(feature = "desktop")]
     pub created_time: Option<NaiveDateTime>,
@@ -47,13 +50,13 @@ pub enum NotedownBackend {
 
 impl Default for Context {
     fn default() -> Self {
-        Context { ast: AST::None, meta: Default::default() }
+        Self { ast: AST::None, meta: Default::default() }
     }
 }
 
 impl Default for NotedownConfig {
     fn default() -> Self {
-        NotedownConfig {
+        Self {
             // basic
             tab_size: 2,
             target: NotedownBackend::Web,
@@ -63,9 +66,10 @@ impl Default for NotedownConfig {
 
 impl Default for NotedownMeta {
     fn default() -> Self {
-        NotedownMeta {
+        Self {
             // extra
             file_name: None,
+            #[cfg(feature = "desktop")]
             file_path: None,
             #[cfg(feature = "desktop")]
             created_time: None,
@@ -95,15 +99,15 @@ impl lazy_static::__Deref for GlobalConfig {
     type Target = Mutex<NotedownConfig>;
     fn deref(&self) -> &Mutex<NotedownConfig> {
         #[inline(always)]
-        fn __static_ref_initialize() -> Mutex<NotedownConfig> {
+        fn static_ref_initialize() -> Mutex<NotedownConfig> {
             Mutex::new(NotedownConfig::default())
         }
         #[inline(always)]
-        fn __stability() -> &'static Mutex<NotedownConfig> {
-            static LAZY: lazy_static::lazy::Lazy<Mutex<NotedownConfig>> = lazy_static::lazy::Lazy::INIT;
-            LAZY.get(__static_ref_initialize)
+        fn stability() -> &'static Mutex<NotedownConfig> {
+            static LAZY: Lazy<Mutex<NotedownConfig>> = Lazy::INIT;
+            LAZY.get(static_ref_initialize)
         }
-        __stability()
+        stability()
     }
 }
 

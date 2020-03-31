@@ -115,16 +115,17 @@ fn test_table() {
 }
 
 #[test]
+#[cfg(not(feature="desktop"))]
 fn test_code() {
-    let input = parse(
-        r#"
+    let input = r#"
         ```js
         let r = 0
         ```
-    "#,
-    );
-    // println!("{:#?}", f);
-    println!("{}", input.to_html());
+    "#;
+    let output = r#"
+        \js[]{"body": "\n        let r = 0\n        "}
+    "#;
+    trim_eq(input, output);
 }
 
 #[test]
@@ -170,7 +171,7 @@ fn test_url() {
             <p>
                 Page210
                 </br>
-                <ahref="http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf">http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf</a>
+                <ahref="http://read.pudn.com/downloads133/ebook/566944/%E9%AB%98%E6%95%88%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A5%A5%E7%A7%98.pdf">http://read.pudn.com/downloads133/ebook/566944/高效程序的奥秘.pdf</a>
                 </br>
                 <ahref="ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf">ftp://www.m-hikari.com/ams/ams-2012/ams-73-76-2012/kaddouraAMS73-76-2012.pdf</a>
             </p>

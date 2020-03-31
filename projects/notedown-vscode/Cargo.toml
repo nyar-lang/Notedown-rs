@@ -13,11 +13,11 @@ edition = "2018"
 wasm-bindgen = "0.2.58"
 
 [dependencies.notedown_fmt]
-# path = "../notedown-fmt"
+path = "../notedown-fmt"
 version = "0.3.1"
 
 [dependencies.notedown_ast]
-#path = "../notedown-ast"
+path = "../notedown-ast"
 version = "0.4.0"
 
 

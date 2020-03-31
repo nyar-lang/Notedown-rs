@@ -1,57 +1,26 @@
-\title: Anaconda 安装教程
-\path: Anaconda Installation Tutorial
-\date: 2018-02-23 15:07:32
-\tags: python, anaconda
-\categories: Tutorial
+\title: R上是否存在导数等于反函数的连续函数
+\date: 2018-7-14
 
-## 安装 Anaconda
+满足 $f'(x)=f_{-1}(x)$ 这样的连续函数在 $\mathbb{R}$ 上不存在
 
-到清华镜像站下载最新 Anaconda 安装包, Date 倒序排列即可.
+$f(x)$ 要是有反函数, 那必须在整个定义域上单调, 那 $f'(x)$ 就不能变号
 
-https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/
+但同时又要求他是个连续函数, $f(x)$ 必定要穿过 $y$ 轴, $f_{-1}(x)$ 关于 $y=x$ 对称必定穿过 $x$ 轴
 
-然后全局安装, 第二个最新 Python 勾上
+这不就必须变号了吗, $f_{-1}(x)$ 非要变号而 $f'(x)$ 不能变号怎么能相等, 矛盾!
 
-## 配置 Anaconda
+\read_more
 
-```sh
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
-conda config --set show_channel_urls yes
-conda create -n py2 python=2.7
-conda create -n py3 python=3.6
-```
+---
 
-接下来就没bash什么事了, 切换到新搞的python3环境, 然后我看看, jupyterlab,spyder和vscode走起,其他不要了.
-
-打开 spyder 开干!
-
-\more
-
-## 应用
-
-### conda
+    > 1
+> 2
+        > 3
 
 
-### bash 环境命令
+\function {
+	x = 2
+}
 
-切换环境
-
-```sh
-source activate python3
-source deactivate
-```
-
-安装依赖, 可以叠加多个包名
-
-```sh
-conda install tensorflow word2vec numpy --yes
-```
-
-当分享代码的时候，同时也需要将运行环境分享给大家，执行如下命令可以将当前环境下的 package 信息存入名为 environment 的 YAML 文件中。
-
-`conda env export > environment.yaml`
-
-同样，当执行他人的代码时，也需要配置相应的环境。这时你可以用对方分享的 YAML 文件来创建一摸一样的运行环境。
-
-`conda env create -f environment.yaml`
+\f[a] {x = 2, y= "
+"}

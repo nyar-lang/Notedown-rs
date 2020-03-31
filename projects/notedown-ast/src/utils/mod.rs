@@ -7,7 +7,7 @@ mod desktop;
 mod html;
 
 #[cfg(feature = "desktop")]
-pub use desktop::{build_zola, rex_math_display, rex_math_inline};
+pub use desktop::build_zola;
 pub use html::{build_td, build_th};
 
 pub fn unescape(s: &str, c: &str) -> String {

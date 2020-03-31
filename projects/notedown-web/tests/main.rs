@@ -1,4 +1,4 @@
 #[test]
-fn can_run(){
-   println!("yes!")
+fn can_run() {
+    println!("yes!")
 }

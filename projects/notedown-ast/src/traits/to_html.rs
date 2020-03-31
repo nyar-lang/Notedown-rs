@@ -1,6 +1,8 @@
+#[cfg(feature = "desktop")]
+use crate::utils;
 use crate::{
     traits::NotedownMeta,
-    utils::{self, build_td, build_th},
+    utils::{build_td, build_th},
     Context, NotedownBackend, AST, GLOBAL_CONFIG,
 };
 use std::iter::repeat;
@@ -25,7 +27,7 @@ impl ToHTML for NotedownMeta {
             NotedownBackend::Zola => utils::build_zola(self),
             _ => String::new(),
         }
-        #[cfg(feature = "default")]
+        #[cfg(not(feature = "desktop"))]
         match cfg.target {
             NotedownBackend::VSCode => String::new(),
             _ => String::new(),

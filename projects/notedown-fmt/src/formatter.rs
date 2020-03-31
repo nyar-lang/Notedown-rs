@@ -4,8 +4,8 @@ use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use std::borrow::Cow;
-use text_utils::{dedent_less_than, indent, indent_count};
+use std::{borrow::Cow, collections::BTreeMap, fmt::Write};
+use text_utils::{dedent_less_than, indent, indent_count, indent_with};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -39,16 +39,17 @@ impl Settings {
         for pair in pairs {
             match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::NEWLINE => codes.push(String::from("\n")),
-                Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
+                Rule::LINE_SEPARATOR => codes.push(String::from("\n")),
+                //Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
+                Rule::HorizontalRule => codes.push(pair.as_str().to_string()),
 
                 Rule::Header => codes.push(self.format_header(pair)),
                 Rule::TextBlock => codes.push(self.format_text(pair.as_str())),
                 Rule::List => codes.push(self.format_list(pair)),
-                Rule::CommandLine => codes.push(self.format_command_line(pair)),
                 Rule::Code => codes.push(self.format_code(pair)),
+
+                Rule::CommandLine => codes.push(self.format_command_line(pair)),
                 Rule::CommandBlock => codes.push(self.format_command_block(pair)),
-                Rule::HorizontalRule => codes.push(pair.as_str().to_string()),
                 _ => debug_cases!(pair),
             };
         }
@@ -65,7 +66,7 @@ impl Settings {
         let mut text = String::new();
         for pair in pairs.into_inner() {
             let _code = match pair.as_rule() {
-                Rule::SPACE_SEPARATOR => continue,
+                //Rule::SPACE_SEPARATOR => continue,
                 Rule::Sharp => level += 1,
                 Rule::RestOfLine => text = self.format_text(pair.as_str().trim()),
                 _ => debug_cases!(pair),
@@ -81,8 +82,8 @@ impl Settings {
         for pair in parse_text(dedent_less_than(text.trim_end(), spaces).trim_end()) {
             match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
-                Rule::NEWLINE => codes.push(String::from("\n")),
+                Rule::WHITE_SPACE => codes.push(String::from(" ")),
+                Rule::LINE_SEPARATOR => codes.push(String::from("\n")),
 
                 Rule::Raw => codes.push(pair.as_str().to_string()),
                 Rule::URL => codes.push(pair.as_str().to_string()),
@@ -132,7 +133,7 @@ impl Settings {
 
         for pair in input.into_inner() {
             match pair.as_rule() {
-                Rule::SPACE_SEPARATOR => continue,
+                //Rule::SPACE_SEPARATOR => continue,
                 Rule::ListMark => match pair.as_str() {
                     ">" => codes.push(self.format_quote(dedent_less_than(text, spaces).trim_end())),
                     _ => break,
@@ -150,9 +151,10 @@ impl Settings {
                 _ => lines.push(l),
             }
         }
-        let f = self.format_text(&lines.join("\n"));
-        let ls: Vec<String> = f.lines().map(|l| format!("> {}", l)).collect();
-        return ls.join("\n");
+        indent_with(&self.format_text(&lines.join("\n")), ">")
+
+        //let ls: Vec<String> = f.lines().map(|l| format!("> {}", l)).collect();
+        //return ls.join("\n");
         // let text = input.as_str();
         // let spaces = count_indent(text);
         // let mut codes = vec![];
@@ -185,7 +187,7 @@ impl Settings {
         let mut rst = "";
         for pair in input.into_inner() {
             match pair.as_rule() {
-                Rule::SPACE_SEPARATOR => continue,
+                //Rule::SPACE_SEPARATOR => continue,
                 Rule::Colon => continue,
                 Rule::command => cmd = pair.as_str(),
                 Rule::RestOfLine => rst = pair.as_str().trim(),
@@ -196,16 +198,86 @@ impl Settings {
     }
     fn format_command_block(&self, input: Pair<Rule>) -> String {
         // let mut codes = vec![];
+        //println!("{}", input.as_str());
+        let mut use_literal = false;
         let mut cmd = "";
         let mut args = vec![];
+        let mut kvs = BTreeMap::new();
         for pair in input.into_inner() {
             match pair.as_rule() {
+                Rule::WHITE_SPACE => continue,
+                Rule::PATTERN_WHITE_SPACE => continue,
                 Rule::command => cmd = pair.as_str(),
                 Rule::argument => args.push(pair.as_str()),
+                Rule::argument_literal => {
+                    use_literal = true;
+                    args.push(pair.as_str())
+                }
+                Rule::key_value => {
+                    let (k, v) = self.format_key_value(pair);
+                    kvs.insert(k, v);
+                }
                 _ => debug_cases!(pair),
             };
         }
-        if args.len() != 0 { format!("{}{:?}", cmd, args) } else { String::from(cmd) }
+        if args.len() == 0 {
+            String::from(cmd)
+        }
+        else if use_literal && kvs.len() == 0 {
+            let mut out = String::from(cmd);
+            for a in args {
+                write!(out, "[{}]", a).unwrap();
+            }
+            return out;
+        }
+        else {
+            let (mut max_lines, mut all_chars): (usize, usize) = Default::default();
+            let mut out = Vec::with_capacity(args.capacity());
+            for a in args {
+                if a.lines().count() > max_lines {
+                    max_lines = a.lines().count()
+                }
+                all_chars += a.len();
+                out.push(a.to_string())
+            }
+            for (k, v) in kvs {
+                let a = format!("{} = {}", k, v);
+                if a.lines().count() > max_lines {
+                    max_lines = a.lines().count()
+                }
+                all_chars += a.len();
+                out.push(a.to_string())
+            }
+            if max_lines > 1 || all_chars > 144 {
+                format!("{}{{\n{}\n}}", cmd, indent(&out.join("\n"), 4))
+            }
+            else {
+                format!("{}{{{}}}", cmd, out.join(", "))
+            }
+        }
+    }
+    fn format_key_value(&self, input: Pair<Rule>) -> (String, String) {
+        let (mut key, mut value) = Default::default();
+        for pair in input.into_inner() {
+            match pair.as_rule() {
+                Rule::WHITE_SPACE | Rule::Set | Rule::Comma => continue,
+                Rule::key => key = pair.as_str().to_string(),
+                Rule::value => value = self.format_value(pair),
+                _ => debug_cases!(pair),
+            };
+        }
+        return (key, value);
+    }
+    fn format_value(&self, input: Pair<Rule>) -> String {
+        let mut value = String::new();
+        for pair in input.into_inner() {
+            value = match pair.as_rule() {
+                Rule::Integer => format!("{}", pair.as_str()),
+                Rule::String => format!("\"{}\"", pair.as_str()),
+                _ => debug_cases!(pair),
+            };
+        }
+        return value;
     }
 }
 
@@ -221,11 +293,3 @@ fn parse_list(text: &str) -> Pairs<Rule> {
     let p = NoteDownParser::parse(Rule::ListMode, text).unwrap_or_else(|e| panic!("{}", e));
     p.into_iter().next().unwrap().into_inner()
 }
-// #[derive(Debug)]
-// enum List {
-// Quote,
-// Ordered,
-// Orderless,
-// }
-//
-// impl List {}
