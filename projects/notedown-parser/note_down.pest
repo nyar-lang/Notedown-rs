@@ -85,7 +85,7 @@ LineText = {(Escape ~ Tilde|!(Tilde ~ PEEK) ~ ANY)*}
 LineRest = {Tilde+}
 /*====================================================================================================================*/
 //!#61AFEF: CommandLine|CommandBlock|CommandSection
-Command = _{WHITE_SPACE* ~ (CommandLine|CommandBlock|CommandSection)}
+Command = _{WHITE_SPACE* ~ (CommandLine|CommandBlock)}
 CommandLine = ${command ~ Colon  ~  RestOfLine}
 //!#56B6C2: Set
 //!#E06C75: key
@@ -94,7 +94,6 @@ arguments = _{
     "["  ~ argument_literal ~  "]"
   | "{"  ~(PATTERN_WHITE_SPACE*~ (key_value|argument) ~PATTERN_WHITE_SPACE*)*~  "}"
 }
-CommandSection = !{Begin ~ (Push ~ statement+)* ~End}
 argument_literal={(!"]" ~ ANY)*}
 argument = {value  ~ PATTERN_WHITE_SPACE* ~  Comma?}
 key_value = {key  ~PATTERN_WHITE_SPACE*~  Set  ~PATTERN_WHITE_SPACE*~ value  ~PATTERN_WHITE_SPACE*~  Comma?}
@@ -105,9 +104,6 @@ value = {Integer|String|Keywords|SYMBOL}
 
 command = @{Escape ~ SYMBOL}
 RestOfLine = !{(!LINE_SEPARATOR  ~  ANY)*}
-Begin = @{"\\begin" ~ (WHITE_SPACE* ~ arguments)*}
-End = @{"\\end" ~ (WHITE_SPACE* ~ arguments)*}
-Push = @{"\\push" ~ (WHITE_SPACE* ~ arguments)*}
 /*====================================================================================================================*/
 //!#D19A66: Integer|Decimal|DecimalBad|Exponent|ComplexHandler
 Number = ${Sign? ~ (Decimal|DecimalBad|Integer)}
