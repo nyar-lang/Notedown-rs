@@ -3,7 +3,7 @@ use crate::utils;
 use crate::{
     traits::NotedownMeta,
     utils::{build_td, build_th},
-    Context, NotedownBackend, AST, GLOBAL_CONFIG,
+    Context, NotedownBackend, AST,
 };
 use std::iter::repeat;
 

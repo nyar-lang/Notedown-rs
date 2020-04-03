@@ -92,7 +92,7 @@ CommandLine = ${command ~ Colon  ~  RestOfLine}
 CommandBlock = !{command ~ (WHITE_SPACE* ~ arguments)*}
 arguments = _{
     "["  ~ argument_literal ~  "]"
-  | "{"  ~(PATTERN_WHITE_SPACE*~ (key_value|argument) ~PATTERN_WHITE_SPACE*)*~  "}"
+  | "("  ~(PATTERN_WHITE_SPACE*~ (key_value|argument) ~PATTERN_WHITE_SPACE*)*~  ")"
 }
 argument_literal={(!"]" ~ ANY)*}
 argument = {value  ~ PATTERN_WHITE_SPACE* ~  Comma?}

@@ -54,6 +54,18 @@ pub enum AST {
     Escaped(String),
 }
 
+pub enum Span {
+    /// - `String`: Normal string with no style
+    String(String),
+    /// - `Bold`:
+    Bold(Box<AST>),
+    Italic(Box<AST>),
+    /// - `Underline`:
+    Underline(Box<AST>),
+    Strikethrough(Box<AST>),
+    Undercover(Box<AST>),
+}
+
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
@@ -104,6 +116,19 @@ impl Display for AST {
                 let a = format!("unimplemented AST::{:?}", self);
                 write!(f, "{}", a.split("(").next().unwrap_or("Unknown"))
             }
+        }
+    }
+}
+
+impl Display for Span {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Span::String(s) => write!(f, "{}", s),
+            Span::Bold(s) => {}
+            Span::Italic(s) => write!(f, "*{}*", s),
+            Span::Underline(s) => {}
+            Span::Strikethrough(s) => {}
+            Span::Undercover(s) => {}
         }
     }
 }

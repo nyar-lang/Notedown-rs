@@ -1,5 +1,5 @@
 [package]
-name = "notedown_parser_v1"
+name = "notedown_parser"
 publish = false
 version = "0.5.0"
 authors = ["Aster <192607617@qq.com>"]

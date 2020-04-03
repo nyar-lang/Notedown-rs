@@ -2,11 +2,9 @@ use crate::{Context, AST};
 use notedown_parser::NoteDownRule as Rule;
 use pest::iterators::Pair;
 
-#[cfg(feature = "desktop")]
 mod desktop;
 mod html;
 
-#[cfg(feature = "desktop")]
 pub use desktop::build_zola;
 pub use html::{build_td, build_th};
 

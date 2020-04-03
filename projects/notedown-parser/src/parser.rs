@@ -1,6 +1,6 @@
 use crate::{
     utils::{map_escape, map_white_space, maybe_math, str_escape, unescape},
-    Context, Value, AST, GLOBAL_CONFIG,
+    Context, Value, AST,
 };
 
 use notedown_parser::{NoteDownParser, NoteDownRule as Rule};

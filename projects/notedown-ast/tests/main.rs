@@ -1,2 +1,4 @@
-mod easy;
-mod normal;
+#[test]
+fn test(){
+    println!("it, works!")
+}
