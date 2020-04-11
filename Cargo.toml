@@ -4,7 +4,6 @@ default-members = [
     "projects/notedown-parser",
     "projects/notedown-ast",
     "projects/notedown-fmt",
-    "projects/notedown-web",
     "projects/notedown-zola",
     "projects/notedown-vscode",
 ]

@@ -52,8 +52,7 @@ fn test_quote_1() {
  1
 0
 ";
-    const OUTPUT: &str = "\n";
-    //const OUTPUT: &str = "\n    >  4\n    >  3\n    >  2\n    >  1\n    >  0\n";
+    const OUTPUT: &str = "\n    >  4\n    >  3\n    >  2\n    >  1\n    >  0\n";
     assert_eq!(s.format(&s.format(INPUT)), OUTPUT)
 }
 

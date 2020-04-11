@@ -1,7 +1,19 @@
-use crate::Value;
+use crate::{ Command};
 
 mod display;
 mod from;
+
+#[derive(Clone)]
+pub enum Value {
+    None,
+    String(String),
+    // Integer(String),
+    // Decimal(String),
+    Boolean(bool),
+    List(Vec<Value>),
+    // Dict(HashMap<String, Value>),
+    Command(Command),
+}
 
 impl Value {
     pub fn as_str(&self) -> &str {
