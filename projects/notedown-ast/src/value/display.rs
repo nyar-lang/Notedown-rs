@@ -2,13 +2,13 @@ use crate::Value;
 use std::fmt::{Debug, Formatter, Display};
 use std::fmt;
 
-impl Debug for Value {
+impl<'a> Debug for Value<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Value::None => write!(f, "none"),
             Value::String(s) => write!(f, "{:?}", s),
-            // Value::Integer(s) => write!(f, "{}", s),
-            // Value::Decimal(s) => write!(f, "{}", s),
+            Value::Integer(s) => write!(f, "{}", s),
+            Value::Decimal(s) => write!(f, "{}", s),
             Value::Boolean(b) => write!(f, "{}", b),
             Value::List(_) => unimplemented!(),
             // Value::Dict(_) => unimplemented!(),
@@ -17,7 +17,7 @@ impl Debug for Value {
     }
 }
 
-impl Display for Value {
+impl<'a> Display for Value<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Value::None => write!(f, ""),

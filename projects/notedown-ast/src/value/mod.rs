@@ -1,39 +1,30 @@
-use crate::{ Command};
+use crate::{Command};
+use std::borrow::Cow;
 
 mod display;
 mod from;
 
+
 #[derive(Clone)]
-pub enum Value {
+pub enum Value<'a> {
     None,
-    String(String),
-    // Integer(String),
-    // Decimal(String),
+    String(Cow<'a, str>),
+    Integer(Cow<'a, str>),
+    Decimal(Cow<'a, str>),
     Boolean(bool),
-    List(Vec<Value>),
+    List(Vec<Value<'a>>),
     // Dict(HashMap<String, Value>),
-    Command(Command),
+    Command(Command<'a>),
 }
 
-impl Value {
+impl<'a> Value<'a> {
+    #[rustfmt::skip]
     pub fn as_str(&self) -> &str {
         match self {
             Value::String(s) => s,
             Value::Boolean(b) => {
-                if *b {
-                    "true"
-                }
-                else {
-                    "false"
-                }
+                if *b { "true" } else { "false" }
             }
-            _ => unreachable!(),
-        }
-    }
-    pub fn to_string(&self) -> String {
-        match self {
-            Value::String(s) => s.clone(),
-            Value::Boolean(b) => format!("{}", b),
             _ => unreachable!(),
         }
     }
