@@ -1,4 +1,7 @@
+mod markdown;
+
 #[test]
-fn test(){
+fn test() {
     println!("it, works!")
 }
+

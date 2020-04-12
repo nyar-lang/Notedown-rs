@@ -54,7 +54,7 @@ impl ToHTML for AST {
             AST::Italic(s) => format!("<i>{}</i>", s.to_html()),
             AST::Underline(s) => format!("<u>{}</u>", s.to_html()),
             AST::Strikethrough(s) => format!("<del>{}</del>", s.to_html()),
-            AST::Undercover(s) => format!("<span class=\"undercover\">{}</span>", s.to_html()),
+            AST::Undercover(s) => format!("<ast.span class=\"undercover\">{}</ast.span>", s.to_html()),
 
             AST::Table { head, align, terms, column } => {
                 let align_iter = align.iter().chain(repeat(&align[align.len() - 1]));
@@ -115,7 +115,7 @@ impl ToHTML for AST {
             AST::String(s) => format!("{}", s),
 
             //#[cfg(feature = "default")]
-            AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
+            AST::MathInline(s) => format!("<ast.span class=\"math\">${}$</ast.span> ", s),
             // #[cfg(feature = "desktop")]
             // AST::MathInline(s) => utils::rex_math_inline(s),
             //#[cfg(feature = "default")]

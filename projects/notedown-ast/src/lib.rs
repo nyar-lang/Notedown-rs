@@ -1,13 +1,9 @@
-mod command;
-mod span;
-mod block;
+#![feature(box_syntax)]
+
 mod ast;
-pub mod value;
+mod convert;
 
 
-pub use ast::AST;
-pub use command::Command;
-pub use span::Span;
-pub use block::Block;
-pub use value::Value;
+pub use ast::{AST, Value, Command, Span};
+
 pub use lazy_format::lazy_format;

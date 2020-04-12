@@ -11,8 +11,10 @@ edition = "2018"
 [dependencies]
 lazy_format = "1.8"
 joinery = "2.0"
+markdown = {version = "0.3", optional = true}
 
 [dev-dependencies]
 
 [features]
-default = []
+default = ["convert"]
+convert = ["markdown"]

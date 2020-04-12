@@ -11,6 +11,8 @@ impl<'a> Display for Span<'a> {
             Span::Underline(s) => {unimplemented!()}
             Span::Strikethrough(s) => {unimplemented!()}
             Span::Undercover(s) => {unimplemented!()}
+            Span::MathInline(_) => {unimplemented!()}
+            Span::MathDisplay(_) => {unimplemented!()}
         }
     }
 }
