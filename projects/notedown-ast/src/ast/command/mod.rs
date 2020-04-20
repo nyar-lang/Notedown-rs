@@ -1,4 +1,5 @@
 mod from;
+
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::{Value};
@@ -7,16 +8,16 @@ use crate::lazy_format;
 
 #[derive(Debug, Clone)]
 pub struct Command<'a> {
-    cmd: &'static str,
-    args: Vec<Value<'a>>,
-    kvs: HashMap<&'static str, Value<'a>>,
-    kind: CommandKind,
+    pub(crate) cmd: &'static str,
+    pub(crate) args: Vec<Value<'a>>,
+    pub(crate) kvs: HashMap<&'static str, Value<'a>>,
+    pub(crate) kind: CommandKind,
 }
 
 #[derive(Copy, Clone, Debug)]
 pub enum CommandKind {
     Inline,
-    Smart,
+    SmartLink,
     Normal,
     OpenClose,
     SelfClose,

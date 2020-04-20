@@ -1,10 +1,17 @@
 mod command;
 mod span;
 mod value;
+mod link;
+mod list;
 
+use std::fmt::{Display, Formatter};
+use std::fmt;
+use std::borrow::Cow;
 pub use command::{Command, CommandKind};
 pub use span::Span;
 pub use value::{Value};
+pub use link::SmartLink;
+pub use list::ListView;
 
 #[derive(Debug, Clone)]
 pub enum AST<'a> {
@@ -33,12 +40,7 @@ pub enum AST<'a> {
         terms: Vec<Vec<AST<'a>>>,
         column: usize,
     },
-    Quote {
-        body: Vec<AST<'a>>,
-        style: String,
-    },
-    Ordered(Vec<AST<'a>>),
-    Orderless(Vec<AST<'a>>),
+    List(ListView<'a>),
     /// - `Code`:
     Command(Command<'a>),
     // inlined
@@ -51,62 +53,58 @@ pub enum AST<'a> {
     /// normal text
     Text(Cow<'a, str>),
     Raw(Cow<'a, str>),
-    Italic(Cow<'a, str>),
-    Bold(Cow<'a, str>),
-    Underline(Cow<'a, str>),
-    Strikethrough(Cow<'a, str>),
-    Undercover(Cow<'a, str>),
+    Emphasis(Vec<AST<'a>>),
+    Strong(Vec<AST<'a>>),
+    Underline(Vec<AST<'a>>),
+    Strikethrough(Vec<AST<'a>>),
+    Undercover(Vec<AST<'a>>),
 
     MathInline(Cow<'a, str>),
     MathDisplay(Cow<'a, str>),
 
-    Escaped(String),
+    Link(SmartLink<'a>),
+
+    Escaped(char),
 }
 
-
-use std::fmt::{Display, Formatter};
-use std::fmt;
-use std::borrow::Cow;
 
 impl<'a> Display for AST<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             AST::None => write!(f, ""),
-            //AST::Space => write!(f, " "),
             AST::Newline => write!(f, "\n"),
 
             AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l as usize), a),
 
             AST::Statements(e) => {
                 let fs: Vec<String> = e.iter().map(|ast| format!("{}", ast)).collect();
-                write!(f, "{}", fs.join(""))
+                write!(f, "{}", fs.join("\n\n"))
             }
 
-            AST::Paragraph(t) => {                let fs: Vec<String> = t.iter().map(|k| format!("{}", k)).collect();                write!(f, "{}", fs.join(""))            }
+            AST::Paragraph(t) => {
+                let fs: Vec<String> = t.iter().map(|k| format!("{}", k)).collect();
+                write!(f, "{}", fs.join(""))
+            }
             AST::Raw(s) => write!(f, "{}", s),
             AST::Code(s) => write!(f, "`{}`", s),
             AST::Text(s) => write!(f, "{}", s),
-            AST::Italic(s) => write!(f, "*{}*", s),
-            AST::Bold(s) => write!(f, "**{}**", s),
-            AST::Underline(s) => write!(f, "~{}~", s),
-            AST::Strikethrough(s) => write!(f, "~~{}~~", s),
-            AST::Undercover(s) => write!(f, "~~~{}~~~", s),
-            AST::MathInline(s) => write!(f, "${}$", s),
-            AST::MathDisplay(s) => write!(f, "$${}$$", s),
+            AST::Emphasis(s) => write!(f, "*{}*", "s"),
+            AST::Strong(s) => write!(f, "**{}**", "s"),
+            AST::Underline(s) => write!(f, "~{}~", "s"),
+            AST::Strikethrough(s) => write!(f, "~~{}~~", "s"),
+            AST::Undercover(s) => write!(f, "~~~{}~~~", "s"),
 
-            AST::Quote { body, .. } => {
-                let s: Vec<_> = body.iter().map(|a| format!("> {}", a)).collect();
-                write!(f, "{}", s.join("\n"))
-            }
-            AST::Orderless(v) => {
-                let s: Vec<_> = v.iter().map(|a| format!("- {}", a)).collect();
-                write!(f, "{}", s.join("\n"))
-            }
-            AST::Command(c) => write!(f, "{}", c),
-            _ => {
-                let a = format!("unimplemented AST::{:?}", self);
-                write!(f, "{}", a.split("(").next().unwrap_or("Unknown"))
-            }
+            AST::MathInline(m) => write!(f, "${}$", m),
+            AST::MathDisplay(m) => write!(f, "$${}$$", m),
+            AST::MathBlock(m) => write!(f, "$${}$$", m),
+
+            AST::Link(link) => write!(f, "{}", link),
+            AST::List(list) => write!(f, "{}", list),
+            AST::Table { .. } => {unimplemented!()}
+            AST::Command(cmd) => write!(f, "{}", cmd),
+
+
+            AST::Escaped(_) => {unimplemented!()}
         }
     }
 }
