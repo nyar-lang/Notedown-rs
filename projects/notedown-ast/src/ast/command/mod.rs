@@ -16,10 +16,33 @@ pub struct Command<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub enum CommandKind {
+    ///
+    /// ```md
+    /// \cmd: args
+    /// ```
     Inline,
-    SmartLink,
+    /// ```md
+    /// \cmd(
+    ///     arg = 1
+    /// )
+    /// ```
     Normal,
+
+    /// `[]`
+    SmartLink,
+    /// ````md
+    /// ```cmd(arg=1)
+    /// body text
+    /// ```
+    /// ````
+    CodeBlock,
+    /// ```md
+    /// <cmd arg=1>body text</cmd>
+    /// ```
     OpenClose,
+    /// ```md
+    /// `<cmd arg=1/>`
+    /// ```
     SelfClose,
 }
 

@@ -1,5 +1,5 @@
 mod command;
-mod span;
+mod table;
 mod value;
 mod link;
 mod list;
@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use std::fmt;
 use std::borrow::Cow;
 pub use command::{Command, CommandKind};
-pub use span::Span;
+pub use table::TableView;
 pub use value::{Value};
 pub use link::SmartLink;
 pub use list::ListView;
@@ -34,15 +34,10 @@ pub enum AST<'a> {
     Code(Cow<'a, str>),
     /// - `Math`:
     MathBlock(Cow<'a, str>),
-    Table {
-        head: Vec<AST<'a>>,
-        align: Vec<u8>,
-        terms: Vec<Vec<AST<'a>>>,
-        column: usize,
-    },
+    Table(TableView<'a>),
     List(ListView<'a>),
     /// - `Code`:
-    Command(Command<'a>),
+
     // inlined
 
 
@@ -65,6 +60,10 @@ pub enum AST<'a> {
     Link(SmartLink<'a>),
 
     Escaped(char),
+    //
+
+
+    Command(Command<'a>),
 }
 
 

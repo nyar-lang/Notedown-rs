@@ -5,7 +5,7 @@ use std::fmt;
 #[derive(Clone, Debug)]
 pub enum ListView<'a> {
     Quote {
-        style: &'static str,
+        style: Option<&'static str>,
         body: Vec<AST<'a>>,
     },
     Ordered {

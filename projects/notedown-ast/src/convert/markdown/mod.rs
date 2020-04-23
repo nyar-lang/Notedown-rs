@@ -1,6 +1,11 @@
-use markdown::{Block, Span, ListItem};
+use markdown::{Block, Span, ListItem, tokenize};
 use crate::{AST, Command, Value, ListView, SmartLink, CommandKind};
 use std::collections::HashMap;
+
+
+pub fn markdown_parse<'a>(input: &str) -> AST<'a> {
+    AST::from(tokenize(include_str!("readme.md")))
+}
 
 impl<'a> From<Vec<Block>> for AST<'a> {
     fn from(v: Vec<Block>) -> Self {
@@ -13,12 +18,33 @@ impl<'a> From<Block> for AST<'a> {
         match v {
             Block::Header(content, level) => AST::Header(box content.into(), level as u8),
             Block::Paragraph(p) => p.into(),
-            Block::Blockquote(_) => { unimplemented!() }
-            Block::CodeBlock(_, _) => { unimplemented!() }
+            Block::CodeBlock(lang, code) => {
+                let mut kvs: HashMap<&str, Value> = Default::default();
+                kvs.insert("body", code.into());
+                let lang = match lang {
+                    None => "txt",
+                    // lang tokens created from the String would be available across all threads
+                    Some(s) => Box::leak(s.into_boxed_str())
+                };
+                let code = Command {
+                    cmd: lang,
+                    args: vec![],
+                    kvs,
+                    kind: CommandKind::SmartLink,
+                };
+                AST::Command(code)
+            }
+            Block::Blockquote(q) => {
+                let list = ListView::Quote {
+                    style: None,
+                    body: q.into_iter().map(Into::into).collect(),
+                };
+                AST::List(list)
+            }
             Block::OrderedList(o, _) => {
                 let list = ListView::Ordered {
                     head: 1,
-                    body: o.into_iter().map(Into::into).collect()
+                    body: o.into_iter().map(Into::into).collect(),
                 };
                 AST::List(list)
             }
@@ -49,7 +75,7 @@ impl<'a> From<Span> for AST<'a> {
             Span::Link(a, b, None) => {
                 let link = SmartLink::Hyperlinks(a.into(), Some(b.into()));
                 AST::Link(link)
-            },
+            }
             Span::Link(a, b, Some(s)) => {
                 let mut kvs: HashMap<&str, Value> = Default::default();
                 kvs.insert("title", s.into());
@@ -57,7 +83,7 @@ impl<'a> From<Span> for AST<'a> {
                     cmd: "a",
                     args: vec![],
                     kvs,
-                    kind: CommandKind::SmartLink
+                    kind: CommandKind::SmartLink,
                 };
                 AST::Command(link)
             }
