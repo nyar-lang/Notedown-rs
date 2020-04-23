@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 
 pub fn markdown_parse<'a>(input: &str) -> AST<'a> {
-    AST::from(tokenize(include_str!("readme.md")))
+    AST::from(tokenize(input))
 }
 
 impl<'a> From<Vec<Block>> for AST<'a> {
@@ -72,13 +72,15 @@ impl<'a> From<Span> for AST<'a> {
             Span::Break => { unimplemented!() }
             Span::Text(text) => { AST::Text(text.into()) }
             Span::Code(c) => { AST::Raw(c.into()) }
-            Span::Link(a, b, None) => {
-                let link = SmartLink::Hyperlinks(a.into(), Some(b.into()));
+            Span::Link(text, url, None) => {
+                let link = SmartLink::Hyperlinks(text.into(), Some(url.into()));
                 AST::Link(link)
             }
-            Span::Link(a, b, Some(s)) => {
+            Span::Link(text, url, Some(title)) => {
                 let mut kvs: HashMap<&str, Value> = Default::default();
-                kvs.insert("title", s.into());
+                kvs.insert("title", title.into());
+                kvs.insert("href", url.into());
+                kvs.insert("body", text.into());
                 let link = Command {
                     cmd: "a",
                     args: vec![],
@@ -87,8 +89,14 @@ impl<'a> From<Span> for AST<'a> {
                 };
                 AST::Command(link)
             }
-            Span::Image(a, b, None) => { unimplemented!() }
-            Span::Image(a, b, Some(s)) => { unimplemented!() }
+            Span::Image(a, b, None) => {
+                let link = SmartLink::Image(a.into(), Some(b.into()));
+                AST::Link(link)
+            }
+            Span::Image(text, url, Some(title)) => {
+                let link = SmartLink::Image(a.into(), Some(b.into()));
+                AST::Link(link)
+            }
             Span::Emphasis(e) => { AST::Emphasis(e.into_iter().map(Into::into).collect()) }
             Span::Strong(s) => { AST::Strong(s.into_iter().map(Into::into).collect()) }
         }

@@ -2,4 +2,4 @@
 mod markdown;
 
 #[cfg(feature = "markdown")]
-pub use markdown::markdown_parse;
+pub use self::markdown::markdown_parse;

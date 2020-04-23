@@ -12,6 +12,8 @@ pub use table::TableView;
 pub use value::{Value};
 pub use link::SmartLink;
 pub use list::ListView;
+use joinery::JoinableIterator;
+use lazy_format::lazy_format;
 
 #[derive(Debug, Clone)]
 pub enum AST<'a> {
@@ -76,22 +78,19 @@ impl<'a> Display for AST<'a> {
             AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l as usize), a),
 
             AST::Statements(e) => {
-                let fs: Vec<String> = e.iter().map(|ast| format!("{}", ast)).collect();
-                write!(f, "{}", fs.join("\n\n"))
+                let fs = e.iter().map(|ast| lazy_format!("{}", ast));
+                write!(f, "{}", fs.join_with("\n\n").to_string())
             }
 
-            AST::Paragraph(t) => {
-                let fs: Vec<String> = t.iter().map(|k| format!("{}", k)).collect();
-                write!(f, "{}", fs.join(""))
-            }
+            AST::Paragraph(span) => write!(f, "{}", join_span(span)),
             AST::Raw(s) => write!(f, "{}", s),
             AST::Code(s) => write!(f, "`{}`", s),
             AST::Text(s) => write!(f, "{}", s),
-            AST::Emphasis(s) => write!(f, "*{}*", "s"),
-            AST::Strong(s) => write!(f, "**{}**", "s"),
-            AST::Underline(s) => write!(f, "~{}~", "s"),
-            AST::Strikethrough(s) => write!(f, "~~{}~~", "s"),
-            AST::Undercover(s) => write!(f, "~~~{}~~~", "s"),
+            AST::Emphasis(s) => write!(f, "*{}*", join_span(s)),
+            AST::Strong(s) => write!(f, "**{}**", join_span(s)),
+            AST::Underline(s) => write!(f, "~{}~", join_span(s)),
+            AST::Strikethrough(s) => write!(f, "~~{}~~", join_span(s)),
+            AST::Undercover(s) => write!(f, "~~~{}~~~", join_span(s)),
 
             AST::MathInline(m) => write!(f, "${}$", m),
             AST::MathDisplay(m) => write!(f, "$${}$$", m),
@@ -99,12 +98,15 @@ impl<'a> Display for AST<'a> {
 
             AST::Link(link) => write!(f, "{}", link),
             AST::List(list) => write!(f, "{}", list),
-            AST::Table { .. } => {unimplemented!()}
+            AST::Table(table) => write!(f, "{}", table),
             AST::Command(cmd) => write!(f, "{}", cmd),
 
-
-            AST::Escaped(_) => {unimplemented!()}
+            AST::Escaped(c) => { write!(f, "{}", c) }
         }
     }
 }
 
+fn join_span(v: &[AST]) -> String {
+    let s = v.iter().map(|k| lazy_format!("{}", k));
+    s.join_with("").to_string()
+}

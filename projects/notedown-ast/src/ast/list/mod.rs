@@ -20,7 +20,7 @@ pub enum ListView<'a> {
 impl<'a> Display for ListView<'a> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            ListView::Quote { style, body } => {
+            ListView::Quote { style: _, body } => {
                 let s: Vec<_> = body.iter().map(|a| format!("> {}", a)).collect();
                 write!(f, "{}", s.join("\n"))
             }
