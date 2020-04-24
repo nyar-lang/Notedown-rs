@@ -16,7 +16,7 @@ impl<'a> From<Vec<Block>> for AST<'a> {
 impl<'a> From<Block> for AST<'a> {
     fn from(v: Block) -> Self {
         match v {
-            Block::Header(content, level) => AST::Header(box content.into(), level as u8),
+            Block::Header(content, level) => AST::Header(vec![content.into()] , level),
             Block::Paragraph(p) => p.into(),
             Block::CodeBlock(lang, code) => {
                 let mut kvs: HashMap<&str, Value> = Default::default();
@@ -71,30 +71,23 @@ impl<'a> From<Span> for AST<'a> {
         match v {
             Span::Break => { unimplemented!() }
             Span::Text(text) => { AST::Text(text.into()) }
-            Span::Code(c) => { AST::Raw(c.into()) }
-            Span::Link(text, url, None) => {
-                let link = SmartLink::Hyperlinks(text.into(), Some(url.into()));
-                AST::Link(link)
-            }
-            Span::Link(text, url, Some(title)) => {
-                let mut kvs: HashMap<&str, Value> = Default::default();
-                kvs.insert("title", title.into());
-                kvs.insert("href", url.into());
-                kvs.insert("body", text.into());
-                let link = Command {
-                    cmd: "a",
-                    args: vec![],
-                    kvs,
-                    kind: CommandKind::SmartLink,
+            Span::Code(c) => { AST::Code(c.into()) }
+            Span::Link(text, url, title) => {
+                let link = SmartLink::Hyperlinks {
+                    from: text.into(),
+                    to: Some(url.into()),
+                    alt: title.map(Into::into),
+                    bind: None,
                 };
-                AST::Command(link)
-            }
-            Span::Image(a, b, None) => {
-                let link = SmartLink::Image(a.into(), Some(b.into()));
                 AST::Link(link)
             }
-            Span::Image(text, url, Some(title)) => {
-                let link = SmartLink::Image(a.into(), Some(b.into()));
+            Span::Image(_, src, title) => {
+                let link = SmartLink::Hyperlinks {
+                    from: src.into(),
+                    to: None,
+                    alt: title.map(Into::into),
+                    bind: None,
+                };
                 AST::Link(link)
             }
             Span::Emphasis(e) => { AST::Emphasis(e.into_iter().map(Into::into).collect()) }

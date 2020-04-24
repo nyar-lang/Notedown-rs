@@ -42,9 +42,9 @@ Readability, however, is emphasized above all else. A Markdown-formatted documen
 
 A paragraph is simply one or more consecutive lines of text, separated by one or more blank lines. (A blank line is any line that looks like a blank line -- a line containing nothing but spaces or tabs is considered blank.) Normal paragraphs should not be indented with spaces or tabs.
 
-The implication of the "one or more consecutive lines of text" rule is that Markdown supports "hard-wrapped" text paragraphs. This differs significantly from most other text-to-HTML formatters (including Movable Type's "Convert Line Breaks" option) which translate every line break character in a paragraph into a <br /> tag.
+The implication of the "one or more consecutive lines of text" rule is that Markdown supports "hard-wrapped" text paragraphs. This differs significantly from most other text-to-HTML formatters (including Movable Type's "Convert Line Breaks" option) which translate every line break character in a paragraph into a `<br />` tag.
 
-When you *do* want to insert a <br /> break tag using Markdown, you end a line with two or more spaces, then type return.
+When you *do* want to insert a `<br />` break tag using Markdown, you end a line with two or more spaces, then type return.
 
 ### Headers
 
@@ -54,17 +54,17 @@ Optionally, you may "close" atx-style headers. This is purely cosmetic -- you ca
 
 ### Blockquotes
 
-Markdown uses email-style > characters for blockquoting. If you're familiar with quoting passages of text in an email message, then you know how to create a blockquote in Markdown. It looks best if you hard wrap the text and put a > before every line:
+Markdown uses email-style `>` characters for blockquoting. If you're familiar with quoting passages of text in an email message, then you know how to create a blockquote in Markdown. It looks best if you hard wrap the text and put a `>` before every line:
 
 > This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus. Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.
 > Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse id sem consectetuer libero luctus adipiscing.
 
-Markdown allows you to be lazy and only put the > before the first line of a hard-wrapped paragraph:
+Markdown allows you to be lazy and only put the `>` before the first line of a hard-wrapped paragraph:
 
 > This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus. Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.
 > Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse id sem consectetuer libero luctus adipiscing.
 
-Blockquotes can be nested (i.e. a blockquote-in-a-blockquote) by adding additional levels of >:
+Blockquotes can be nested (i.e. a blockquote-in-a-blockquote) by adding additional levels of `>`:
 
 > This is the first level of quoting.
 > > This is nested blockquote.
@@ -148,7 +148,7 @@ It looks nice if you indent every line of the subsequent paragraphs, but here ag
 This is the second paragraph in the list item. You're only required to indent the first line. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
 - Another item in the same list.
 
-To put a blockquote within a list item, the blockquote's > delimiters need to be indented:
+To put a blockquote within a list item, the blockquote's `>` delimiters need to be indented:
 
 - A list item with a blockquote:
 
@@ -162,7 +162,7 @@ To put a code block within a list item, the code block needs to be indented *twi
 
 ### Code Blocks
 
-Pre-formatted code blocks are used for writing about programming or markup source code. Rather than forming normal paragraphs, the lines of a code block are interpreted literally. Markdown wraps a code block in both <pre> and <code> tags.
+Pre-formatted code blocks are used for writing about programming or markup source code. Rather than forming normal paragraphs, the lines of a code block are interpreted literally. Markdown wraps a code block in both `<pre>` and `<code>` tags.
 
 To produce a code block in Markdown, simply indent every line of the block by at least 4 spaces or 1 tab.
 
@@ -176,7 +176,7 @@ Here is an example of AppleScript:
 
 A code block continues until it reaches a line that is not indented (or the end of the article).
 
-Within a code block, ampersands (&) and angle brackets (< and >) are automatically converted into HTML entities. This makes it very easy to include example HTML source code using Markdown -- just paste it and indent it, and Markdown will handle the hassle of encoding the ampersands and angle brackets. For example, this:
+Within a code block, ampersands (`&`) and angle brackets (`<` and `>`) are automatically converted into HTML entities. This makes it very easy to include example HTML source code using Markdown -- just paste it and indent it, and Markdown will handle the hassle of encoding the ampersands and angle brackets. For example, this:
 
 \txt(body = "<div class=\"footer\">\n    &copy; 2004 Foo Corporation\n</div>")
 
@@ -200,7 +200,7 @@ This is [an example > http://example.com/] inline link.
 
 ### Emphasis
 
-Markdown treats asterisks (*) and underscores (_) as indicators of emphasis. Text wrapped with one * or _ will be wrapped with an HTML <em> tag; double *'s or _'s will be wrapped with an HTML <strong> tag. E.g., this input:
+Markdown treats asterisks (`*`) and underscores (`_`) as indicators of emphasis. Text wrapped with one `*` or `_` will be wrapped with an HTML `<em>` tag; double `*`'s or `_`'s will be wrapped with an HTML `<strong>` tag. E.g., this input:
 
 *single asterisks*
 
@@ -212,6 +212,6 @@ Markdown treats asterisks (*) and underscores (_) as indicators of emphasis. Tex
 
 ### Code
 
-To indicate a span of code, wrap it with backtick quotes ( ` ). Unlike a pre-formatted code block, a code span indicates code within a normal paragraph. For example:
+To indicate a span of code, wrap it with backtick quotes (` ` `). Unlike a pre-formatted code block, a code span indicates code within a normal paragraph. For example:
 
-Use the printf() function.
+Use the `printf()` function.

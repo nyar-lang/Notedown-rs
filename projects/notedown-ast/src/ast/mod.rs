@@ -3,6 +3,7 @@ mod table;
 mod value;
 mod link;
 mod list;
+mod highlighter;
 
 use std::fmt::{Display, Formatter};
 use std::fmt;
@@ -14,6 +15,7 @@ pub use link::SmartLink;
 pub use list::ListView;
 use joinery::JoinableIterator;
 use lazy_format::lazy_format;
+use crate::ast::highlighter::Highlighter;
 
 #[derive(Debug, Clone)]
 pub enum AST<'a> {
@@ -30,12 +32,12 @@ pub enum AST<'a> {
 
 
     /// - `Header`: TEXT, level
-    Header(Box<AST<'a>>, u8),
+    Header(Vec<AST<'a>>, usize),
     ///  - `Paragraph`:
     Paragraph(Vec<AST<'a>>),
-    Code(Cow<'a, str>),
+    Highlight(Highlighter<'a>),
     /// - `Math`:
-    MathBlock(Cow<'a, str>),
+    Math(Cow<'a, str>),
     Table(TableView<'a>),
     List(ListView<'a>),
     /// - `Code`:
@@ -50,6 +52,7 @@ pub enum AST<'a> {
     /// normal text
     Text(Cow<'a, str>),
     Raw(Cow<'a, str>),
+    Code(Cow<'a, str>),
     Emphasis(Vec<AST<'a>>),
     Strong(Vec<AST<'a>>),
     Underline(Vec<AST<'a>>),
@@ -75,7 +78,7 @@ impl<'a> Display for AST<'a> {
             AST::None => write!(f, ""),
             AST::Newline => write!(f, "\n"),
 
-            AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l as usize), a),
+            AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l), join_span(a)),
 
             AST::Statements(e) => {
                 let fs = e.iter().map(|ast| lazy_format!("{}", ast));
@@ -83,6 +86,8 @@ impl<'a> Display for AST<'a> {
             }
 
             AST::Paragraph(span) => write!(f, "{}", join_span(span)),
+
+
             AST::Raw(s) => write!(f, "{}", s),
             AST::Code(s) => write!(f, "`{}`", s),
             AST::Text(s) => write!(f, "{}", s),
@@ -94,14 +99,16 @@ impl<'a> Display for AST<'a> {
 
             AST::MathInline(m) => write!(f, "${}$", m),
             AST::MathDisplay(m) => write!(f, "$${}$$", m),
-            AST::MathBlock(m) => write!(f, "$${}$$", m),
+            AST::Math(m) => write!(f, "$${}$$", m),
 
             AST::Link(link) => write!(f, "{}", link),
             AST::List(list) => write!(f, "{}", list),
             AST::Table(table) => write!(f, "{}", table),
+            AST::Highlight(code) => write!(f, "{}", code),
             AST::Command(cmd) => write!(f, "{}", cmd),
 
             AST::Escaped(c) => { write!(f, "{}", c) }
+
         }
     }
 }
