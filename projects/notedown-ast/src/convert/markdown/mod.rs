@@ -1,6 +1,5 @@
 use markdown::{Block, Span, ListItem, tokenize};
-use crate::{AST, Command, Value, ListView, SmartLink, CommandKind};
-use std::collections::HashMap;
+use crate::{AST, ListView, SmartLink, Highlighter};
 
 
 pub fn markdown_parse<'a>(input: &str) -> AST<'a> {
@@ -16,23 +15,24 @@ impl<'a> From<Vec<Block>> for AST<'a> {
 impl<'a> From<Block> for AST<'a> {
     fn from(v: Block) -> Self {
         match v {
-            Block::Header(content, level) => AST::Header(vec![content.into()] , level),
+            Block::Header(content, level) => AST::Header(vec![content.into()], level),
             Block::Paragraph(p) => p.into(),
             Block::CodeBlock(lang, code) => {
-                let mut kvs: HashMap<&str, Value> = Default::default();
-                kvs.insert("body", code.into());
                 let lang = match lang {
                     None => "txt",
-                    // lang tokens created from the String would be available across all threads
-                    Some(s) => Box::leak(s.into_boxed_str())
+                    Some(s) => match s.as_ref() {
+                        "" => "txt",
+                        // lang tokens created from the String would be available across all threads
+                        _ => Box::leak(s.into_boxed_str())
+                    },
                 };
-                let code = Command {
-                    cmd: lang,
-                    args: vec![],
-                    kvs,
-                    kind: CommandKind::SmartLink,
+                let code = Highlighter {
+                    lang,
+                    code: code.into(),
+                    inline: false,
+                    high_line: vec![],
                 };
-                AST::Command(code)
+                AST::Highlight(code)
             }
             Block::Blockquote(q) => {
                 let list = ListView::Quote {

@@ -8,14 +8,15 @@ mod highlighter;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use std::borrow::Cow;
+use joinery::JoinableIterator;
+use lazy_format::lazy_format;
+
 pub use command::{Command, CommandKind};
 pub use table::TableView;
 pub use value::{Value};
 pub use link::SmartLink;
 pub use list::ListView;
-use joinery::JoinableIterator;
-use lazy_format::lazy_format;
-use crate::ast::highlighter::Highlighter;
+pub use highlighter::Highlighter;
 
 #[derive(Debug, Clone)]
 pub enum AST<'a> {

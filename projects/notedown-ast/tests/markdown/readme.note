@@ -76,7 +76,9 @@ Blockquotes can contain other Markdown elements, including headers, lists, and c
 > 1. This is the first list item.
 1. This is the second list item.
 > Here's some example code:
-> \txt(body = "return shell_exec(\"echo $input | $markdown_script\");")
+> ```txt
+return shell_exec("echo $input | $markdown_script");
+```
 
 Any decent text editor should make email-style quoting easy. For example, with BBEdit, you can make a selection and choose Increase Quote Level from the Text menu.
 
@@ -158,7 +160,9 @@ To put a code block within a list item, the code block needs to be indented *twi
 
 - A list item with a code block:
 
-\txt(body = "<code goes here>")
+```txt
+<code goes here>
+```
 
 ### Code Blocks
 
@@ -168,21 +172,35 @@ To produce a code block in Markdown, simply indent every line of the block by at
 
 This is a normal paragraph:
 
-\txt(body = "This is a code block.")
+```txt
+This is a code block.
+```
 
 Here is an example of AppleScript:
 
-\txt(body = "tell application \"Foo\"\n    beep\nend tell")
+```txt
+tell application "Foo"
+    beep
+end tell
+```
 
 A code block continues until it reaches a line that is not indented (or the end of the article).
 
 Within a code block, ampersands (`&`) and angle brackets (`<` and `>`) are automatically converted into HTML entities. This makes it very easy to include example HTML source code using Markdown -- just paste it and indent it, and Markdown will handle the hassle of encoding the ampersands and angle brackets. For example, this:
 
-\txt(body = "<div class=\"footer\">\n    &copy; 2004 Foo Corporation\n</div>")
+```txt
+<div class="footer">
+    &copy; 2004 Foo Corporation
+</div>
+```
 
 Regular Markdown syntax is not processed within code blocks. E.g., asterisks are just literal asterisks within a code block. This means it's also easy to use Markdown to write about Markdown's own syntax.
 
-\(body = "tell application \"Foo\"\n    beep\nend tell")
+```txt
+tell application "Foo"
+    beep
+end tell
+```
 
 ## Span Elements
 
