@@ -1,23 +1,22 @@
 mod from;
 
-use std::fmt::{Display, Formatter};
-use std::fmt;
-use crate::{Value};
-use std::collections::HashMap;
-// use crate::lazy_format;
-use joinery::JoinableIterator;
+use crate::Value;
+use std::{
+    collections::HashMap,
+    fmt,
+    fmt::{Display, Formatter},
+};
 
 #[derive(Debug, Clone)]
-pub struct Command<'a> {
-    pub(crate) cmd: &'static str,
-    pub(crate) args: Vec<Value<'a>>,
-    pub(crate) kvs: HashMap<&'static str, Value<'a>>,
-    pub(crate) kind: CommandKind,
+pub struct Command {
+    pub cmd: String,
+    pub args: Vec<Value>,
+    pub kvs: HashMap<String, Value>,
+    pub kind: CommandKind,
 }
 
 #[derive(Copy, Clone, Debug)]
 pub enum CommandKind {
-    ///
     /// ```md
     /// \cmd: args
     /// ```
@@ -47,7 +46,7 @@ pub enum CommandKind {
     SelfClose,
 }
 
-impl<'a> Display for Command<'a> {
+impl Display for Command {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let a = self.args.iter().map(|v| format!("{}", v));
         let kv = self.kvs.iter().map(|(k, v)| format!("{} = {}", k, v));

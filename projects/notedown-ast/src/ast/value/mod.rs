@@ -1,23 +1,23 @@
 mod from;
 
-use crate::{Command};
-use std::borrow::Cow;
-use std::fmt::{Debug, Formatter, Display};
-use std::fmt;
+use crate::Command;
+use std::{
+    fmt::{self,Debug, Display, Formatter},
+};
 
 #[derive(Clone)]
-pub enum Value<'a> {
+pub enum Value {
     None,
-    String(Cow<'a, str>),
-    Integer(Cow<'a, str>),
-    Decimal(Cow<'a, str>),
+    String(String),
+    Integer(String),
+    Decimal(String),
     Boolean(bool),
-    List(Vec<Value<'a>>),
+    List(Vec<Value>),
     // Dict(HashMap<String, Value>),
-    Command(Command<'a>),
+    Command(Command),
 }
 
-impl<'a> Value<'a> {
+impl Value {
     #[rustfmt::skip]
     pub fn as_str(&self) -> &str {
         match self {
@@ -36,9 +36,7 @@ impl<'a> Value<'a> {
     }
 }
 
-
-
-impl<'a> Debug for Value<'a> {
+impl Debug for Value {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Value::None => write!(f, "none"),
@@ -53,7 +51,7 @@ impl<'a> Debug for Value<'a> {
     }
 }
 
-impl<'a> Display for Value<'a> {
+impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Value::None => write!(f, ""),

@@ -1,7 +1,6 @@
-use markdown::{tokenize};
+use markdown::tokenize;
 use notedown_ast::AST;
-use std::fs::File;
-use std::io::Write;
+use std::{fs::File, io::Write};
 
 #[test]
 pub fn markdown_codegen() {

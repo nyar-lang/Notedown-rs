@@ -1,23 +1,17 @@
 use crate::AST;
-use std::fmt::{Display, Formatter};
-use std::fmt;
+use std::{
+    fmt,
+    fmt::{Display, Formatter},
+};
 
 #[derive(Clone, Debug)]
-pub enum ListView<'a> {
-    Quote {
-        style: Option<&'static str>,
-        body: Vec<AST<'a>>,
-    },
-    Ordered {
-        head: usize,
-        body: Vec<AST<'a>>,
-    },
-    Orderless {
-        body: Vec<AST<'a>>
-    },
+pub enum ListView {
+    Quote { style: Option<String>, body: Vec<AST> },
+    Ordered { head: usize, body: Vec<AST> },
+    Orderless { body: Vec<AST> },
 }
 
-impl<'a> Display for ListView<'a> {
+impl Display for ListView {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             ListView::Quote { style: _, body } => {

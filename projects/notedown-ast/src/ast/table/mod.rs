@@ -4,17 +4,15 @@ mod from;
 
 use std::fmt::{self, Display, Formatter};
 
-
 #[derive(Debug, Clone)]
-pub struct TableView<'a> {
-    head: Vec<AST<'a>>,
+pub struct TableView {
+    head: Vec<AST>,
     align: Vec<u8>,
-    terms: Vec<Vec<AST<'a>>>,
+    terms: Vec<Vec<AST>>,
     column: usize,
 }
 
-
-impl<'a> Display for TableView<'a> {
+impl Display for TableView {
     fn fmt(&self, _: &mut Formatter) -> fmt::Result {
         unimplemented!()
     }

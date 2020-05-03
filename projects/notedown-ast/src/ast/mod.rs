@@ -1,79 +1,65 @@
 mod command;
-mod table;
-mod value;
+mod highlighter;
 mod link;
 mod list;
-mod highlighter;
+mod table;
+mod value;
 
-use std::fmt::{Display, Formatter};
-use std::fmt;
-use std::borrow::Cow;
 use joinery::JoinableIterator;
 use lazy_format::lazy_format;
+use std::{
+    fmt::{self,Display, Formatter},
+};
 
 pub use command::{Command, CommandKind};
-pub use table::TableView;
-pub use value::{Value};
+pub use highlighter::Highlighter;
 pub use link::SmartLink;
 pub use list::ListView;
-pub use highlighter::Highlighter;
+pub use table::TableView;
+pub use value::Value;
 
 #[derive(Debug, Clone)]
-pub enum AST<'a> {
+pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,
     Newline,
     /// - `Statements`
-    Statements(Vec<AST<'a>>),
+    Statements(Vec<AST>),
     // Blocks
-
-
-
-
-
-
     /// - `Header`: TEXT, level
-    Header(Vec<AST<'a>>, usize),
+    Header(Vec<AST>, usize),
     ///  - `Paragraph`:
-    Paragraph(Vec<AST<'a>>),
-    Highlight(Highlighter<'a>),
+    Paragraph(Vec<AST>),
+    Highlight(Highlighter),
     /// - `Math`:
-    Math(Cow<'a, str>),
-    Table(TableView<'a>),
-    List(ListView<'a>),
+    Math(String),
+    Table(TableView),
+    List(ListView),
     /// - `Code`:
 
     // inlined
 
-
-
-
-
-
     /// normal text
-    Text(Cow<'a, str>),
-    Raw(Cow<'a, str>),
-    Code(Cow<'a, str>),
-    Emphasis(Vec<AST<'a>>),
-    Strong(Vec<AST<'a>>),
-    Underline(Vec<AST<'a>>),
-    Strikethrough(Vec<AST<'a>>),
-    Undercover(Vec<AST<'a>>),
+    Text(String),
+    Raw(String),
+    Code(String),
+    Emphasis(Vec<AST>),
+    Strong(Vec<AST>),
+    Underline(Vec<AST>),
+    Strikethrough(Vec<AST>),
+    Undercover(Vec<AST>),
 
-    MathInline(Cow<'a, str>),
-    MathDisplay(Cow<'a, str>),
+    MathInline(String),
+    MathDisplay(String),
 
-    Link(SmartLink<'a>),
+    Link(SmartLink),
 
     Escaped(char),
     //
-
-
-    Command(Command<'a>),
+    Command(Command),
 }
 
-
-impl<'a> Display for AST<'a> {
+impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             AST::None => write!(f, ""),
@@ -87,7 +73,6 @@ impl<'a> Display for AST<'a> {
             }
 
             AST::Paragraph(span) => write!(f, "{}", join_span(span)),
-
 
             AST::Raw(s) => write!(f, "{}", s),
             AST::Code(s) => write!(f, "`{}`", s),
@@ -108,8 +93,7 @@ impl<'a> Display for AST<'a> {
             AST::Highlight(code) => write!(f, "{}", code),
             AST::Command(cmd) => write!(f, "{}", cmd),
 
-            AST::Escaped(c) => { write!(f, "{}", c) }
-
+            AST::Escaped(c) => write!(f, "{}", c),
         }
     }
 }

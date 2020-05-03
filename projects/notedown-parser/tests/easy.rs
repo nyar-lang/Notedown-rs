@@ -115,7 +115,7 @@ fn test_table() {
 }
 
 #[test]
-#[cfg(not(feature="desktop"))]
+#[cfg(not(feature = "desktop"))]
 fn test_code() {
     let input = r#"
         ```js
