@@ -1,8 +1,4 @@
-use std::{
-    borrow::Cow,
-    fmt,
-    fmt::{Display, Formatter},
-};
+use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub enum SmartLink {

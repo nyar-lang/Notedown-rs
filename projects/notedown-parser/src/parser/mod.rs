@@ -210,7 +210,7 @@ impl Context {
                     let mut v = Value::None;
                     for inner in pair.into_inner() {
                         match inner.as_rule() {
-                            Rule::PATTERN_WHITE_SPACE=>continue,
+                            Rule::PATTERN_WHITE_SPACE => continue,
                             Rule::Comma => continue,
                             Rule::value => v = self.parse_value(inner),
                             _ => debug_cases!(inner),

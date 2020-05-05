@@ -5,11 +5,7 @@ mod list;
 mod table;
 mod value;
 
-use joinery::JoinableIterator;
-use lazy_format::lazy_format;
-use std::{
-    fmt::{self,Display, Formatter},
-};
+use std::fmt::{self, Display, Formatter};
 
 pub use command::{Command, CommandKind};
 pub use highlighter::Highlighter;
@@ -68,8 +64,8 @@ impl Display for AST {
             AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l), join_span(a)),
 
             AST::Statements(e) => {
-                let fs = e.iter().map(|ast| lazy_format!("{}", ast));
-                write!(f, "{}", fs.join_with("\n\n").to_string())
+                let fs: Vec<_> = e.iter().map(|ast| format!("{}", ast)).collect();
+                write!(f, "{}", fs.join("\n\n"))
             }
 
             AST::Paragraph(span) => write!(f, "{}", join_span(span)),
@@ -99,6 +95,6 @@ impl Display for AST {
 }
 
 fn join_span(v: &[AST]) -> String {
-    let s = v.iter().map(|k| lazy_format!("{}", k));
-    s.join_with("").to_string()
+    let s: Vec<String> = v.iter().map(|k| format!("{}", k)).collect();
+    s.join("")
 }

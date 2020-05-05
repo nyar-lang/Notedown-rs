@@ -51,6 +51,6 @@ impl Display for Command {
         let a = self.args.iter().map(|v| format!("{}", v));
         let kv = self.kvs.iter().map(|(k, v)| format!("{} = {}", k, v));
 
-        write!(f, "\\{}({})", self.cmd, a.chain(kv).join_with(", "))
+        write!(f, "\\{}({})", self.cmd, a.chain(kv).collect::<Vec<_>>().join(", "))
     }
 }

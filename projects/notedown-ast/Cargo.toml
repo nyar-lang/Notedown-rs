@@ -1,6 +1,6 @@
 [package]
 name = "notedown_ast"
-version = "0.6.1"
+version = "0.7.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "notedown ast and converter"
 repository = "https://github.com/nyar-lang/Notedown-rs"
@@ -11,9 +11,10 @@ edition = "2018"
 [dependencies]
 text-utils = "0.2"
 markdown = {version = "0.3", optional = true}
+orgize = {version = "0.8", optional = true}
 
 [dev-dependencies]
 
 [features]
 default = ["convert"]
-convert = ["markdown"]
+convert = ["markdown", "orgize"]

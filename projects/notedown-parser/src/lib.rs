@@ -11,6 +11,7 @@ extern crate proc_macro;
 mod pre_build;
 
 mod note_down;
+mod parser;
 // mod note_text;
 
 pub use note_down::{NoteDownParser, Rule as NoteDownRule};

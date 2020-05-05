@@ -45,7 +45,7 @@ pub fn set_title(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
 }
 
 pub fn set_date(ctx: &mut Context, args: &Vec<Value>) -> Option<String> {
-    // notice that parse no trim needed
+    // notice that parser no trim needed
     if let Value::String(s) = &args[0] {
         if let Ok(t) = NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S") {
             ctx.meta.created_time = Some(t)

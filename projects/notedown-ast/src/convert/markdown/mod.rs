@@ -14,7 +14,7 @@ impl From<Vec<Block>> for AST {
 impl From<Block> for AST {
     fn from(v: Block) -> Self {
         match v {
-            Block::Header(content, level) => AST::Header(vec![content.into()], level),
+            Block::Header(content, level) => AST::Header(content.into_iter().map(Into::into).collect(), level),
             Block::Paragraph(p) => p.into(),
             Block::CodeBlock(lang, code) => {
                 let lang = match lang {
@@ -25,7 +25,7 @@ impl From<Block> for AST {
                         _ => Box::leak(s.into_boxed_str()),
                     },
                 };
-                let code = Highlighter { lang, code: code.into(), inline: false, high_line: vec![] };
+                let code = Highlighter { lang: lang.to_string(), code: code.into(), inline: false, high_line: vec![] };
                 AST::Highlight(code)
             }
             Block::Blockquote(q) => {
