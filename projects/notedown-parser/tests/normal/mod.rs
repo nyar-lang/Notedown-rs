@@ -33,3 +33,12 @@ fn test_command() {
     // println!("{:#?}", f);
     file.write_all(f.to_html().as_bytes()).unwrap();
 }
+
+
+#[test]
+fn test_component() {
+    let mut file = File::create("tests/normal/component.md").unwrap();
+    let f = parse(include_str!("component.note"));
+    // println!("{:#?}", f);
+    file.write_all(f.to_html().as_bytes()).unwrap();
+}

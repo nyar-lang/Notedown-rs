@@ -59,12 +59,11 @@ impl From<Span> for AST {
             Span::Text(text) => AST::Text(text.into()),
             Span::Code(c) => AST::Code(c.into()),
             Span::Link(text, url, title) => {
-                let link =
-                    SmartLink::Hyperlinks { from: text.into(), to: Some(url.into()), alt: title.map(Into::into), bind: None };
+                let link = SmartLink::Hyperlinks { from: text.into(), to: url.into(), alt: title.map(Into::into), bind: None };
                 AST::Link(link)
             }
             Span::Image(_, src, title) => {
-                let link = SmartLink::Hyperlinks { from: src.into(), to: None, alt: title.map(Into::into), bind: None };
+                let link = SmartLink::Image { img: src.into(), to: None, alt: title.map(Into::into), bind: None };
                 AST::Link(link)
             }
             Span::Emphasis(e) => AST::Emphasis(e.into_iter().map(Into::into).collect()),

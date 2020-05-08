@@ -1,15 +1,8 @@
-use crate::{
-    utils::{map_escape, map_white_space, maybe_math, str_escape, unescape},
-    Context, Value, AST,
-};
-
-use notedown_parser::{NoteDownParser, NoteDownRule as Rule};
-use pest::{
-    iterators::{Pair, Pairs},
-    Parser,
-};
+use crate::{NoteDownParser,ParserConfig};
+use crate::note_down::Rule;
+use pest::Parser;
+use pest::iterators::{Pair, Pairs};
 use std::collections::{HashMap, VecDeque};
-use text_utils::dedent_less_than;
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -20,13 +13,11 @@ macro_rules! debug_cases {
     }};
 }
 
-impl Context {}
 
-impl Context {
-    pub fn parse(&mut self, text: &str) {
-        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
-        let input = text.replace("\t", &" ".repeat(cfg.tab_size)).replace("\r\n", "\n");
-        self.ast = self.parse_program(&input)
+impl ParserConfig {
+    pub fn parse(&mut self, text: &str) -> AST {
+        let input = text.replace("\t", &" ".repeat(self.tab_size)).replace("\r\n", "\n");
+        self.parse_program(&input)
     }
     pub fn parse_program(&mut self, text: &str) -> AST {
         let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
@@ -353,7 +344,7 @@ fn parse_table_align(input: &str) -> Vec<u8> {
 }
 
 #[derive(Debug)]
-enum List {
+pub enum List {
     Quote,
     Ordered,
     Orderless,
