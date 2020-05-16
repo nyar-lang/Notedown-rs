@@ -3,6 +3,9 @@ use crate::note_down::Rule;
 use pest::Parser;
 use pest::iterators::{Pair, Pairs};
 use std::collections::{HashMap, VecDeque};
+use notedown_ast::{AST, Value, ListView, TableView, Command, CommandKind};
+use notedown_ast::utils::dedent_less_than;
+use crate::utils::{maybe_math, str_escape, map_white_space, map_escape, unescape};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -28,7 +31,10 @@ impl ParserConfig {
                 Rule::COMMENT => continue,
                 Rule::LINE_SEPARATOR => continue,
                 Rule::WHITE_SPACE => continue,
-                Rule::HorizontalRule => AST::from("<hr/>"),
+                Rule::HorizontalRule => {
+                    unimplemented!();
+                    // AST::from("<hr/>")
+                },
                 Rule::TextBlock => maybe_math(self, pair),
                 Rule::Header => self.parse_header(pair),
                 Rule::List => self.parse_list(pair.as_str().trim_end()),
@@ -36,11 +42,11 @@ impl ParserConfig {
                 Rule::Code => self.parse_code(pair),
                 Rule::CommandBlock => {
                     let cmd = self.parse_command(pair);
-                    self.execute_cmd(cmd)
+                    unimplemented!()
                 }
                 Rule::CommandLine => {
                     let cmd = self.parse_command(pair);
-                    self.execute_cmd(cmd)
+                    unimplemented!()
                 }
                 _ => debug_cases!(pair),
             };
@@ -60,7 +66,7 @@ impl ParserConfig {
                 _ => debug_cases!(pair),
             };
         }
-        return AST::Header(Box::new(head), level);
+        return AST::Header(vec![head], level);
     }
     fn parse_code(&mut self, pairs: Pair<Rule>) -> AST {
         let mut cmd = "txt";
@@ -77,8 +83,7 @@ impl ParserConfig {
                 _ => debug_cases!(pair),
             };
         }
-        let cmd = AST::Command(Box::from(cmd), vec![], kvs);
-        self.execute_cmd(cmd)
+        AST::Highlight(unimplemented!())
     }
     pub fn parse_text(&mut self, text: &str) -> AST {
         let pairs = NoteDownParser::parse(Rule::TextMode, text).unwrap_or_else(|e| panic!("{}", e));
@@ -95,29 +100,31 @@ impl ParserConfig {
                 Rule::Raw => self.parse_code_inline(pair),
                 Rule::Math => self.parse_math(pair),
 
-                Rule::TextRest => AST::String(pair.as_str().to_string()),
-                Rule::RawRest => AST::String(pair.as_str().to_string()),
-                Rule::StyleRest => AST::String(pair.as_str().to_string()),
-                Rule::LineRest => AST::String(pair.as_str().to_string()),
-                Rule::MathRest => AST::String(pair.as_str().to_string()),
+                Rule::TextRest => AST::Text(pair.as_str().to_string()),
+                Rule::RawRest => AST::Text(pair.as_str().to_string()),
+                Rule::StyleRest => AST::Text(pair.as_str().to_string()),
+                Rule::LineRest => AST::Text(pair.as_str().to_string()),
+                Rule::MathRest => AST::Text(pair.as_str().to_string()),
 
                 Rule::CommandLine => {
                     let cmd = self.parse_command(pair);
-                    self.execute_cmd(cmd)
+                    unimplemented!()
                 }
                 Rule::CommandBlock => {
                     let cmd = self.parse_command(pair);
-                    self.execute_cmd(cmd)
+                    unimplemented!()
                 }
                 Rule::URL => {
-                    let cmd = AST::Command(Box::from("link"), vec![Value::from(pair.as_str())], Default::default());
-                    self.execute_cmd(cmd)
+                    unimplemented!()
                 }
                 _ => debug_cases!(pair),
             };
             codes.push(code);
         }
-        if codes.len() == 0 { AST::None } else { AST::Text(codes) }
+        if codes.len() == 0 { AST::None } else {
+            unimplemented!()
+            //AST::Text(codes)
+        }
     }
     fn parse_style(&mut self, pairs: Pair<Rule>) -> AST {
         let s = pairs.as_str();
@@ -132,9 +139,9 @@ impl ParserConfig {
             };
         }
         match level {
-            1 => AST::Italic(Box::new(text)),
-            2 => AST::Bold(Box::new(text)),
-            3 => AST::Bold(Box::new(AST::Italic(Box::new(text)))),
+            1 => AST::Emphasis(vec![text]),
+            2 => AST::Strong(vec![text]),
+            3 => AST::Strong(vec![AST::Emphasis(vec![text])]),
             _ => AST::Raw(s.to_string()),
         }
     }
@@ -152,9 +159,9 @@ impl ParserConfig {
             };
         }
         match level {
-            1 => AST::Underline(Box::new(text)),
-            2 => AST::Strikethrough(Box::new(text)),
-            3 => AST::Undercover(Box::new(text)),
+            1 => AST::Underline(vec![text]),
+            2 => AST::Strikethrough(vec![text]),
+            3 => AST::Undercover(vec![text]),
             _ => AST::Raw(s.to_string()),
         }
     }
@@ -188,8 +195,8 @@ impl ParserConfig {
             _ => AST::Raw(s.to_string()),
         }
     }
-    fn parse_command(&self, pairs: Pair<Rule>) -> AST {
-        let mut cmd = Default::default();
+    fn parse_command(&self, pairs: Pair<Rule>) -> (String,Vec<Value>,HashMap<String, Value> ) {
+        let mut cmd = "";
         let mut arg = vec![];
         let mut kvs = HashMap::default();
         for pair in pairs.into_inner() {
@@ -227,7 +234,7 @@ impl ParserConfig {
                 _ => debug_cases!(pair),
             };
         }
-        return AST::Command(Box::from(cmd), arg, kvs);
+        return (cmd.to_string(),arg,kvs);
     }
     fn parse_value(&self, pairs: Pair<Rule>) -> Value {
         let mut value = Value::None;
@@ -242,8 +249,13 @@ impl ParserConfig {
                     _ => unreachable!(),
                 },
                 Rule::SYMBOL => {
-                    let s = pair.as_str();
-                    Value::Command(AST::Command(Box::from(s), vec![], Default::default()))
+                    let cmd = Command {
+                        cmd: pair.as_str().to_string(),
+                        args: vec![],
+                        kvs: Default::default(),
+                        kind: CommandKind::Normal
+                    };
+                    Value::Command(cmd)
                 }
                 _ => debug_cases!(pair),
             };
@@ -263,7 +275,7 @@ impl ParserConfig {
             lines.push_back(l)
         }
         if lines.len() < 3 {
-            return AST::Paragraph(Box::new(AST::Raw(text.to_string())));
+            return AST::Paragraph(vec![AST::Raw(text.to_string())]);
         }
         let head = self.parse_table_line(&lines.pop_front().unwrap());
         let align = parse_table_align(&lines.pop_front().unwrap());
@@ -274,7 +286,13 @@ impl ParserConfig {
         let mut column = vec![head.len(), align.len()];
         column.extend(terms.iter().map(Vec::len).collect::<Vec<usize>>());
         let column = *column.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-        return AST::Table { head, align, terms, column };
+        let table = TableView {
+            head,
+            align,
+            terms,
+            column
+        };
+        return AST::Table(table);
     }
     fn parse_table_line(&mut self, input: &str) -> Vec<AST> {
         let pairs = NoteDownParser::parse(Rule::TableMode, input).unwrap_or_else(|e| panic!("{}", e));
@@ -308,11 +326,23 @@ impl ParserConfig {
             }
         }
         codes.push(code.join("\n"));
-        let ast: Vec<_> = codes.iter().map(|c| self.parse_program(&c)).collect();
+        let ast = codes.iter().map(|c| self.parse_program(&c)).collect();
         match ty {
-            List::Quote => AST::Quote { body: ast, style: String::new() },
-            List::Ordered => AST::Ordered(ast),
-            List::Orderless => AST::Orderless(ast),
+            List::Quote => {
+                let quote = ListView::Quote {
+                    style: None,
+                    body: ast
+                };
+                AST::List(quote)
+            },
+            List::Ordered => {
+              //  AST::Ordered(ast);
+                unimplemented!()
+            },
+            List::Orderless => {
+               // AST::Orderless(ast)
+                unimplemented!()
+            },
         }
     }
 }

@@ -6,10 +6,10 @@ use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub struct TableView {
-    head: Vec<AST>,
-    align: Vec<u8>,
-    terms: Vec<Vec<AST>>,
-    column: usize,
+    pub head: Vec<AST>,
+    pub align: Vec<u8>,
+    pub terms: Vec<Vec<AST>>,
+    pub column: usize,
 }
 
 impl Display for TableView {

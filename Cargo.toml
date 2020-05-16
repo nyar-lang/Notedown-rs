@@ -1,8 +1,8 @@
 [workspace]
 members = ["projects/*"]
 default-members = [
-    "projects/notedown-parser",
     "projects/notedown-ast",
+    "projects/notedown-parser",
     "projects/notedown-fmt",
     "projects/notedown-zola",
     "projects/notedown-vscode",

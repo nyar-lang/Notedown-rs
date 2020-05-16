@@ -1,39 +1,9 @@
-#[cfg(feature = "desktop")]
-use crate::utils;
-use crate::{
-    traits::NotedownMeta,
-    utils::{build_td, build_th},
-    Context, NotedownBackend, AST,
-};
-use std::iter::repeat;
+use crate::AST;
 
 pub trait ToHTML {
     fn to_html(&self) -> String;
 }
 
-impl ToHTML for Context {
-    fn to_html(&self) -> String {
-        let head = self.meta.to_html();
-        let post = self.ast.to_html();
-        return format!("{}\n\n{}\n", head, post.trim_end());
-    }
-}
-
-impl ToHTML for NotedownMeta {
-    fn to_html(&self) -> String {
-        let ref cfg = GLOBAL_CONFIG.lock().unwrap();
-        #[cfg(feature = "desktop")]
-        match cfg.target {
-            NotedownBackend::Zola => utils::build_zola(self),
-            _ => String::new(),
-        }
-        #[cfg(not(feature = "desktop"))]
-        match cfg.target {
-            NotedownBackend::VSCode => String::new(),
-            _ => String::new(),
-        }
-    }
-}
 
 impl ToHTML for AST {
     fn to_html(&self) -> String {
@@ -50,12 +20,12 @@ impl ToHTML for AST {
 
             AST::Paragraph(p) => format!("<p>{}</p>", p.to_html()),
             AST::Text(v) => v.iter().map(|s| s.to_html()).collect::<Vec<String>>().join(""),
-            AST::Bold(s) => format!("<b>{}</b>", s.to_html()),
-            AST::Italic(s) => format!("<i>{}</i>", s.to_html()),
+            AST::Strong(s) => format!("<b>{}</b>", s.to_html()),
+            AST::Emphasis(s) => format!("<i>{}</i>", s.to_html()),
             AST::Underline(s) => format!("<u>{}</u>", s.to_html()),
             AST::Strikethrough(s) => format!("<del>{}</del>", s.to_html()),
             AST::Undercover(s) => format!("<ast.span class=\"undercover\">{}</ast.span>", s.to_html()),
-
+            /*
             AST::Table { head, align, terms, column } => {
                 let align_iter = align.iter().chain(repeat(&align[align.len() - 1]));
                 let thead = {
@@ -105,14 +75,12 @@ impl ToHTML for AST {
                 let ref cfg = GLOBAL_CONFIG.lock().unwrap();
                 format!("cmd: {}\narg: {:?}\nkvs: {:?}", s, keys, values)
             }
-
+            */
             AST::None => String::from(""),
-            AST::Space => String::from(" "),
             AST::Newline => String::from("</br>"),
 
             AST::Raw(s) => format!("<pre>{}</pre>", s),
             AST::Code(s) => format!("<code>{}</code>", s),
-            AST::String(s) => format!("{}", s),
 
             //#[cfg(feature = "default")]
             AST::MathInline(s) => format!("<ast.span class=\"math\">${}$</ast.span> ", s),
@@ -129,5 +97,12 @@ impl ToHTML for AST {
                 unreachable!()
             }
         }
+    }
+}
+
+impl ToHTML for Vec<AST> {
+    fn to_html(&self) -> String {
+        let v:Vec<_> = self.iter().map(ToHTML::to_html).collect();
+        v.join("")
     }
 }

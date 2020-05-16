@@ -9,3 +9,8 @@ fn test_math() {
     // println!("{:#?}", f);
     file.write_all(f.to_html().as_bytes()).unwrap();
 }
+
+#[test]
+fn ready() {
+    println!("it, works!")
+}

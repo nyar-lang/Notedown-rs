@@ -3,16 +3,15 @@ mod highlighter;
 mod link;
 mod list;
 mod table;
-mod value;
 
 use std::fmt::{self, Display, Formatter};
 
+pub use crate::Value;
 pub use command::{Command, CommandKind};
 pub use highlighter::Highlighter;
 pub use link::SmartLink;
 pub use list::ListView;
 pub use table::TableView;
-pub use value::Value;
 
 #[derive(Debug, Clone)]
 pub enum AST {

@@ -1,12 +1,7 @@
-use crate::{Context, AST};
-use notedown_parser::NoteDownRule as Rule;
+use notedown_ast::AST;
 use pest::iterators::Pair;
-
-mod desktop;
-mod html;
-
-pub use desktop::build_zola;
-pub use html::{build_td, build_th};
+use crate::note_down::Rule;
+use crate::ParserConfig;
 
 pub fn unescape(s: &str, c: &str) -> String {
     let mut e = String::from("\\");
@@ -38,7 +33,7 @@ pub fn str_escape(s: &str) -> String {
     }
 }
 
-pub fn maybe_math(ctx: &mut Context, pair: Pair<Rule>) -> AST {
+pub fn maybe_math(ctx: &mut ParserConfig, pair: Pair<Rule>) -> AST {
     let s = pair.as_str().trim();
     if s.starts_with("$$") && s.ends_with("$$") {
         let r = s[2..s.chars().count() - 2].to_string();
@@ -49,7 +44,7 @@ pub fn maybe_math(ctx: &mut Context, pair: Pair<Rule>) -> AST {
     let t = ctx.parse_text(s);
     match t {
         AST::None => AST::None,
-        _ => AST::Paragraph(Box::new(t)),
+        _ => AST::Paragraph(vec![t]),
     }
 }
 
@@ -58,15 +53,17 @@ pub fn map_escape(c: &str) -> AST {
         "\\\r" => AST::None,
         "\\\n" => AST::None,
         _ => {
+            unimplemented!()
             // println!("escaping {:?}=>", c);
-            AST::from(c.chars().last().unwrap())
+            //AST::from(c.chars().last().unwrap())
         }
     }
 }
 
 pub fn map_white_space(c: &str) -> AST {
-    match c {
-        "\t" => AST::String(String::from("    ")),
-        _ => AST::Space,
-    }
+    unimplemented!()
+    //match c {
+    //    "\t" => AST::String(String::from("    ")),
+   //     _ => AST::Space,
+   // }
 }

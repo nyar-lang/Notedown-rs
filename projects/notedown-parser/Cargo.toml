@@ -12,6 +12,7 @@ edition = "2018"
 
 [dependencies]
 pest = "2.1.2"
+notedown_ast = {version = "0.7", path = "../notedown-ast"}
 
 [dev-dependencies]
 pest_generator = "2.1.2"

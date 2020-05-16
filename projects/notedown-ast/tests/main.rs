@@ -1,6 +1,6 @@
 mod markdown;
 
 #[test]
-fn test() {
+fn ready() {
     println!("it, works!")
 }
