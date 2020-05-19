@@ -39,7 +39,7 @@ impl Settings {
         for pair in pairs {
             match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::LINE_SEPARATOR => codes.push(String::from("\n")),
+                // Rule::LINE_SEPARATOR => codes.push(String::from("\n")),
                 //Rule::SPACE_SEPARATOR => codes.push(String::from(" ")),
                 Rule::HorizontalRule => codes.push(pair.as_str().to_string()),
 
@@ -83,8 +83,7 @@ impl Settings {
             match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::WHITE_SPACE => codes.push(String::from(" ")),
-                Rule::LINE_SEPARATOR => codes.push(String::from("\n")),
-
+                // Rule::LINE_SEPARATOR => codes.push(String::from("\n")),
                 Rule::Raw => codes.push(pair.as_str().to_string()),
                 Rule::URL => codes.push(pair.as_str().to_string()),
                 Rule::Math => codes.push(self.format_math(pair)),
@@ -189,7 +188,7 @@ impl Settings {
             match pair.as_rule() {
                 //Rule::SPACE_SEPARATOR => continue,
                 Rule::Colon => continue,
-                Rule::command => cmd = pair.as_str(),
+                // Rule::command => cmd = pair.as_str(),
                 Rule::RestOfLine => rst = pair.as_str().trim(),
                 _ => unreachable!(),
             };
@@ -207,7 +206,7 @@ impl Settings {
             match pair.as_rule() {
                 Rule::WHITE_SPACE => continue,
                 Rule::PATTERN_WHITE_SPACE => continue,
-                Rule::command => cmd = pair.as_str(),
+                // Rule::command => cmd = pair.as_str(),
                 Rule::argument => args.push(pair.as_str()),
                 Rule::argument_literal => {
                     use_literal = true;
