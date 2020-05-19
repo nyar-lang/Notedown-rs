@@ -1,5 +1,6 @@
 [package]
 name = "notedown_ast"
+publish = false
 version = "0.7.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "notedown ast and converter"
@@ -10,11 +11,12 @@ edition = "2018"
 
 [dependencies]
 text-utils = "0.2"
-markdown = {version = "0.3", optional = true}
-orgize = {version = "0.8", optional = true}
+# markdown = {version = "0.3", optional = true}
+# orgize = {version = "0.8", optional = true}
+url = "2.1"
 
 [dev-dependencies]
 
 [features]
-default = ["convert"]
-convert = ["markdown", "orgize"]
+default = []
+# convert = ["markdown", "orgize"]

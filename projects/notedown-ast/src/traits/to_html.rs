@@ -4,7 +4,6 @@ pub trait ToHTML {
     fn to_html(&self) -> String;
 }
 
-
 impl ToHTML for AST {
     fn to_html(&self) -> String {
         match self {
@@ -19,7 +18,7 @@ impl ToHTML for AST {
             AST::Header(e, level) => format!("<h{0}>{1}</h{0}>", level, e.to_html()),
 
             AST::Paragraph(p) => format!("<p>{}</p>", p.to_html()),
-            AST::Text(v) => v.iter().map(|s| s.to_html()).collect::<Vec<String>>().join(""),
+            AST::Normal(s) => s.to_owned(),
             AST::Strong(s) => format!("<b>{}</b>", s.to_html()),
             AST::Emphasis(s) => format!("<i>{}</i>", s.to_html()),
             AST::Underline(s) => format!("<u>{}</u>", s.to_html()),
@@ -83,7 +82,7 @@ impl ToHTML for AST {
             AST::Code(s) => format!("<code>{}</code>", s),
 
             //#[cfg(feature = "default")]
-            AST::MathInline(s) => format!("<ast.span class=\"math\">${}$</ast.span> ", s),
+            AST::MathInline(s) => format!("<span class=\"math\">${}$</span> ", s),
             // #[cfg(feature = "desktop")]
             // AST::MathInline(s) => utils::rex_math_inline(s),
             //#[cfg(feature = "default")]
@@ -102,7 +101,7 @@ impl ToHTML for AST {
 
 impl ToHTML for Vec<AST> {
     fn to_html(&self) -> String {
-        let v:Vec<_> = self.iter().map(ToHTML::to_html).collect();
+        let v: Vec<_> = self.iter().map(ToHTML::to_html).collect();
         v.join("")
     }
 }

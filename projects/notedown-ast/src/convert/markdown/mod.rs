@@ -56,7 +56,7 @@ impl From<Span> for AST {
     fn from(v: Span) -> Self {
         match v {
             Span::Break => unimplemented!(),
-            Span::Text(text) => AST::Text(text.into()),
+            Span::Text(text) => AST::Normal(text.into()),
             Span::Code(c) => AST::Code(c.into()),
             Span::Link(text, url, title) => {
                 let link = SmartLink::Hyperlinks { from: text.into(), to: url.into(), alt: title.map(Into::into), bind: None };

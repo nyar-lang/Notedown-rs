@@ -13,53 +13,134 @@ pub use link::SmartLink;
 pub use list::ListView;
 pub use table::TableView;
 
+use url::Url;
+
+#[derive(Debug, Clone)]
+pub struct TextRange {
+    file: Url,
+    start: (u64, u64),
+    end: (u64, u64),
+}
+
+impl Default for TextRange {
+    fn default() -> Self {
+        Self {
+            file: (),
+            start: (0, 0),
+            end: (0, 0)
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,
-    Newline,
+    Newline {
+        r: TextRange
+    },
     /// - `Statements`
-    Statements(Vec<AST>),
+    Statements {
+        children: Vec<AST>,
+        r: TextRange
+    },
+
     // Blocks
     /// - `Header`: TEXT, level
-    Header(Vec<AST>, usize),
+    Header {
+        children: Vec<AST>,
+        level: usize,
+        r: TextRange
+    },
     ///  - `Paragraph`:
-    Paragraph(Vec<AST>),
-    Highlight(Highlighter),
+    Paragraph {
+        children: Vec<AST>,
+        r: TextRange
+    },
+    Highlight {
+        inner: Highlighter,
+        r: TextRange
+    },
     /// - `Math`:
-    Math(String),
-    Table(TableView),
-    List(ListView),
+    MathBlock {
+        inner:String,
+        r: TextRange
+    },
+    Table{
+        inner: TableView,
+        r: TextRange
+    },
+    List{
+        inner:ListView,
+        r: TextRange
+    },
     /// - `Code`:
 
     // inlined
+    Normal{
+        inner: String,
+        r: TextRange
+    },
+    Raw{
+        inner:String,
+        r: TextRange
+    },
+    /// `` `code` ``
+    Code{
+        inner: String,
+        r: TextRange
+    },
+    Emphasis{
+        children: Vec<AST>,
+        r: TextRange
+    },
+    Strong{
+        children:Vec<AST>,
+        r: TextRange
+    },
+    Underline{
+        children:Vec<AST>,
+        r: TextRange
+    },
+    Strikethrough {
+        children:Vec<AST>,
+        r: TextRange
+    },
+    Undercover {
+        children:Vec<AST>,
+        r: TextRange
+    },
 
-    /// normal text
-    Text(String),
-    Raw(String),
-    Code(String),
-    Emphasis(Vec<AST>),
-    Strong(Vec<AST>),
-    Underline(Vec<AST>),
-    Strikethrough(Vec<AST>),
-    Undercover(Vec<AST>),
+    MathInline{
+        inner: String,
+        r: TextRange
+    },
+    MathDisplay{
+        inner: String,
+        r: TextRange
+    },
 
-    MathInline(String),
-    MathDisplay(String),
+    Link{
+        inner: SmartLink,
+        r: TextRange
+    },
 
-    Link(SmartLink),
-
-    Escaped(char),
+    Escaped{
+        inner:char,
+        r: TextRange
+    },
     //
-    Command(Command),
+    Command{
+        inner: Command,
+        r: TextRange
+    },
 }
 
 impl Display for AST {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            AST::None => write!(f, ""),
-            AST::Newline => write!(f, "\n"),
 
+            /*
             AST::Header(a, l) => write!(f, "{} {}", "#".repeat(*l), join_span(a)),
 
             AST::Statements(e) => {
@@ -71,7 +152,7 @@ impl Display for AST {
 
             AST::Raw(s) => write!(f, "{}", s),
             AST::Code(s) => write!(f, "`{}`", s),
-            AST::Text(s) => write!(f, "{}", s),
+            AST::Normal(s) => write!(f, "{}", s),
             AST::Emphasis(s) => write!(f, "*{}*", join_span(s)),
             AST::Strong(s) => write!(f, "**{}**", join_span(s)),
             AST::Underline(s) => write!(f, "~{}~", join_span(s)),
@@ -89,6 +170,29 @@ impl Display for AST {
             AST::Command(cmd) => write!(f, "{}", cmd),
 
             AST::Escaped(c) => write!(f, "{}", c),
+             */
+            AST::None => write!(f, ""),
+            AST::Newline { .. } => write!(f, "\n"),
+            AST::Statements { .. } => {}
+            AST::Header { .. } => {}
+            AST::Paragraph { .. } => {}
+            AST::Highlight { .. } => {}
+            AST::MathBlock { .. } => {}
+            AST::Table { .. } => {}
+            AST::List { .. } => {}
+            AST::Normal { .. } => {}
+            AST::Raw { .. } => {}
+            AST::Code { .. } => {}
+            AST::Emphasis { .. } => {}
+            AST::Strong { .. } => {}
+            AST::Underline { .. } => {}
+            AST::Strikethrough { .. } => {}
+            AST::Undercover { .. } => {}
+            AST::MathInline { .. } => {}
+            AST::MathDisplay { .. } => {}
+            AST::Link { .. } => {}
+            AST::Escaped { .. } => {}
+            AST::Command { .. } => {}
         }
     }
 }

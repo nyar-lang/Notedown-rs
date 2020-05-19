@@ -3,6 +3,7 @@ mod from;
 use crate::Command;
 use std::fmt::{self, Debug, Display, Formatter};
 
+
 #[derive(Clone)]
 pub enum Value {
     None,

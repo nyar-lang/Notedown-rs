@@ -76,7 +76,7 @@ println!("Hello");
 
 impl<'a> From<&Title<'a>> for AST {
     fn from(s: &Title<'a>) -> Self {
-        let text = AST::Text(String::from(s.raw.clone()));
+        let text = AST::Normal(String::from(s.raw.clone()));
         AST::Header(vec![text], s.level)
     }
 }
