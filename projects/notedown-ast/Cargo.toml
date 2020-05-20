@@ -11,12 +11,12 @@ edition = "2018"
 
 [dependencies]
 text-utils = "0.2"
-# markdown = {version = "0.3", optional = true}
+# notedown = {version = "0.3", optional = true}
 # orgize = {version = "0.8", optional = true}
-url = "2.1"
+# url = "2.1"
 
 [dev-dependencies]
 
 [features]
 default = []
-# convert = ["markdown", "orgize"]
+# convert = ["notedown", "orgize"]

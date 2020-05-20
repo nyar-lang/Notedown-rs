@@ -1,11 +1,10 @@
-use crate::{NoteDownParser,ParserConfig};
-use crate::note_down::Rule;
-use pest::Parser;
-use pest::iterators::{Pair, Pairs};
+use crate::{note_down::Rule, NoteDownParser, ParserConfig, ParserResult, Error};
+use notedown_ast::{utils::dedent_less_than, Command, CommandKind, ListView, TableView, Value, AST};
+use pest::{
+    iterators::{Pair, Pairs},
+    Parser,
+};
 use std::collections::{HashMap, VecDeque};
-use notedown_ast::{AST, Value, ListView, TableView, Command, CommandKind};
-use notedown_ast::utils::dedent_less_than;
-use crate::utils::{maybe_math, str_escape, map_white_space, map_escape, unescape};
 
 macro_rules! debug_cases {
     ($i:ident) => {{
@@ -18,23 +17,54 @@ macro_rules! debug_cases {
 
 
 impl ParserConfig {
-    pub fn parse(&mut self, text: &str) -> AST {
+    pub fn parse_file(&mut self, text: &str) -> ParserResult<AST> {
         let input = text.replace("\t", &" ".repeat(self.tab_size)).replace("\r\n", "\n");
         self.parse_program(&input)
     }
-    pub fn parse_program(&mut self, text: &str) -> AST {
-        let pairs = NoteDownParser::parse(Rule::program, text).unwrap_or_else(|e| panic!("{}", e));
+    pub fn parse(&mut self, text: &str) -> ParserResult<AST> {
+        let input = text.replace("\t", &" ".repeat(self.tab_size)).replace("\r\n", "\n");
+        self.parse_program(&input)
+    }
+    pub fn parse_program(&mut self, text: &str) -> ParserResult<AST> {
+        let pairs = NoteDownParser::parse(Rule::program, text)?;
         let mut codes = vec![];
         for pair in pairs {
             let code = match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::COMMENT => continue,
-                Rule::LINE_SEPARATOR => continue,
                 Rule::WHITE_SPACE => continue,
                 Rule::HorizontalRule => {
                     unimplemented!();
                     // AST::from("<hr/>")
-                },
+                }
+                _ => debug_cases!(pair),
+            };
+            // println!("{:?}", code);
+            codes.push(code);
+        }
+        Ok(AST::Statements { children: codes, r: Default::default() })
+    }
+}
+/*
+impl ParserConfig {
+    pub fn parse_file(&mut self, text: &str) -> ParserResult<AST> {
+        let input = text.replace("\t", &" ".repeat(self.tab_size)).replace("\r\n", "\n");
+        self.parse_program(&input)
+    }
+    pub fn parse(&mut self, text: &str) -> ParserResult<AST> {
+        let input = text.replace("\t", &" ".repeat(self.tab_size)).replace("\r\n", "\n");
+        self.parse_program(&input)
+    }
+    pub fn parse_program(&mut self, text: &str) -> ParserResult<AST> {
+        let pairs = NoteDownParser::parse(Rule::program, text)?;
+        let mut codes = vec![];
+        for pair in pairs {
+            let code = match pair.as_rule() {
+                Rule::EOI => continue,
+                Rule::WHITE_SPACE => continue,
+                Rule::HorizontalRule => {
+                    unimplemented!();
+                    // AST::from("<hr/>")
+                }
                 Rule::TextBlock => maybe_math(self, pair),
                 Rule::Header => self.parse_header(pair),
                 Rule::List => self.parse_list(pair.as_str().trim_end()),
@@ -53,7 +83,7 @@ impl ParserConfig {
             // println!("{:?}", code);
             codes.push(code);
         }
-        AST::Statements(codes)
+        Ok(AST::Statements(codes))
     }
     fn parse_header(&mut self, pairs: Pair<Rule>) -> AST {
         let mut level = 0;
@@ -91,7 +121,6 @@ impl ParserConfig {
         for pair in pairs {
             let code = match pair.as_rule() {
                 Rule::EOI => continue,
-                Rule::LINE_SEPARATOR => AST::Newline,
                 Rule::WHITE_SPACE => map_white_space(pair.as_str()),
                 Rule::Escaped => map_escape(pair.as_str()),
 
@@ -100,11 +129,11 @@ impl ParserConfig {
                 Rule::Raw => self.parse_code_inline(pair),
                 Rule::Math => self.parse_math(pair),
 
-                Rule::TextRest => AST::Text(pair.as_str().to_string()),
-                Rule::RawRest => AST::Text(pair.as_str().to_string()),
-                Rule::StyleRest => AST::Text(pair.as_str().to_string()),
-                Rule::LineRest => AST::Text(pair.as_str().to_string()),
-                Rule::MathRest => AST::Text(pair.as_str().to_string()),
+                Rule::TextRest => AST::Normal(pair.as_str().to_string()),
+                Rule::RawRest => AST::Normal(pair.as_str().to_string()),
+                Rule::StyleRest => AST::Normal(pair.as_str().to_string()),
+                Rule::LineRest => AST::Normal(pair.as_str().to_string()),
+                Rule::MathRest => AST::Normal(pair.as_str().to_string()),
 
                 Rule::CommandLine => {
                     let cmd = self.parse_command(pair);
@@ -114,16 +143,14 @@ impl ParserConfig {
                     let cmd = self.parse_command(pair);
                     unimplemented!()
                 }
-                Rule::URL => {
-                    unimplemented!()
-                }
+                Rule::URL => unimplemented!(),
                 _ => debug_cases!(pair),
             };
             codes.push(code);
         }
-        if codes.len() == 0 { AST::None } else {
-            unimplemented!()
-            //AST::Text(codes)
+        match codes.len() {
+            0 => AST::None,
+            _ => AST::Paragraph(codes),
         }
     }
     fn parse_style(&mut self, pairs: Pair<Rule>) -> AST {
@@ -195,14 +222,14 @@ impl ParserConfig {
             _ => AST::Raw(s.to_string()),
         }
     }
-    fn parse_command(&self, pairs: Pair<Rule>) -> (String,Vec<Value>,HashMap<String, Value> ) {
+    fn parse_command(&self, pairs: Pair<Rule>) -> (String, Vec<Value>, HashMap<String, Value>) {
         let mut cmd = "";
         let mut arg = vec![];
         let mut kvs = HashMap::default();
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::Colon => continue,
-                Rule::command => cmd = pair.as_str().trim_start_matches('\\'),
+                // Rule::command => cmd = pair.as_str().trim_start_matches('\\'),
                 Rule::argument_literal => arg.push(Value::String(unescape(pair.as_str(), "]"))),
                 Rule::argument => {
                     let mut v = Value::None;
@@ -234,7 +261,7 @@ impl ParserConfig {
                 _ => debug_cases!(pair),
             };
         }
-        return (cmd.to_string(),arg,kvs);
+        return (cmd.to_string(), arg, kvs);
     }
     fn parse_value(&self, pairs: Pair<Rule>) -> Value {
         let mut value = Value::None;
@@ -249,12 +276,7 @@ impl ParserConfig {
                     _ => unreachable!(),
                 },
                 Rule::SYMBOL => {
-                    let cmd = Command {
-                        cmd: pair.as_str().to_string(),
-                        args: vec![],
-                        kvs: Default::default(),
-                        kind: CommandKind::Normal
-                    };
+                    let cmd = Command { cmd: pair.as_str().to_string(), args: vec![], kvs: Default::default(), kind: CommandKind::Normal };
                     Value::Command(cmd)
                 }
                 _ => debug_cases!(pair),
@@ -286,12 +308,7 @@ impl ParserConfig {
         let mut column = vec![head.len(), align.len()];
         column.extend(terms.iter().map(Vec::len).collect::<Vec<usize>>());
         let column = *column.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-        let table = TableView {
-            head,
-            align,
-            terms,
-            column
-        };
+        let table = TableView { head, align, terms, column };
         return AST::Table(table);
     }
     fn parse_table_line(&mut self, input: &str) -> Vec<AST> {
@@ -326,23 +343,28 @@ impl ParserConfig {
             }
         }
         codes.push(code.join("\n"));
-        let ast = codes.iter().map(|c| self.parse_program(&c)).collect();
+        let mut ast = vec![];
+        for node in codes.iter() {
+            let new = match self.parse_program(node) {
+                Ok(o) => {o}
+                Err(e) => {AST::Normal(format!("{:?}",e))}
+            };
+            ast.push(new)
+        }
+        // let ast = codes.iter().map(|c| self.parse_program(&c)).collect();
         match ty {
             List::Quote => {
-                let quote = ListView::Quote {
-                    style: None,
-                    body: ast
-                };
+                let quote = ListView::Quote { style: None, body: ast };
                 AST::List(quote)
-            },
+            }
             List::Ordered => {
-              //  AST::Ordered(ast);
+                //  AST::Ordered(ast);
                 unimplemented!()
-            },
+            }
             List::Orderless => {
-               // AST::Orderless(ast)
+                // AST::Orderless(ast)
                 unimplemented!()
-            },
+            }
         }
     }
 }
@@ -440,3 +462,4 @@ impl List {
         p.into_iter().next().unwrap().into_inner()
     }
 }
+*/

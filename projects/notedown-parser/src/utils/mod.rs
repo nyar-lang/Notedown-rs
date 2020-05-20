@@ -1,7 +1,6 @@
+use crate::{note_down::Rule, ParserConfig};
 use notedown_ast::AST;
 use pest::iterators::Pair;
-use crate::note_down::Rule;
-use crate::ParserConfig;
 
 pub fn unescape(s: &str, c: &str) -> String {
     let mut e = String::from("\\");
@@ -50,20 +49,20 @@ pub fn maybe_math(ctx: &mut ParserConfig, pair: Pair<Rule>) -> AST {
 
 pub fn map_escape(c: &str) -> AST {
     match c {
-        "\\\r" => AST::None,
-        "\\\n" => AST::None,
+        r"\r" => AST::None,
+        r"\n" => AST::None,
+        r"\t" => AST::Normal(String::from("    ")),
         _ => {
             unimplemented!()
             // println!("escaping {:?}=>", c);
-            //AST::from(c.chars().last().unwrap())
+            // AST::from(c.chars().last().unwrap())
         }
     }
 }
 
 pub fn map_white_space(c: &str) -> AST {
-    unimplemented!()
-    //match c {
-    //    "\t" => AST::String(String::from("    ")),
-   //     _ => AST::Space,
-   // }
+    match c {
+        "\t" => AST::Normal(String::from("    ")),
+        _ => AST::Normal(String::from(" ")),
+    }
 }

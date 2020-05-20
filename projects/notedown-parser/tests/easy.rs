@@ -1,4 +1,5 @@
-use notedown_parser::{parse};
+use notedown_ast::utils::ToHTML;
+use notedown_parser::parse;
 
 fn trim_eq(input: &str, output: &str) {
     let input = parse(input).to_html().replace(" ", "").replace("\n", "");

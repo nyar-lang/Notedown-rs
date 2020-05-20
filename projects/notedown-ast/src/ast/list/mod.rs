@@ -10,7 +10,7 @@ pub enum ListView {
     Ordered { head: usize, body: Vec<AST> },
     Orderless { body: Vec<AST> },
 }
-
+/*
 impl Display for ListView {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
@@ -29,3 +29,4 @@ impl Display for ListView {
         }
     }
 }
+*/
