@@ -1,16 +1,5 @@
-#[macro_use]
-extern crate quote;
-extern crate pest_generator;
-extern crate proc_macro;
-
 use pest_generator::derive_parser;
 use std::{fs::File, io::prelude::*, path::Path};
-
-#[test]
-#[ignore]
-fn gen_parser() {
-    gen_note_down();
-}
 
 pub fn gen_note_down() {
     let pest = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "./note_down.pest"));

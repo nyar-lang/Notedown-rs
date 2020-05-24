@@ -69,26 +69,48 @@ impl ParserConfig {
         }
         return AST::Header { children: vec![head], level, r };
     }
+    pub fn parse_text(&self, text: &str, shift: (usize, usize)) -> Vec<AST> {
+        let _ = text;
+        let _ = shift;
+        unimplemented!()
+    }
+
     pub fn parse_paragraph(&self, pairs: Pair<Rule>) -> AST {
         let r = self.get_position(pairs.as_span());
+        let codes = self.parse_span(pairs);
+        match codes.len() {
+            0 => AST::None,
+            1 => {
+                match codes[0].clone() {
+                    AST::MathDisplay { inner, r } => {
+                        AST::MathBlock { inner, r}
+                    },
+                    _ => AST::Paragraph { children: codes, r },
+                }
+            },
+            _ => AST::Paragraph { children: codes, r },
+        }
+    }
+    fn parse_span(&self, pairs: Pair<Rule>) -> Vec<AST> {
         let mut codes = vec![];
         for pair in pairs.into_inner() {
             let code = match pair.as_rule() {
                 Rule::EOI => continue,
                 Rule::Style => self.parse_styled_text(pair),
                 Rule::TextRest => self.parse_normal_text(pair),
+                Rule::Line => self.parse_tilde_text(pair),
+                Rule::Raw => self.parse_raw_text(pair),
+                Rule::Math=> self.parse_math_text(pair),
+                Rule::RawRest | Rule::StyleRest | Rule::LineRest | Rule::MathRest =>
+                    self.
+                        parse_normal_text(pair),
                 Rule::WHITE_SPACE | Rule::LINE_SEPARATOR => self.parse_normal_text(pair),
-                Rule::Line=>self.parse_tilde_text(pair),
-                Rule::Raw=>self.parse_raw_text(pair),
                 _ => debug_cases!(pair),
             };
+
             codes.push(code);
         }
-        match codes.len() {
-            0 => AST::None,
-            1 => codes[0].clone(),
-            _ => AST::Paragraph { children: codes, r },
-        }
+        return codes;
     }
     pub fn parse_normal_text(&self, pairs: Pair<Rule>) -> AST {
         let r = self.get_position(pairs.as_span());
@@ -98,60 +120,67 @@ impl ParserConfig {
         let s = pairs.as_str().to_string();
         let r = self.get_position(pairs.as_span());
         let mut level = 0;
-        let mut text = AST::None;
+        let mut text = vec![];
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::Asterisk => continue,
                 Rule::StyleLevel => level += pair.as_str().len(),
-                Rule::StyleText => text = self.parse_paragraph(pair),
+                Rule::StyleText => {
+                    // FIXME: parse inner
+                    text.push(self.parse_normal_text(pair))
+                }
                 _ => debug_cases!(pair),
             };
         }
         match level {
-            1 => AST::Italic { children: vec![text], r },
-            2 => AST::Bold { children: vec![text], r },
-            3 => AST::Emphasis { children: vec![text], r },
-            _ => AST::Raw { inner: s, r },
+            1 => AST::Italic { children: text, r },
+            2 => AST::Bold { children: text, r },
+            3 => AST::Emphasis { children: text, r },
+            _ => AST::Normal { inner: s, r },
         }
     }
     fn parse_tilde_text(&self, pairs: Pair<Rule>) -> AST {
         let s = pairs.as_str().to_string();
         let r = self.get_position(pairs.as_span());
         let mut level = 0;
-        let mut text = AST::None;
+        let mut text = vec![];
         for pair in pairs.into_inner() {
             match pair.as_rule() {
                 Rule::Tilde => continue,
                 Rule::LineLevel => level += pair.as_str().len(),
-                Rule::LineText => text = self.parse_paragraph(pair),
+                Rule::LineText => {
+                    // FIXME: parse inner
+                    text.push(self.parse_normal_text(pair))
+                }
                 _ => debug_cases!(pair),
             };
         }
         match level {
-            1 => AST::Underline { children: vec![text], r },
-            2 => AST::Strikethrough { children: vec![text], r },
-            3 => AST::Undercover { children: vec![text], r },
-            _ => AST::Raw { inner: s, r },
+            1 => AST::Underline { children: text, r },
+            2 => AST::Strikethrough { children: text, r },
+            3 => AST::Undercover { children: text, r },
+            _ => AST::Normal { inner: s, r },
         }
     }
     fn parse_raw_text(&self, pairs: Pair<Rule>) -> AST {
-        let s = pairs.as_str().to_string();
         let r = self.get_position(pairs.as_span());
-        let mut level = 0;
-        let mut text = AST::None;
         for pair in pairs.into_inner() {
-            match pair.as_rule() {
-                Rule::Accent => continue,
-                Rule::RawLevel => level += pair.as_str().len(),
-                Rule::RawText => text = self.parse_normal_text(pair),
-                _ => debug_cases!(pair),
+            if let Rule::RawText = pair.as_rule() {
+                return AST::Raw { inner: pair.as_str().to_string(), r };
             };
         }
+        return AST::None;
+    }
+    fn parse_math_text(&self, pairs: Pair<Rule>) -> AST {
+        let s = pairs.as_str().to_string();
+        let r = self.get_position(pairs.as_span());
+        let mut inner = pairs.into_inner();
+        let level = inner.next().unwrap().as_str().len();
+        let text = inner.next().unwrap().as_str().to_string();
         match level {
-            1 => AST::Underline { children: vec![text], r },
-            2 => AST::Strikethrough { children: vec![text], r },
-            3 => AST::Undercover { children: vec![text], r },
-            _ => AST::Raw { inner: s, r },
+            1 => AST::MathInline { inner: text, r },
+            2 => AST::MathDisplay { inner: text, r },
+            _ => AST::Normal { inner: s, r },
         }
     }
 }

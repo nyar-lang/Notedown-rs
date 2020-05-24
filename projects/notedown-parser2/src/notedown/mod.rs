@@ -20,5 +20,3 @@ pub enum NotedownInline {
     Italic(String),
     Plaintext(String),
 }
-
-

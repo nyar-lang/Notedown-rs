@@ -4,30 +4,28 @@ mod link;
 mod list;
 mod table;
 
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 
 pub use crate::Value;
 pub use command::{Command, CommandKind};
 pub use highlighter::Highlighter;
 pub use link::SmartLink;
 pub use list::ListView;
-pub use table::TableView;
 use std::collections::HashMap;
+pub use table::TableView;
+pub use url::Url;
 
-
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TextRange {
-    file: (),
-    index: u64,
-    start: (u64, u64),
-    end: (u64, u64),
+    // pub index: u64,
+    pub start: (u64, u64),
+    pub end: (u64, u64),
 }
 
 impl Default for TextRange {
     fn default() -> Self {
         Self {
-            file: (),
-            index: 0,
+            // index: 0,
             start: (0, 0),
             end: (0, 0),
         }
@@ -38,19 +36,12 @@ impl Default for TextRange {
 pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,
-    Newline {
-        r: TextRange
-    },
-    /// - `Statements`
-    Statements {
-        children: Vec<AST>,
-        r: TextRange,
-    },
+    Statements(Vec<AST>),
     // Blocks
     /// - `Header`: TEXT, level
     Header {
-        children: Vec<AST>,
         level: usize,
+        children: Vec<AST>,
         r: TextRange,
     },
     ///  - `Paragraph`:
@@ -76,7 +67,6 @@ pub enum AST {
         r: TextRange,
     },
     /// - `Code`:
-
     // inlined
     Normal {
         inner: String,
@@ -91,11 +81,15 @@ pub enum AST {
         inner: String,
         r: TextRange,
     },
-    Emphasis {
+    Italic {
         children: Vec<AST>,
         r: TextRange,
     },
-    Strong {
+    Bold {
+        children: Vec<AST>,
+        r: TextRange,
+    },
+    Emphasis {
         children: Vec<AST>,
         r: TextRange,
     },
@@ -160,46 +154,57 @@ pub enum AST {
         r: TextRange,
     },
 }
-/*
-impl Display for AST {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self {
-            AST::None => write!(f, ""),
-            AST::Newline { .. } => write!(f, "\n"),
-            AST::Header { children: c, level: l, .. } => write!(f, "{} {}", "#".repeat(*l), join_span(c)),
-            AST::Statements { children: e, .. } => {
-                let fs: Vec<_> = e.iter().map(|ast| format!("{}", ast)).collect();
-                write!(f, "{}", fs.join("\n\n"))
-            }
 
-            AST::Paragraph { children: span, .. } => write!(f, "{}", join_span(span)),
-
-            AST::Raw { inner, .. } => write!(f, "{}", inner),
-            AST::Code { inner, .. } => write!(f, "`{}`", inner),
-            AST::Normal { inner, .. } => write!(f, "{}", inner),
-            AST::Emphasis { children: s, .. } => write!(f, "*{}*", join_span(s)),
-            AST::Strong { children: s, .. } => write!(f, "**{}**", join_span(s)),
-            AST::Underline { children: s, .. } => write!(f, "~{}~", join_span(s)),
-            AST::Strikethrough { children: s, .. } => write!(f, "~~{}~~", join_span(s)),
-            AST::Undercover { children: s, .. } => write!(f, "~~~{}~~~", join_span(s)),
-
-            AST::MathInline { inner, .. } => write!(f, "${}$", inner),
-            AST::MathDisplay { inner, .. } => write!(f, "$${}$$", inner),
-            AST::MathBlock { inner, .. } => write!(f, "$${}$$", inner),
-
-            AST::Link { inner: link, .. } => write!(f, "{}", link),
-            AST::List { inner: list, .. } => write!(f, "{}", list),
-            AST::Table { inner: table, .. } => write!(f, "{}", table),
-            AST::Highlight { inner: code, .. } => write!(f, "{}", code),
-            AST::Command { inner: cmd, .. } => write!(f, "{}", cmd),
-
-            AST::Escaped { inner: c, .. } => write!(f, "{}", c),
-        }
+impl Default for AST {
+    fn default() -> Self {
+        Self::None
     }
 }
 
-fn join_span(v: &[AST]) -> String {
-    let s: Vec<String> = v.iter().map(|k| format!("{}", k)).collect();
-    s.join("")
+impl Debug for TextRange {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "({}, {}) → ({}, {})", self.start.0, self.start.1, self.end.0, self.end.1)
+    }
 }
-*/
+
+// impl Display for AST {
+// fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+// match self {
+// AST::None => write!(f, ""),
+// AST::Newline { .. } => write!(f, "\n"),
+// AST::Header { children: c, level: l, .. } => write!(f, "{} {}", "#".repeat(*l), join_span(c)),
+// AST::Statements { children: e, .. } => {
+// let fs: Vec<_> = e.iter().map(|ast| format!("{}", ast)).collect();
+// write!(f, "{}", fs.join("\n\n"))
+// }
+//
+// AST::Paragraph { children: span, .. } => write!(f, "{}", join_span(span)),
+//
+// AST::Raw { inner, .. } => write!(f, "{}", inner),
+// AST::Code { inner, .. } => write!(f, "`{}`", inner),
+// AST::Normal { inner, .. } => write!(f, "{}", inner),
+// AST::Emphasis { children: s, .. } => write!(f, "*{}*", join_span(s)),
+// AST::Strong { children: s, .. } => write!(f, "**{}**", join_span(s)),
+// AST::Underline { children: s, .. } => write!(f, "~{}~", join_span(s)),
+// AST::Strikethrough { children: s, .. } => write!(f, "~~{}~~", join_span(s)),
+// AST::Undercover { children: s, .. } => write!(f, "~~~{}~~~", join_span(s)),
+//
+// AST::MathInline { inner, .. } => write!(f, "${}$", inner),
+// AST::MathDisplay { inner, .. } => write!(f, "$${}$$", inner),
+// AST::MathBlock { inner, .. } => write!(f, "$${}$$", inner),
+//
+// AST::Link { inner: link, .. } => write!(f, "{}", link),
+// AST::List { inner: list, .. } => write!(f, "{}", list),
+// AST::Table { inner: table, .. } => write!(f, "{}", table),
+// AST::Highlight { inner: code, .. } => write!(f, "{}", code),
+// AST::Command { inner: cmd, .. } => write!(f, "{}", cmd),
+//
+// AST::Escaped { inner: c, .. } => write!(f, "{}", c),
+// }
+// }
+// }
+//
+// fn join_span(v: &[AST]) -> String {
+// let s: Vec<String> = v.iter().map(|k| format!("{}", k)).collect();
+// s.join("")
+// }

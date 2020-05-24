@@ -1,11 +1,6 @@
-use nom::error::ParseError;
-use nom::combinator::value;
-use nom::IResult;
-use nom::bytes::complete::tag;
-use nom::branch::alt;
-use nom_locate::{LocatedSpan, position};
-use notedown_ast::{AST, Value};
-
+use nom::{branch::alt, bytes::complete::tag, combinator::value, error::ParseError, IResult};
+use nom_locate::{position, LocatedSpan};
+use notedown_ast::{Value, AST};
 
 type Span<'a> = LocatedSpan<&'a str>;
 
@@ -15,23 +10,16 @@ struct Token<'a> {
     pub rest: &'a str,
 }
 
-
 fn parse_boolean(s: Span) -> IResult<Span, Value> {
-    let (rest, pat ) = alt((tag("true"), tag("false")))(s)?;
+    let (rest, pat) = alt((tag("true"), tag("false")))(s)?;
 
-    println!("{:?}",pat);
+    println!("{:?}", pat);
     let (s, pos) = position(pat)?;
-    let token = Value::Boolean {
-        position: pos,
-        rest: s.fragment()
-    };
-    println!("{:?}",rest);
-    println!("{:?}",token);
+    let token = Value::Boolean { position: pos, rest: s.fragment() };
+    println!("{:?}", rest);
+    println!("{:?}", token);
 
-    Ok((
-        rest,
-        token,
-    ))
+    Ok((rest, token))
 }
 
 #[test]
