@@ -1,9 +1,13 @@
 use crate::AST;
+use crate::traits::ToHTML;
 
-pub trait ToHTML {
-    fn to_html(&self) -> String;
+impl ToHTML for AST {
+    fn to_html(&self) -> String {
+        unimplemented!()
+    }
 }
 
+/*
 impl ToHTML for AST {
     fn to_html(&self) -> String {
         match self {
@@ -105,3 +109,4 @@ impl ToHTML for Vec<AST> {
         v.join("")
     }
 }
+*/

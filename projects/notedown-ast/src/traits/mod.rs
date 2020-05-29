@@ -1,5 +1,7 @@
 mod to_html;
-pub use to_html::ToHTML;
+pub trait ToHTML {
+    fn to_html(&self) -> String;
+}
 
 // #[derive(Debug, Clone)]
 // pub struct NotedownMeta {

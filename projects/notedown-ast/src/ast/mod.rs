@@ -2,7 +2,6 @@ mod command;
 mod highlighter;
 mod link;
 mod list;
-mod table;
 
 use std::fmt::{self, Debug, Display, Formatter};
 
@@ -12,27 +11,16 @@ pub use highlighter::Highlighter;
 pub use link::SmartLink;
 pub use list::ListView;
 use std::collections::HashMap;
-pub use table::TableView;
 pub use url::Url;
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct TextRange {
     // pub index: u64,
     pub start: (u64, u64),
     pub end: (u64, u64),
 }
 
-impl Default for TextRange {
-    fn default() -> Self {
-        Self {
-            // index: 0,
-            start: (0, 0),
-            end: (0, 0),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AST {
     /// - `None`: It doesn't look like anything to me
     None,
@@ -44,13 +32,19 @@ pub enum AST {
         children: Vec<AST>,
         r: TextRange,
     },
+    HorizontalRule {
+        r: TextRange,
+    },
     ///  - `Paragraph`:
     Paragraph {
         children: Vec<AST>,
         r: TextRange,
     },
     Highlight {
-        inner: Highlighter,
+        lang: String,
+        code: String,
+        inline: bool,
+        high_line: Vec<usize>,
         r: TextRange,
     },
     /// - `Math`:
@@ -58,8 +52,11 @@ pub enum AST {
         inner: String,
         r: TextRange,
     },
-    Table {
-        inner: TableView,
+    TableView {
+        head: Vec<AST>,
+        align: Vec<Option<bool>>,
+        terms: Vec<Vec<AST>>,
+        column: usize,
         r: TextRange,
     },
     List {
@@ -155,6 +152,16 @@ pub enum AST {
     },
 }
 
+impl Default for TextRange {
+    fn default() -> Self {
+        Self {
+            // index: 0,
+            start: (0, 0),
+            end: (0, 0),
+        }
+    }
+}
+
 impl Default for AST {
     fn default() -> Self {
         Self::None
@@ -164,6 +171,12 @@ impl Default for AST {
 impl Debug for TextRange {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "({}, {}) → ({}, {})", self.start.0, self.start.1, self.end.0, self.end.1)
+    }
+}
+
+impl Display for AST {
+    fn fmt(&self, _: &mut Formatter) -> fmt::Result {
+        unimplemented!()
     }
 }
 
@@ -208,3 +221,13 @@ impl Debug for TextRange {
 // let s: Vec<String> = v.iter().map(|k| format!("{}", k)).collect();
 // s.join("")
 // }
+
+impl AST {
+    pub fn to_vec(self)-> Vec<AST> {
+        match self {
+            AST::Statements(v) => {v}
+            AST::Paragraph { children, .. } => {children}
+            _ => vec![]
+        }
+    }
+}

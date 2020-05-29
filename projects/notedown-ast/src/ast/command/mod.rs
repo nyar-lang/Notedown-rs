@@ -7,7 +7,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Eq, PartialEq)]
 pub struct Command {
     pub cmd: String,
     pub args: Vec<Value>,
@@ -15,7 +15,7 @@ pub struct Command {
     pub kind: CommandKind,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug,Eq, PartialEq)]
 pub enum CommandKind {
     /// ```md
     /// \cmd: args

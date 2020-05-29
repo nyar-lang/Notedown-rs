@@ -1,6 +1,6 @@
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Eq, PartialEq)]
 pub enum SmartLink {
     // from, to
     Hyperlinks { from: String, to: String, alt: Option<String>, bind: Option<String> },

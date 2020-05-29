@@ -3,7 +3,7 @@ mod from;
 use crate::Command;
 use std::fmt::{self, Debug, Display, Formatter};
 
-#[derive(Clone)]
+#[derive(Clone,Eq, PartialEq)]
 pub enum Value {
     None,
     String(String),

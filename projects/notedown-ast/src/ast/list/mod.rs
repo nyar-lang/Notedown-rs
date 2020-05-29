@@ -1,10 +1,7 @@
 use crate::AST;
-use std::{
-    fmt,
-    fmt::{Display, Formatter},
-};
 
-#[derive(Clone, Debug)]
+
+#[derive(Clone, Debug,Eq, PartialEq)]
 pub enum ListView {
     Quote { style: Option<String>, body: Vec<AST> },
     Ordered { head: usize, body: Vec<AST> },
