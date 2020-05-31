@@ -1,15 +1,11 @@
 mod command;
-mod highlighter;
 mod link;
-mod list;
 
 use std::fmt::{self, Debug, Display, Formatter};
 
 pub use crate::Value;
 pub use command::{Command, CommandKind};
-pub use highlighter::Highlighter;
 pub use link::SmartLink;
-pub use list::ListView;
 use std::collections::HashMap;
 pub use url::Url;
 
@@ -59,8 +55,18 @@ pub enum AST {
         column: usize,
         r: TextRange,
     },
-    List {
-        inner: ListView,
+    QuoteList {
+        style: Option<String>,
+        body: Vec<AST>,
+        r: TextRange,
+    },
+    OrderedList {
+        head: usize,
+        body: Vec<AST>,
+        r: TextRange,
+    },
+    OrderlessList {
+        body: Vec<AST>,
         r: TextRange,
     },
     /// - `Code`:
@@ -175,8 +181,49 @@ impl Debug for TextRange {
 }
 
 impl Display for AST {
-    fn fmt(&self, _: &mut Formatter) -> fmt::Result {
-        unimplemented!()
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            AST::None => {write!(f,"")}
+            AST::Statements(v) => {
+                let s:Vec<_> = v.iter().map(|e|format!("{}",e)).collect();
+                write!(f, "{}", s.join("\n\n"))
+            }
+            AST::Header { .. } => {unimplemented!()}
+            AST::HorizontalRule { .. } => {unimplemented!()}
+            AST::Paragraph { .. } => {unimplemented!()}
+            AST::Highlight { lang, code, inline,  .. } => {
+                if *inline {
+                    write!(f, "{mark}{lang}\n{body}\n{mark}", mark = "`", lang = "", body = code)
+                }
+                else {
+                    write!(f, "{mark}{lang}\n{body}\n{mark}", mark = "`".repeat(3), lang = lang, body = code)
+                }
+            }
+            AST::MathBlock { .. } => {unimplemented!()}
+            AST::TableView { .. } => {unimplemented!()}
+            AST::QuoteList { .. } => {unimplemented!()}
+            AST::OrderedList { .. } => {unimplemented!()}
+            AST::OrderlessList { .. } => {unimplemented!()}
+            AST::Normal { .. } => {unimplemented!()}
+            AST::Raw { .. } => {unimplemented!()}
+            AST::Code { .. } => {unimplemented!()}
+            AST::Italic { .. } => {unimplemented!()}
+            AST::Bold { .. } => {unimplemented!()}
+            AST::Emphasis { .. } => {unimplemented!()}
+            AST::Underline { .. } => {unimplemented!()}
+            AST::Strikethrough { .. } => {unimplemented!()}
+            AST::Undercover { .. } => {unimplemented!()}
+            AST::MathInline { .. } => {unimplemented!()}
+            AST::MathDisplay { .. } => {unimplemented!()}
+            AST::Link { .. } => {unimplemented!()}
+            AST::Escaped { .. } => {unimplemented!()}
+            AST::Command { .. } => {unimplemented!()}
+            AST::String { .. } => {unimplemented!()}
+            AST::Integer { .. } => {unimplemented!()}
+            AST::Decimal { .. } => {unimplemented!()}
+            AST::Boolean { .. } => {unimplemented!()}
+            AST::Array { .. } => {unimplemented!()}
+        }
     }
 }
 
@@ -223,11 +270,11 @@ impl Display for AST {
 // }
 
 impl AST {
-    pub fn to_vec(self)-> Vec<AST> {
+    pub fn to_vec(self) -> Vec<AST> {
         match self {
-            AST::Statements(v) => {v}
-            AST::Paragraph { children, .. } => {children}
-            _ => vec![]
+            AST::Statements(v) => v,
+            AST::Paragraph { children, .. } => children,
+            _ => vec![],
         }
     }
 }

@@ -37,8 +37,8 @@ CodeText = {(!(CodeMark ~ PEEK) ~ ANY)*}
 CodeMark = @{Accent}
 /*====================================================================================================================*/
 /// Green
-Table = {TableFirstLine ~ (LINE_SEPARATOR ~ TableRestLine)*}
-TableFirstLine = {WHITE_SPACE* ~ Vertical ~ (Escape ~ Vertical |Vertical |TextElement)*}
+Table = {WHITE_SPACE* ~ TableFirstLine ~ (LINE_SEPARATOR ~ TableRestLine)*}
+TableFirstLine = {Vertical ~ (Escape ~ Vertical |Vertical |TextElement)*}
 TableRestLine = {(Escape ~ Vertical |Vertical |TextElement)*}
 /*====================================================================================================================*/
 /// Green

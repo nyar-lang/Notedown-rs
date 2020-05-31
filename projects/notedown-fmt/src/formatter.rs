@@ -24,7 +24,7 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { tab_size: 2, pangu_space: true }
+        Settings { tab_size: 4, pangu_space: true }
     }
 }
 
